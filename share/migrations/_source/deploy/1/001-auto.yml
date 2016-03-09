@@ -1,0 +1,218 @@
+---
+schema:
+  procedures: {}
+  tables:
+    job_history:
+      constraints:
+        - deferrable: 1
+          expression: ''
+          fields:
+            - id
+          match_type: ''
+          name: ''
+          on_delete: ''
+          on_update: ''
+          options: []
+          reference_fields: []
+          reference_table: ''
+          type: PRIMARY KEY
+      fields:
+        args:
+          data_type: text
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: args
+          order: 4
+          size:
+            - 0
+        creation_time:
+          data_type: integer
+          default_value: 0
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: creation_time
+          order: 6
+          size:
+            - 0
+        end_time:
+          data_type: integer
+          default_value: 0
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: end_time
+          order: 8
+          size:
+            - 0
+        id:
+          data_type: integer
+          default_value: ~
+          is_auto_increment: 1
+          is_nullable: 0
+          is_primary_key: 1
+          is_unique: 0
+          name: id
+          order: 1
+          size:
+            - 0
+        last_modified:
+          data_type: integer
+          default_value: 0
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: last_modified
+          order: 9
+          size:
+            - 0
+        name:
+          data_type: text
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: name
+          order: 2
+          size:
+            - 0
+        result:
+          data_type: text
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: result
+          order: 5
+          size:
+            - 0
+        start_time:
+          data_type: integer
+          default_value: 0
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: start_time
+          order: 7
+          size:
+            - 0
+        state:
+          data_type: text
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: state
+          order: 3
+          size:
+            - 0
+      indices: []
+      name: job_history
+      options: []
+      order: 1
+    job_history_sub:
+      constraints:
+        - deferrable: 1
+          expression: ''
+          fields:
+            - id
+          match_type: ''
+          name: ''
+          on_delete: ''
+          on_update: ''
+          options: []
+          reference_fields: []
+          reference_table: ''
+          type: PRIMARY KEY
+        - deferrable: 0
+          expression: ''
+          fields:
+            - job_id
+          match_type: ''
+          name: job_history_sub_fk_job_id
+          on_delete: CASCADE
+          on_update: NO ACTION
+          options: []
+          reference_fields:
+            - id
+          reference_table: job_history
+          type: FOREIGN KEY
+      fields:
+        id:
+          data_type: integer
+          default_value: ~
+          is_auto_increment: 1
+          is_nullable: 0
+          is_primary_key: 1
+          is_unique: 0
+          name: id
+          order: 1
+          size:
+            - 0
+        job_id:
+          data_type: integer
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: job_id
+          order: 2
+          size:
+            - 0
+        name:
+          data_type: text
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: name
+          order: 3
+          size:
+            - 0
+        result:
+          data_type: text
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: result
+          order: 5
+          size:
+            - 0
+        state:
+          data_type: text
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: state
+          order: 4
+          size:
+            - 0
+      indices:
+        - fields:
+            - job_id
+          name: job_history_sub_idx_job_id
+          options: []
+          type: NORMAL
+      name: job_history_sub
+      options: []
+      order: 2
+  triggers: {}
+  views: {}
+translator:
+  add_drop_table: 0
+  filename: ~
+  no_comments: 0
+  parser_args:
+    sources:
+      - JobHistory
+      - JobHistorySub
+  parser_type: SQL::Translator::Parser::DBIx::Class
+  producer_args: {}
+  producer_type: SQL::Translator::Producer::YAML
+  show_warnings: 0
+  trace: 0
+  version: 0.11021

@@ -1,0 +1,14 @@
+* [DOC]     Howto setup kanku more secure
+  * https (via apache)
+  * regular user priviliges
+  * simple cli guide
+* [UI]
+  * Make Logs available in web
+  * implement request_role
+  * implement
+* [DIST]    Restore port forward on reboot
+* [CLI] commands to implement:
+  * init
+  * startui
+  * stopui
+* [CLI] implement storage per project ( $PRJDIR/.kanku )

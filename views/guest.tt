@@ -1,0 +1,45 @@
+<h1>Guest</h1>
+
+<div id=schedule_result class="alert alert-success" style="display:none">
+</div>
+
+<div id=job_list>
+
+</div>
+<script id="guest_panel" type="x-tmpl-mustache">
+
+<div class="panel panel-default panel-{{ guest_class }}" id="guest_panel{{ id }}">
+  <div class="panel-heading" id='gp_header_{{ id }}' onClick=toggle_guest_panel_body("{{ id }}")>
+    <div class='row'>
+      <div class="col-md-12">
+        <span class="badge">{{ id }}</span>
+      </div>
+    </div>
+  </div>
+  <div class="panel-body" style='display:none;padding:5px;' id="gp_body_{{ id }}">
+  </div>
+  <div class="panel-footer">
+  </div>
+</div>
+
+</script>
+
+<script id="href_guest" type="x-tmpl-mustache">
+  <a href="{{ proto }}://{{ host_ip }}:{{ host_port}}" target=_blank>Link to Website ({{ proto }})</a><br>
+</script>
+
+<script src="[% request.uri_base %]/javascripts/guest.js"></script>
+
+<script id="iface_line" type="x-tmpl-mustache">
+  <div>
+    <div class="label label-primary">{{ name }}</div>
+    <div class="label label-primary">{{ hwaddr }}</div>
+    <div class="label label-primary" id="addr_for_{{ domain_name }}_{{ name }}"><!-- placeholder for next line --></div>
+  </div>
+</script>
+
+<script id="addr_line" type="x-tmpl-mustache">
+    {{ addr }}<span class="badge"> / {{ prefix }}</span>
+</script>
+
+<!-- vim: set ft=html -->

@@ -1,0 +1,115 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-type" content="text/html; charset=[% settings.charset %]" />
+<title>Kanku</title>
+
+
+<link rel="stylesheet" href="[% request.uri_base %]/bootstrap/css/bootstrap.min.css" />
+<link rel="stylesheet" href="[% request.uri_base %]/css/mystyle.css" />
+
+<link rel="stylesheet" href="[% request.uri_base %]/font-awesome/css/font-awesome.min.css">
+<link href="[% request.uri_base %]/css/signin.css" rel="stylesheet">
+
+<script src="[% request.uri_base %]/javascripts/jquery.js"></script>
+<script src="[% request.uri_base %]/javascripts/mustache.min.js"></script>
+<script src="[% request.uri_base %]/javascripts/js.cookie.js"></script>
+<script src="[% request.uri_base %]/bootstrap/js/bootstrap.min.js"></script>
+
+
+<script type="text/javascript">
+// This is used to bring uri_base into js on a
+// centralized place
+var uri_base = "[% request.uri_base %]";
+</script>
+
+
+</head>
+<body>
+
+
+    <nav class="navbar navbar-fixed-top navbar-default">
+      <div class="container">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="[% request.uri_base %]">Kanku</a>
+        </div>
+        <div id="navbar" class="nav nav-pills">
+          <ul class="nav navbar-nav">
+            <li><a href="[% request.uri_base %]/job_history">Job History</a></li>
+            <li><a href="[% request.uri_base %]/guest">Guest</a></li>
+            [% IF roles.User %]
+            <li><a href="[% request.uri_base %]/job">Job</a></li>
+            [% END %]
+          </ul>
+          <ul class="nav navbar-nav pull-right">
+            [% IF logged_in_user %]
+              <li class="dropdown">
+              <a href="#" 
+                      class="dropdown-toggle" 
+                      data-toggle="dropdown" 
+                      role="button" 
+                      aria-haspopup="true" 
+                      aria-expanded="false">
+                  [% logged_in_user.name %]
+                  <span class="caret"></span>
+              </a>
+              <ul class="dropdown-menu">
+                <li><a href="[% request.uri_base %]/settings">Settings</a></li>
+                <li><a href="[% request.uri_base %]/logout">Logout</a></li>
+                [% IF roles.Admin %]
+                <li role="separator" class="divider"></li>
+                <li><a href="[% request.uri_base %]/admin">Administration</a></li>
+                [% END %]
+<!--
+                <li><a href="#">Another action</a></li>
+                <li><a href="#">Something else here</a></li>
+                <li role="separator" class="divider"></li>
+                <li class="dropdown-header">Nav header</li>
+                <li><a href="#">Separated link</a></li>
+                <li><a href="#">One more separated link</a></li>
+-->
+              </ul>
+            </li>
+            [% ELSE %]
+              <li class="dropdown">
+              <a href="#" 
+                      class="dropdown-toggle" 
+                      data-toggle="dropdown" 
+                      role="button" 
+                      aria-haspopup="true" 
+                      aria-expanded="false">
+                  Sign In
+                  <span class="caret"></span>
+              </a>
+              <div class="dropdown-menu dropdown-menu-right" style="padding: 15px;width: 230px;">
+              <form action="[% request.uri_base %]/login" method=POST>
+                    <input type=hidden name=return_url value="[% request.uri %]">
+                    <label for="username" class=sr-only>Login Name</label>
+                    <input style="margin-bottom: 5px" id="username" name=username class="form-control" placeholder="Login Name" value="[% username %]" required autofocus>
+
+                    <label for="password" class=sr-only>Password</label>
+                    <input style="margin-bottom: 5px;" type="password" name=password id="password" class="form-control" placeholder="Password" required>
+
+                    <button class="btn btn-success btn-block" type="submit">Sign in</button>
+
+                    <hr/>
+                    <a class="btn btn-primary btn-block"  href="[% request.uri_base %]/signup">Sign Up</a>
+              </form>
+              </div>
+            </li>
+            [% END %]
+          </ul>    
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
+
+<div id=content class=container>
+[% messagebar %]
+<!-- content goes here -->
+[% content %]
+<!-- end of content -->
+</div>
+</body>
+</html>

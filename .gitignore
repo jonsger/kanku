@@ -1,0 +1,17 @@
+*.sw?
+blib
+pm_to_blib
+MYMETA.json
+MYMETA.yml
+Makefile
+Makefile.old
+var/log/*log
+var/sqlite/*db
+share/kanku-schema.db
+etc/config.yml
+etc/jobs/*yml
+.kanku
+KankuFile
+config.yml
+.salt
+Saltfile

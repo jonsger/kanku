@@ -1,0 +1,21 @@
+{
+   "sets" : [
+      {
+         "ids" : ["1","2"],
+         "class" : "Role"
+      },
+      {
+         "ids" : ["1"], 
+         "class" : "User"
+      },
+   ],
+   "belongs_to" : {
+      "fetch" : 0
+   },
+   "might_have" : {
+      "fetch" : 0
+   },
+   "has_many" : {
+      "fetch" : 1
+   }
+}

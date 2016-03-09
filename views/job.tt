@@ -1,0 +1,62 @@
+<h1>Job</h1>
+
+<div id=schedule_result class="alert alert-success" style="display:none">
+</div>
+
+<div id=job_list>
+
+</div>
+
+<script id="job_panel" type="x-tmpl-mustache">
+
+<div class="panel panel-default" id="job_panel{{ id }}">
+  <div class="panel-heading" id='jp_header_{{ id }}' onClick=toggle_job_panel_body("{{ id }}")>
+    <div class='row'>
+      <div class="col-md-12">
+        <span class="badge">{{ id }}</span>
+      </div>
+    </div>
+  </div>
+  <div class="panel-body" style='display:none' id="jp_body_{{ id }}">
+      <form role=form id="job_args_{{ name }}">
+      </form>
+  </div>
+  <div class="panel-footer">
+    <div class="btn btn-primary" onClick="schedule_job('{{ id }}')">
+      Trigger Job
+    </div>
+    <div class="btn btn-primary" onClick="restore_defaults('{{ id }}')">
+      Restore Defaults
+    </div>
+  </div>
+</div>
+
+</script>
+
+<script id="template_module_header" type="x-tmpl-mustache">
+  <h4><span class="label label-default" style="display:block;">{{ use_module }}</span></h4>
+  <input type=hidden name="use_module" value="{{ use_module }}">
+</script>
+
+<script id="template_formgroup_text" type="x-tmpl-mustache">
+  <div class="form-group">
+    <label for="{{ id }}">{{ label }} :</label>
+    <input  class="form-control"
+            type=text
+            name="{{ param }}"
+            id="{{ id }}"
+            value="{{ value }}"
+    >
+  </div>
+</script>
+
+<script id="template_formgroup_checkbox" type="x-tmpl-mustache">
+  <div class="form-group">
+    <label for="{{ id }}">{{ label }} :</label>
+    <input type=checkbox name="{{ param }}" value="1" {{ checked }} id="{{ id }}">
+  </div>
+</script>
+
+<script src="[% request.uri_base %]/javascripts/job.js"></script>
+
+<!-- vim: set ft=html -->

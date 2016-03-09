@@ -1,0 +1,108 @@
+#!/usr/bin/env perl
+
+=head1 NAME 
+
+port_forward.pl - FIXME: comment your tool
+
+=head1 SYNOPSIS
+
+|port_forward.pl <required-options> [optional options]
+
+=head1 DESCRIPTION
+
+FIXME: add a useful description
+
+=head1 AUTHORS
+
+Frank Schreiner (M0ses), m0ses@samaxi.de
+
+=head1 COPYRIGHT
+
+This library is free software. You can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
+
+use strict;
+use warnings;
+use FindBin;
+use lib "$FindBin::Bin/../lib";
+use Log::Log4perl;
+use Data::Dumper;
+
+use Kanku::Job;
+use Kanku::Handler::ImageDownload;
+use Kanku::Handler::CreateDomain;
+
+Log::Log4perl->init("$FindBin::Bin/../etc/console-log.conf");
+
+our $VERSION = "0.0.1";
+
+use Getopt::Long;
+
+my $logger = Log::Log4perl->get_logger();
+
+my $url;
+my $output_file;
+my $use_cache;
+my $use_9p;
+my $domain_name;
+my $login_user;
+my $login_pass;
+my $offline;
+
+GetOptions (  "url=s"           => \$url,                     # numeric
+              "output_file=s"   => \$output_file,   # string
+              "domain_name=s"   => \$domain_name,
+              "user=s"          => \$login_user,
+              "pass=s"          => \$login_pass,
+              "use_cache"       => \$use_cache,
+              "use_9p"          => \$use_9p,
+              "offline"         => \$offline,
+
+) or die("Error in command line arguments\n");
+
+
+my $job = Kanku::Job->new(
+  context => { 
+    offline => $offline
+  }
+);
+
+my $img = Kanku::Handler::ImageDownload->new(
+  url           => $url,
+  use_cache     => $use_cache,
+  job           => $job,
+  logger        => Log::Log4perl->get_logger(),
+);
+
+if ( $output_file ) {
+  $img->output_file($output_file)
+};
+$img->prepare();
+$img->execute();
+$img->finalize();
+
+my $dom = Kanku::Handler::CreateDomain->new(
+  domain_name => $domain_name,
+  logger      => Log::Log4perl->get_logger(),
+  job         => $job,
+  login_user  => $login_user,
+  login_pass  => $login_pass,
+  use_9p      => $use_9p,
+);
+
+$dom->prepare();
+$dom->execute();
+$dom->finalize();
+
+$logger->info("
+
+Installation successfully finished. Please use the following command to access
+the created VM:
+
+ssh -l kanku " . $job->context->{ipaddress} . "
+
+");
+
+exit 0;

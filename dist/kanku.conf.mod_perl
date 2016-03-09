@@ -1,0 +1,10 @@
+#in your httpd.conf
+PerlSwitches -I/srv/kanku/lib
+<Location /kanku>
+  SetHandler perl-script
+  PerlResponseHandler Plack::Handler::Apache2
+  PerlSetVar psgi_app /srv/kanku/bin/kanku-app.psgi
+</Location>
+
+# Optionally preload your apps in startup
+#PerlPostConfigRequire /etc/httpd/startup.pl

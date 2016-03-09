@@ -1,0 +1,4 @@
+User_Alias KANKU = wwwrun
+
+KANKU ALL=NOPASSWD: /usr/sbin/iptables
+KANKU ALL=NOPASSWD: /usr/sbin/netstat

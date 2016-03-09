@@ -1,0 +1,13 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use FindBin;
+use lib "$FindBin::Bin/../lib";
+
+use Kanku::Cmd;
+
+
+Kanku::Cmd->run;
+
+exit 0;

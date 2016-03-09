@@ -1,0 +1,148 @@
+<h1>Job History</h1>
+<form>
+<div class=row>
+  <div class="col col-md-2">
+        <h4>
+          <input type="checkbox" name="state" value="succeed" class="cb_state" checked >
+          <span class="label label-success">succeed</span></h4>
+        </h4>
+  </div>
+  <div class="col col-md-2">
+        <h4>
+          <input type="checkbox" name="state" value="failed"  class="cb_state" checked >
+          <span class="label label-danger">failed</span></h4>
+        </h4>
+  </div>
+  <div class="col col-md-2">
+        <h4>
+          <input type="checkbox" name="state" value="running" class="cb_state" checked >
+          <span class="label label-info">running</span></h4>
+        </h4>
+  </div>
+  <div class="col col-md-2">
+        <h4>
+          <input type="checkbox" name="state" value="scheduled" class="cb_state"         >
+          <span class="label label-warning">scheduled</span>
+        </h4>
+  </div>
+  <div class="col col-md-2">
+        <h4>
+          <input type="checkbox" name="state" value="triggered" class="cb_state"         >
+          <span class="label label-warning">triggered</span>
+        </h4>
+  </div>
+  <div class="col col-md-2">
+        <h4>
+          <input type="checkbox" name="state" value="skipped" class="cb_state"         >
+          <span class="label label-warning">skipped</span>
+        </h4>
+  </div>
+</div>
+
+</form>
+
+
+<div id=job_history>
+
+</div>
+
+<script id="job_history_header" type="x-tmpl-mustache">
+
+    <div class='row well'>
+      <div class="col-md-4">
+        <span class="badge">{{ id }}</span>
+          {{ name }}
+      </div>
+      <div class="col-md-4">{{ start_time }}</div>
+      <div class="col-md-4">{{ duration }}</div>
+    </div>
+
+</script>
+
+<script id="job_result_panel" type="x-tmpl-mustache">
+
+<div class="panel panel-{{ state_class }}" id="jh_line_{{ id }}">
+  <div class="panel-heading" onClick=toggle_job_result_body("{{ id }}")>
+    <div class='row'>
+      <div class="col-md-4">
+        <span class="badge">{{ id }}</span>
+          {{ name }}
+      </div>
+      <div class="col-md-3">{{ start_time }}</div>
+      <div class="col-md-3">({{ duration_min }}min {{ duration_sec }}sec)</div>
+      <div class="col-md-2"><i class="glyphicon glyphicon-download pull-right"/></div>
+    </div>
+  </div>
+  <div class="panel-body" style='display:none;'id="jbody_{{ id }}">
+  </div>
+</div>
+
+</script>
+
+<script id="subtask_result_panel" type="x-tmpl-mustache">
+
+<div class="panel panel-{{ state_class }}" id="st_line_{{ id }}">
+  <div class="panel-heading" onClick=toggle_subtask_result_body("{{ id }}")>
+    <div class='row'>
+      <div class="col-md-1">
+        <span class="badge">{{ id }}</span>
+      </div>
+      <div class="col-md-11">
+        {{ name }}
+      </div>
+    </div>
+  </div>
+  <div class="panel-body" style='display:none' id="stbody_{{ id }}">
+  </div>
+</div>
+
+</script>
+
+<script id="subtask_result_success" type="x-tmpl-mustache">
+
+    <div class=row>
+      <div class="col-md-1">
+        prepare
+      </div>
+      <div class="col-md11">
+        {{ result_prepare }}
+      </div>
+    </div>
+    <div class=row>
+      <div class="col-md-1">
+        execute
+      </div>
+      <div class="col-md11">
+        {{ result_execute }}
+      </div>
+    </div>
+    <div class=row>
+      <div class="col-md-1">
+        finalize
+      </div>
+      <div class="col-md11">
+        {{ result_finalize }}
+      </div>
+    </div>
+
+</script>
+
+<script id="subtask_result_failed" type="x-tmpl-mustache">
+
+    <div class=row>
+      <div class="col-md-1">
+      </div>
+      <div class="col-md-10">
+        <pre>
+{{ error_message  }}
+        </pre>
+      </div>
+      <div class="col-md-1">
+      </div>
+    </div>
+
+</script>
+
+<script src="[% request.uri_base %]/javascripts/job_history.js"></script>
+
+<!-- vim: set ft=html -->

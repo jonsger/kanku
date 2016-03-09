@@ -1,0 +1,51 @@
+# Copyright (c) 2016 SUSE LLC
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program (see the file COPYING); if not, write to the
+# Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
+#
+package Kanku::Handler::FileMove;
+
+use Moose;
+use Path::Class qw/file/;
+use Data::Dumper;
+
+with 'Kanku::Roles::Handler';
+with 'Kanku::Roles::Logger';
+
+sub execute {
+  my $self  = shift;
+  my $pkg   = __PACKAGE__;
+  my $files_to_move = $self->job->context->{$pkg}->{files_to_move};
+
+  while ( my $i = shift @$files_to_move ) {
+    my $src = file($i->[0]);
+    my $dst = file($i->[1]);
+
+    $self->logger->info("Moving ". $src->stringify);
+    $self->logger->info("  to ". $dst->stringify);
+
+    ( -d $dst->parent ) || $dst->parent->mkpath;
+
+    $src->move_to($dst) || die "Could not move ". $src ." to ".$dst."\n";
+
+  }
+
+  return {
+    code    => 0,
+    message => "Successfully moved all files in files_to_move stack"
+  }
+
+}
+
+1;

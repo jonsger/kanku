@@ -1,0 +1,29 @@
+---
+
+plugins:
+  DBIC:
+    default:
+      dsn: dbi:SQLite:dbname=share/kanku-schema.db
+      schema_class: Kanku::Schema
+
+
+qemu:
+  user: qemu
+  images_dir: /var/lib/libvirt/images
+
+Kanku::Util::IPTables:
+  start_port: 49001
+
+Kanku::Util::VM::Console:
+  debug: 0
+
+Kanku::Scheduler:
+  -
+    job_name: obs-server
+    delay: 86400
+    #delay: 600
+
+Jobs:
+    obs-server:
+    obs-server-26:
+    sles11sp3:

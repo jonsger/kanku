@@ -1,0 +1,14 @@
+<h1>Welcome to Kanku</h1>
+<p>
+Please visit our <a href=[% request.uri_base %]/job_history>Job History</a> to see the results of the last test runs
+</p>
+
+<p>
+In our <a href=[% request.uri_base %]/guest>Guest Overview</a> you can see the currently configured VM`s on this host, their current state and currently configured port forwardings in form of links, ssh command line or simply shown when protocol is unknown
+</p>
+
+<p>
+<strong>PLEASE BE AWARE:<br> Triggering a new job might be executed immediately, without any other confirmation.</strong>
+</p>
+<p>
+Feel free to trigger a new job in our <a href=[% request.uri_base %]/job>Job Interface</a> but keep in mind that keeping the default domain name might beak others work. Please use your login name in the domain name, so we can easily reach you via email (Just in case).</p>
