@@ -15,3 +15,6 @@ MYMETA.*
 ^.gitignore
 ^.svn\/
 ^Kanku-
+^.kanku\/
+^t\/
+^KankuFile

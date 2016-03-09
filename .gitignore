@@ -15,3 +15,7 @@ KankuFile
 config.yml
 .salt
 Saltfile
+lib/x86_64-linux-thread-multi/perllocal.pod
+lib/x86_64-linux-thread-multi/auto/Kanku/.packlist
+*.bak
+Kanku-*tar.gz
