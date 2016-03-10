@@ -15,41 +15,105 @@
 # Please submit bugfixes or comments via http://bugs.opensuse.org/
 #
 
+
 Name:           kanku
 Version:        0.0.1
-Release:        0.0
-License:        GPL
-Summary:        Kanku - development and continous integration made easy
-Url:
-Group:
-Source:
-Patch:
-BuildRequires:
-PreReq:
-Provides:
+Release:        0.1
+License:        GPL-3.0
+Summary:        Development and continuous integration made easy
+Url:            https://github.com/M0ses/kanku
+Group:          Productivity/Networking/Web/Utilities
+Source:         %{name}-%{version}.tar.xz
+BuildArch:      noarch
+BuildRequires:  perl-macros
+BuildRequires:  fdupes
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
+
+Recommends: osc 
+Requires: libvirt-daemon-qemu qemu-kvm libvirt-daemon-config-network libvirt-daemon-config-nwfilter
+Requires: perl(DBIx::Class::Fixtures)
+Requires: perl(Test::Simple)
+Requires: perl(YAML)
+Requires: perl(Config::Tiny)
+Requires: perl(Path::Class)
+Requires: perl(Sys::Virt)
+Requires: perl(MooseX::App::Cmd)
+Requires: perl(Dancer2::Plugin::REST)
+Requires: perl(MooseX::Singleton)
+Requires: perl(Expect)
+Requires: perl(Net::SSH2)
+Requires: perl(Net::IP)
+Requires: perl(XML::Structured)
+Requires: perl(DBIx::Class::Migration)
+Requires: perl(Template)
+Requires: perl(Log::Log4perl)
+Requires: perl(Config::Tiny)
+Requires: perl(Dancer2::Plugin::DBIC)
+Requires: perl(Dancer2::Plugin::Auth::Extensible)
+Requires: perl(Dancer2::Plugin::Auth::Extensible::Provider::DBIC)
 
 %description
 TODO: add some meaningful description
+ to be more verbose
 
 %prep
 %setup -q
 
 %build
-perl Makefile.PL PREFIX=/opt/kanku LIB=/opt/kanku/lib INSTALLSCRIPT=/opt/kanku/bin
-
+/bin/true
 
 %install
-%perl_process_packlist
 make install DESTDIR=%{buildroot}
-%perl_gen_filelist
+%fdupes %{buildroot}/opt/kanku/share
 
-%post
-
-%postun
-
-%files -f %{name}.files
+%files
 %defattr(-,root,root)
 %doc README.md TODO
 
+%exclude /etc
+%dir /opt/kanku
+/opt/kanku/public/
+/opt/kanku/lib
+%dir /opt/kanku/share/
+/opt/kanku/share/fixtures
+/opt/kanku/share/migrations
+
+%dir /opt/kanku/bin
+%attr(755,root,root) /opt/kanku/bin/kanku-scheduler
+%attr(755,root,root) /opt/kanku/bin/kanku-apache2.psig
+%attr(755,root,root) /opt/kanku/bin/kanku-app.psgi
+%attr(755,root,root) /opt/kanku/bin/kanku
+
+%dir /opt/kanku/etc/
+%ghost /opt/kanku/etc/config.yml
+%config /opt/kanku/etc/console-log.conf
+%config /opt/kanku/etc/config.yml.template
+
+%dir /opt/kanku/etc/templates
+%dir /opt/kanku/etc/templates/cmd
+%config /opt/kanku/etc/templates/cmd/setup.config.yml.tt2
+%config /opt/kanku/etc/templates/cmd/init.tt2
+%config /opt/kanku/etc/templates/obs-server-26.tt2
+%config /opt/kanku/etc/templates/sles11sp3.tt2
+%config /opt/kanku/etc/templates/obs-server.tt2
+
+%dir /opt/kanku/etc/jobs
+%config /opt/kanku/etc/jobs/obs-server.yml.template
+%config /opt/kanku/etc/jobs/sles11sp3.yml.template
+%config /opt/kanku/etc/jobs/obs-server-26.yml.template
+%config /opt/kanku/etc/log4perl.conf
+
+%dir /etc/sudoers.d
+%config (noreplace)  /etc/sudoers.d/kanku
+
+%dir /etc/apache2
+%dir /etc/apache2/conf.d
+%config (noreplace) /etc/apache2/conf.d/kanku.conf
+
+%dir /etc/profile.d/
+%config /etc/profile.d/kanku.sh
+
+%changelog
+* Thu Mar 10 2016 Frank Schreiner - 0.0.1-0.1
+- initial version
 

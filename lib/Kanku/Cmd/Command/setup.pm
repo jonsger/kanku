@@ -205,7 +205,9 @@ sub _execute_devel_setup {
   system("chkconfig libvirtd on");
 
   # start and set autostart for default network
-  system("virsh net-autostart default");
+  system("virsh net-autostart default 1>/dev/null");
+
+  die if $?;
 
   $logger->info("Setup successfully finished!");
   $logger->info("Please reboot to make sure, libvirtd is coming up properly");  
@@ -313,10 +315,16 @@ sub _setup_database {
     end_tag       => '%]'
   };
 
+
   my $output = '';
+  my $cfg_file = "$FindBin::Bin/../config.yml";
+
+
   # process input template, substituting variables
-  $template->process('setup.config.yml.tt2', $vars, "config.yml")
+  $template->process('setup.config.yml.tt2', $vars, $cfg_file)
                || die $template->error()->as_string();
+
+  $self->logger->info("Created config file $cfg_file");
 
   my $migration = DBIx::Class::Migration->new(
           schema => Kanku::Schema->connect($self->dsn)

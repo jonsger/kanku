@@ -3,7 +3,7 @@
 This project is in a very early state (pre-alpha), so we not recommend to use on productive machines. 
 This guide is written for openSUSE Tumbleweed.
 If you wish to use with e.g. Leap, you have to care about some changes in the repository
-pathes.
+paths.
 
 # Project home
 
