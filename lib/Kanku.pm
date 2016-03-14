@@ -301,4 +301,7 @@ get '/rest/guest/list.:format' => sub {
       guest_list =>$guests
   }
 };
+
+__PACKAGE__->meta->make_immutable();
+
 true;

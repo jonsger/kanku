@@ -108,7 +108,7 @@ sub execute {
   $logger->info("kanku up");
 }
 
-
+__PACKAGE__->meta->make_immutable;
 
 1;
 

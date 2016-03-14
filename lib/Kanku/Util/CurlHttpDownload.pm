@@ -132,5 +132,6 @@ sub download {
   return $file->stringify;
 }
 
+__PACKAGE__->meta->make_immutable;
 
 1;

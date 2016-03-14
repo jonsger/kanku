@@ -34,6 +34,7 @@ has global => (
     documentation => 'global vm list',
 );
 
+sub abstract { "Not implemented yet" }
 
 sub execute {
   my $self    = shift;
@@ -44,4 +45,7 @@ sub execute {
 
 
 }
+
+__PACKAGE__->meta->make_immutable;
+
 1;

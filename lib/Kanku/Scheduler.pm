@@ -330,5 +330,7 @@ sub get_todo_list {
   return $todo;
 }
 
+__PACKAGE__->meta->make_immutable();
+
 1;
 

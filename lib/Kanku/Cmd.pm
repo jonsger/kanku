@@ -26,4 +26,6 @@ use Kanku::Config;
 Log::Log4perl->init("$FindBin::Bin/../etc/console-log.conf");
 Kanku::Config->initialize(class => "KankuFile");
 
+__PACKAGE__->meta->make_immutable();
+
 1;

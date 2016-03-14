@@ -181,4 +181,6 @@ sub _sub_get_image_file_from_url_cb {
     }
 }
 
+__PACKAGE__->meta->make_immutable();
+
 1;

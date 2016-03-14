@@ -72,4 +72,6 @@ sub execute {
   $logger->info("Removed domain ".$self->domain_name." successfully");
 }
 
+__PACKAGE__->meta->make_immutable;
+
 1;

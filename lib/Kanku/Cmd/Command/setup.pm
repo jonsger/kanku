@@ -25,6 +25,7 @@ use File::HomeDir;
 use Term::ReadKey;
 use Template;
 use Kanku::Schema;
+use Cwd;
 use DBIx::Class::Migration;
 
 extends qw(MooseX::App::Cmd::Command);
@@ -293,16 +294,10 @@ sub _setup_database {
   my $self = shift;
 
   my $base_dir = dir($FindBin::Bin)->parent;
-  #my $config = file($base_dir,"config.yml");
-  #my $dbfile = $base_dir."/share/kanku-schema.db";
 
   my $config = {
     INCLUDE_PATH => $FindBin::Bin."/../etc/templates/cmd/",
     INTERPOLATE  => 1,               # expand "$var" in plain text
-    #POST_CHOMP   => 1,               # cleanup whitespace
-    #PRE_PROCESS  => 'header',        # prefix each template
-    #EVAL_PERL    => 1,               # evaluate Perl code blocks
-    #RELATIVE     => 1
   };
 
   # create Template object
@@ -310,15 +305,13 @@ sub _setup_database {
 
   # define template variables for replacement
   my $vars = {
-	dsn			  => $self->dsn,
+    dsn		  => $self->dsn,
     start_tag     => '[%',
     end_tag       => '%]'
   };
 
-
   my $output = '';
   my $cfg_file = "$FindBin::Bin/../config.yml";
-
 
   # process input template, substituting variables
   $template->process('setup.config.yml.tt2', $vars, $cfg_file)
@@ -326,10 +319,14 @@ sub _setup_database {
 
   $self->logger->info("Created config file $cfg_file");
 
+  # prepare database setup
   my $migration = DBIx::Class::Migration->new(
-          schema => Kanku::Schema->connect($self->dsn)
+    schema_class   => 'Kanku::Schema',
+    schema_args	   => [$self->dsn],
+    target_dir	   => "$FindBin::Bin/../share"
   );
 
+  # setup database if needed
   $migration->install_if_needed(
     default_fixture_sets => ['all_tables']
   );
@@ -388,13 +385,15 @@ sub _chown_images_dir {
 sub _ask_for_user {
   my $self = shift;
 
-  print "Please enter the username of the user who will run kanku\n";
-  print "Default: '$ENV{SUDO_USER}'\n";
+  while ( ! $self->user ) {
 
-  my $answer = <STDIN>;
-  chomp($answer);
+    print "Please enter the username of the user who will run kanku [".($ENV{SUDO_USER} || '')."]\n";
 
-  $self->user( $answer || $ENV{SUDO_USER} );
+    my $answer = <STDIN>;
+    chomp($answer);
+
+    $self->user( $answer || $ENV{SUDO_USER} );
+  }
 
   return undef;
 }
@@ -407,7 +406,7 @@ sub _set_sudoers {
 
   $logger->info("Adding commands for user $user in " . $sudoers_file->stringify);
 
-  $sudoers_file->spew("$user ALL=NOPASSWD: /usr/sbin/iptables, /usr/sbin/netstat\n");
+  $sudoers_file->spew("$user ALL=NOPASSWD: /usr/sbin/iptables, /bin/netstat\n");
 
   return undef;
 }
@@ -467,6 +466,6 @@ sub _chown {
   }
 }
 
-1;
+__PACKAGE__->meta->make_immutable();
 
-__DATA__
+1;

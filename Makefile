@@ -1,4 +1,3 @@
-DESTDIR				=	$(DESTDIR)
 PREFIX				=	/opt/kanku
 VERSION				=	$(shell grep VERSION lib/Kanku.pm |perl -p -e "s/.*'([\d.]+)'.*/\$$1/")
 CONFIG_FILES 	= templates/cmd/init.tt2 templates/obs-server-26.tt2 templates/sles11sp3.tt2 templates/obs-server.tt2 console-log.conf config.yml.template jobs/obs-server.yml.template jobs/sles11sp3.yml.template jobs/obs-server-26.yml.template log4perl.conf templates/cmd/setup.config.yml.tt2
@@ -28,7 +27,7 @@ install:
 	done
 	#
 	for i in $(FULL_DIRS) ;do \
-		cp -av ./$$i $(DESTDIR)$(PREFIX)/$$i ;\
+		cp -av ./$$i `dirname $(DESTDIR)$(PREFIX)/$$i` ;\
 	done
 
 dist_dirs:

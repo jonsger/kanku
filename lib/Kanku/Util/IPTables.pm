@@ -275,4 +275,6 @@ sub sudo {
   return $sudo;
 }
 
+__PACKAGE__->meta->make_immutable;
+
 1;

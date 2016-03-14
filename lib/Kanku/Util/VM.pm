@@ -267,6 +267,7 @@ sub _get_ip_from_dhcp {
   return undef;
 }
 
+__PACKAGE__->meta->make_immutable;
 
 1;
 
