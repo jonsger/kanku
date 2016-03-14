@@ -52,6 +52,7 @@ Requires: perl(Config::Tiny)
 Requires: perl(Dancer2::Plugin::DBIC)
 Requires: perl(Dancer2::Plugin::Auth::Extensible)
 Requires: perl(Dancer2::Plugin::Auth::Extensible::Provider::DBIC)
+Requires: perl(File::HomeDir)
 
 %description
 TODO: add some meaningful description
