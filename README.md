@@ -88,9 +88,9 @@ Please change the password after logging in 1st time for security concerns
 ```
 kanku ssh # (will connect as user kanku)
 ```
-# Concept and interaction with other tools
+# Overview and Concept
 
-![Concept Diagram](https://drive.google.com/file/d/0B1Huu8D4Exuwa3JzODY2R3kzaWs/view?usp=sharing)
+![Concept Diagram](https://raw.githubusercontent.com/M0ses/kanku/master/docs/kanku_overview.png)
 
 # FAQ
 
