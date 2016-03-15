@@ -1,52 +1,56 @@
 # DISCLAIMER
 
 This project is in a very early state (pre-alpha), so we not recommend to use on productive machines. 
-This guide is written for openSUSE Tumbleweed.
-If you wish to use with e.g. Leap, you have to care about some changes in the repository
-paths.
 
 # Project home
 
 https://github.com/M0ses/kanku
 
-# Preparation for Installation
+# Working linux distributions
 
-## Configuration of additional software respositories
+At the moment kanku works only for 
+(at least with this guide, but kanku is pure perl + libvirt + qemu, so it should run on any linux distribution )
+
+
+
+* openSUSE Tumbleweed
+
+* openSUSE Leap 42.1
+
+but feel free to send us your patches
+
+# Installation
+
+Please be aware, that you choose the right distribution. 
+This example works for openSUSE Tumbleweed.
+
+## Automatic installation with yast one-click-install
+
+You can find a yast one-click-install file in the download repositories
+
+http://download.opensuse.org/repositories/home:/M0ses:/kanku/openSUSE_Tumbleweed/kanku.ymp
+
+## Manual installation
+
+### Configuration of software respositories
 
 ```
-sudo zypper ar http://download.opensuse.org/repositories/home:/M0ses:/Perl/openSUSE_Tumbleweed/home:M0ses:Perl.repo
 sudo zypper ar http://download.opensuse.org/repositories/devel:/languages:/perl/openSUSE_Tumbleweed/devel:languages:perl.repo
+sudo zypper ar http://download.opensuse.org/repositories/home:/M0ses:/Perl/openSUSE_Tumbleweed/home:M0ses:Perl.repo
+sudo zypper ar http://download.opensuse.org/repositories/home:/M0ses:/kanku/openSUSE_Tumbleweed/home:M0ses:kanku.repo
 sudo zypper ref -s
 ```
 
-## Installation of required perl packages
+## Installation of package
 
 ```
-sudo zypper -n in osc git vim-data libvirt libvirt-daemon-qemu qemu-kvm \
-  libvirt-daemon-config-network libvirt-daemon-config-nwfilter \
-  perl-DBIx-Class-Fixtures perl-Test-Simple perl-YAML perl-Config-Tiny \
-  perl-Path-Class perl-Sys-Virt perl-MooseX-App-Cmd perl-Dancer2-Plugin-REST \
-  perl-MooseX-Singleton perl-Expect perl-Net-SSH2 perl-Net-IP \
-  perl-XML-Structured perl-Dancer-Plugin-DBIC perl-DBIx-Class-Migration \
-  perl-Template-Toolkit perl-Log-Log4perl perl-Config-Tiny \
-  perl-Dancer2-Plugin-DBIC perl-Dancer2-Plugin-Auth-Extensible \
-  perl-Dancer2-Plugin-Auth-Extensible-Provider-DBIC \
-
-cd /tmp
-git clone git@github.com:M0ses/Net-OBS-Client.git
-cd Net-OBS-Client
-perl Makefile.PL
-make 
-sudo make install
-
+sudo zypper in kanku
 ```
 
-## Starting frontend development
+# Setup your environment
 
 ```
-git clone <uri_to_kanku_repository>
-cd kanku
-sudo bin/kanku setup --devel
+sudo /opt/kanku/bin/kanku setup --devel
 
 sudo shutdown -r now
 
@@ -55,14 +59,37 @@ sudo shutdown -r now
 
 ## Preparing a new Project
 
-```
-# cd in project's directory
+init will create a default Kankufile which should give you a good starting
+point. The option "--memory=..." defines the RAM of the virtual guest and is optional.
+Default is 2G of RAM.
 
-# init will create a default Kankufile which should give you a good starting 
-# point
-kanku init
+```
+# create directory 
+mkdir MyProject
+
+# cd in project's directory
+cd MyProject
+
+kanku init --memory=512
+```
+
+# Download, create and start a new guest
+
+```
 kanku up
 ```
+
+# Connect to new machine
+Per default, if it exists, your ssh key is added to the authorized keys file
+Otherwise you can login with the default password "kankusho".
+The default root password is "kankudai".
+Please change the password after logging in 1st time for security concerns
+
+```
+kanku ssh # (will connect as user kanku)
+```
+
+
 # FAQ
 
 ## How could I setup the database manually ?
@@ -77,3 +104,7 @@ dbic-migration install
 
 dbic-migration populate
 ```
+
+# KNOWN ISSUES
+
+* In openSUSE Leap 42.1 you have to enter the root password on each interaction with libvirt.
