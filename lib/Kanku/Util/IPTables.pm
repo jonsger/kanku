@@ -40,7 +40,7 @@ has host_ipaddress => (
     my @out = `$cmd`;
 
     for my $line (@out) {
-      if ( $line =~ /^\s*inet\s+([0-9\.]*)\/.*/ ) {
+      if ( $line =~ /^\s*inet\s+([0-9\.]*)(\/\d+)?\s.*/ ) {
         return $1
       }
     }
