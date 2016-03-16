@@ -59,7 +59,9 @@ has memory => (
     default       => 2048
 );
 
+sub abstract { "create KankuFile in your current working directory" }
 
+sub description { "create KankuFile in your current working directory" }
 
 sub execute {
   my $self    = shift;

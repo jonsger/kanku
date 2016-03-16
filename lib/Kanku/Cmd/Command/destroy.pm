@@ -41,6 +41,12 @@ has cfg => (
     default       => sub { Kanku::Config->instance(); }
 );
 
+sub abstract { "Remove domain completely" }
+
+sub description { "meaningfull description" }
+
+
+
 sub execute {
   my $self    = shift;
   my $vm      = Kanku::Util::VM->new(domain_name => $self->domain_name);

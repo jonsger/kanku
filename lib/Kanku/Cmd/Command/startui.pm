@@ -23,6 +23,11 @@ use FindBin;
 
 extends qw(MooseX::App::Cmd::Command);
 
+sub abstract { "start an simple webserver to access web ui under http://localhost:5000" }
+
+sub description { "start an simple webserver to access web ui under http://localhost:5000" }
+
+
 sub execute {
   my $self      = shift;
   my $pid_file  = ".kanku/ui.pid";

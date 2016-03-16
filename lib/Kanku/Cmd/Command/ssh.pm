@@ -24,6 +24,20 @@ use Data::Dumper;
 use Net::IP;
 extends qw(MooseX::App::Cmd::Command);
 
+has user => (
+  traits        => [qw(Getopt)],
+  isa           => 'Str',
+  is            => 'rw',
+  cmd_aliases   => 'u',
+  documentation => 'Login user to use for ssh (default: kanku)',
+  default => 'kanku'
+);
+
+sub abstract { "open ssh connection to vm" }
+
+sub description { "open ssh connection to vm" }
+
+
 sub execute {
   my $self  = shift;
   my $cfg   = Kanku::Config->instance();
@@ -32,8 +46,9 @@ sub execute {
                 management_network  => $cfg->config->{management_network} || ''
               );
   my $ip    = $vm->get_ipaddress;
+  my $user  = $self->user;
 
-  system("ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -l kanku $ip");
+  system("ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -l $user $ip");
 
 }
 

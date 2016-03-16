@@ -23,6 +23,11 @@ use FindBin;
 
 extends qw(MooseX::App::Cmd::Command);
 
+sub abstract { "stop our local webserver, providing the ui" }
+
+sub description { "stop our local webserver, providing the ui" }
+
+
 sub execute {
   my $self      = shift;
 

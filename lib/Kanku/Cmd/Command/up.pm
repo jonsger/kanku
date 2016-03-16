@@ -61,6 +61,9 @@ has skip_all_checks => (
     documentation => 'Skip all checks when downloading from OBS server e.g.',
 );
 
+sub abstract { "start the job defined in KankuFile" }
+
+sub description { "start the job defined in KankuFile" }
 
 sub execute {
   my $self    = shift;
