@@ -115,6 +115,19 @@ make install DESTDIR=%{buildroot}
 %dir /etc/profile.d/
 %config /etc/profile.d/kanku.sh
 
+%dir /opt/kanku/views/
+/opt/kanku/views/admin.tt
+/opt/kanku/views/guest.tt
+/opt/kanku/views/index.tt
+/opt/kanku/views/job.tt
+/opt/kanku/views/job_history.tt
+/opt/kanku/views/layouts/main.tt
+/opt/kanku/views/login.tt
+/opt/kanku/views/login/denied.tt
+/opt/kanku/views/request_roles.tt
+/opt/kanku/views/settings.tt
+/opt/kanku/views/signup.tt
+
 %changelog
 * Thu Mar 10 2016 Frank Schreiner - 0.0.1-0.1
 - initial version
