@@ -1,4 +1,7 @@
 package Kanku;
+
+use Moose;
+
 use Dancer2;
 use Dancer2::Plugin;
 use Dancer2::Plugin::REST;
