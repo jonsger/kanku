@@ -121,8 +121,10 @@ make install DESTDIR=%{buildroot}
 /opt/kanku/views/index.tt
 /opt/kanku/views/job.tt
 /opt/kanku/views/job_history.tt
+%dir /opt/kanku/views/layouts
 /opt/kanku/views/layouts/main.tt
 /opt/kanku/views/login.tt
+%dir /opt/kanku/views/login
 /opt/kanku/views/login/denied.tt
 /opt/kanku/views/request_roles.tt
 /opt/kanku/views/settings.tt
