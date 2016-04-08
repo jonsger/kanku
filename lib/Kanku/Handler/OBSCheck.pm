@@ -157,3 +157,67 @@ sub execute {
 
 
 1;
+__END__
+
+=head1 NAME
+
+Kanku::Handler::OBSCheck
+
+=head1 SYNOPSIS
+
+Here is an example how to configure the module in your jobs file or KankuFile
+
+  -
+    use_module: Kanku::Handler::OBSCheck
+    options:
+      api_url: https://api.opensuse.org
+      project: home:M0ses:kanku:images
+      package: openSUSE-Leap-42.1-JeOS
+      use_cache: 1
+
+
+=head1 DESCRIPTION
+
+This handler downloads a file from a given url to the local filesystem and sets vm_image_file.
+
+=head1 OPTIONS
+
+  api_url             : API url to OBS server 
+
+  project             : project name in OBS
+
+  package             : package name to search for in project
+
+  skip_all_checks     : skip checks all checks on project/package on obs side before downloading image
+
+  skip_check_project  : skip check of project state before downloading image
+
+  skip_check_package  : skip check of package state before downloading image
+
+  skip_download       : no changes detected in OBS skip downloading image file if found in cache
+
+  offline             : proceed in offline mode ( skip download and set use_cache in context)
+
+  use_cache           : use cached files if found in users cache directory
+
+=head1 CONTEXT
+
+=head2 getters
+
+  offline
+
+  use_cache
+
+  skip_all_checks
+
+
+=head2 setters
+
+  vm_image_url
+
+=head1 DEFAULTS
+
+NONE
+
+=cut
+

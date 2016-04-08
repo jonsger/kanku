@@ -53,3 +53,45 @@ sub execute {
 
 1;
 
+__END__
+
+=head1 NAME
+
+Kanku::Handler::RemoveDomain
+
+=head1 SYNOPSIS
+
+Here is an example how to configure the module in your jobs file or KankuFile
+
+  -
+    use_module: Kanku::Handler::RemoveDomain
+    options:
+      domain_name: my-unneeded-domain
+
+=head1 DESCRIPTION
+
+This handler removes VM and removes configured port forwarding rules.
+
+=head1 OPTIONS
+
+
+    domain_name           : name of domain to remove
+
+
+=head1 CONTEXT
+
+=head2 getters
+
+ domain_name
+
+=head2 setters
+
+NONE
+
+=head1 DEFAULTS
+
+NONE
+
+
+=cut
+

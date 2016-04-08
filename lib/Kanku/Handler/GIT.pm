@@ -119,3 +119,58 @@ __PACKAGE__->meta->make_immutable;
 
 
 1;
+__END__
+
+=head1 NAME
+
+Kanku::Handler::Git
+
+=head1 SYNOPSIS
+
+Here is an example how to configure the module in your jobs file or KankuFile
+
+  -
+    use_module: Kanku::Handler::GIT
+    options:
+      giturl: https://github.com/M0ses/kanku.git
+      revision: master
+      destination: /tmp/kankua
+      submodules: 1
+      
+
+=head1 DESCRIPTION
+
+This handler logs into the guest os via ssh and clones/checks out a git repository.
+
+
+=head1 OPTIONS
+
+SEE ALSO Kanku::Handler::ExecuteCommandViaSSH
+
+  giturl      : url to clone git repository from
+
+  revision    : revision to checkout in git working copy
+
+  destination : path where working copy is checked out in VM's filesystem
+
+  submodules  : boolean, if set to 1, submodules will be initialized and updated
+
+=head1 CONTEXT
+
+=head2 getters
+
+SEE Kanku::Handler::ExecuteCommandViaSSH
+
+=head2 setters
+
+NONE
+
+=head1 DEFAULTS
+
+NONE
+
+=head1 SEE ALSO
+
+L<Kanku::Handler::ExecuteCommandViaSSH>
+
+=cut

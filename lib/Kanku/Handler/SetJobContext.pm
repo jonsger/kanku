@@ -103,3 +103,74 @@ sub execute {
 
 
 1;
+
+__END__
+
+=head1 NAME
+
+Kanku::Handler::SetJobContext
+
+=head1 SYNOPSIS
+
+Here is an example how to configure the module in your jobs file or KankuFile
+
+  -
+    use_module: Kanku::Handler::SetJobContext
+    options:
+      api_url: https://api.opensuse.org
+      ....
+
+=head1 DESCRIPTION
+
+This handler will set the given variables in the job context
+
+
+=head1 OPTIONS
+
+For further explaination of these options please have a look at the corresponding modules.
+
+      api_url
+
+      project
+
+      package
+
+      vm_image_file
+
+      vm_image_url
+
+      vm_template_file
+
+      domain_name
+
+      host_interface
+
+      vm_image_dir
+
+      skip_all_checks
+
+      skip_check_project
+
+      skip_check_package
+
+      skip_download
+
+
+
+=head1 CONTEXT
+
+=head2 getters
+
+NONE
+
+=head2 setters
+
+Please see the OPTIONS section. All given options will be set in the job context.
+
+=head1 DEFAULTS
+
+NONE
+
+
+=cut
+

@@ -49,3 +49,42 @@ sub execute {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+Kanku::Handler::FileMove
+
+=head1 SYNOPSIS
+
+Here is an example how to configure the module in your jobs file or KankuFile
+
+  -
+    use_module: Kanku::Handler::FileMove
+
+=head1 DESCRIPTION
+
+This handler moves a file in the filesystem.
+
+=head1 OPTIONS
+
+NONE
+
+=head1 CONTEXT
+
+=head2 getters
+
+ files_to_move      : array of move jobs. 1st element is src, 2nd is dst
+
+=head2 setters
+
+NONE
+
+=head1 DEFAULTS
+
+NONE
+
+
+=cut
+

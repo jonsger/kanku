@@ -161,3 +161,19 @@ sub finalize {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+Kanku::Handler::OBSDownload
+
+=head1 SYNOPSIS
+
+DEPRECATION WARNING: This module is deprecated and be replaced with Kanku::Handler::OBSCheck and Kanku::Handler::ImageDownload.
+
+Please have a look in their documentation and rework your configs as this module will be removed soon.
+
+
+=cut
+

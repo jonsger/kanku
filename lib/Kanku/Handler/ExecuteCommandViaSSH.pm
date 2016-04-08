@@ -75,3 +75,62 @@ sub finalize {
 __PACKAGE__->meta->make_immutable;
 
 1;
+
+__END__
+
+=head1 NAME
+
+Kanku::Handler::ExecuteCommandViaSSH
+
+=head1 SYNOPSIS
+
+Here is an example how to configure the module in your jobs file or KankuFile
+
+  -
+    use_module: Kanku::Handler::ExecuteCommandViaSSH
+    options:
+      publickey_path: /home/m0ses/.ssh/id_rsa.pub
+      privatekey_path: /home/m0ses/.ssh/id_rsa
+      passphrase: MySecret1234
+      username: kanku
+      commands:
+        - rm /etc/shadow
+
+=head1 DESCRIPTION
+
+This handler will connect to the ipaddress stored in job context and excute the configured commands
+
+
+=head1 OPTIONS
+
+      publickey_path    : path to public key file (optional)
+
+      privatekey_path   : path to private key file
+
+      passphrase        : password to use for private key
+
+      username          : username used to login via ssh
+
+      commands          : array of commands to execute
+
+
+=head1 CONTEXT
+
+=head2 getters
+
+ ipaddress
+
+=head2 setters
+
+ vm_image_file
+
+
+=head1 DEFAULTS
+
+  privatekey_path       : $HOME/.ssh/id_rsa
+
+  username              : root
+
+
+=cut
+

@@ -21,13 +21,6 @@ with 'Kanku::Roles::Handler';
 
 has [qw/delay reason/] => (is=>'rw',isa=>'Str');
 
-sub prepare {
-  return {
-    code    => 0,
-    message => "Nothing to do"
-  };
-}
-
 sub execute {
   my $self = shift;
 
@@ -41,11 +34,50 @@ sub execute {
   };
 }
 
-sub finalize {
-  return {
-    code    => 0,
-    message => "Nothing to do"
-  };
-}
-
 1;
+__END__
+
+=head1 NAME
+
+Kanku::Handler::Wait
+
+=head1 SYNOPSIS
+
+Here is an example how to configure the module in your jobs file or KankuFile
+
+  -
+    use_module: Kanku::Handler::Wait
+    options:
+      delay: 120
+      reason: Give XY the change to finish his job
+
+=head1 DESCRIPTION
+
+This handler simply waits for given delay in seconds and the reason wil be logged for documenation purposes.
+
+
+=head1 OPTIONS
+
+
+    delay                 : sleep for n seconds
+
+    reason                : message to be logged
+
+
+=head1 CONTEXT
+
+=head2 getters
+
+NONE
+
+=head2 setters
+
+NONE
+
+=head1 DEFAULTS
+
+    reason                : "Not configured"    images_dir     /var/lib/libvirt/images
+
+
+=cut
+

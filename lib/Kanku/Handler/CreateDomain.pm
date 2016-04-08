@@ -184,3 +184,91 @@ sub _create_image_file_from_cache {
 }
 1;
 
+__END__
+
+=head1 NAME
+
+Kanku::Handler::CreateDomain
+
+=head1 SYNOPSIS
+
+Here is an example how to configure the module in your jobs file or KankuFile
+
+  -
+    use_module: Kanku::Handler::CreateDomain
+    options:
+      api_url: https://api.opensuse.org
+      ....
+
+=head1 DESCRIPTION
+
+This handler creates a new VM from the given template file and a qcow2 image file.
+
+It will login into the VM and try to find out the ipaddress of the interface connected to the default route.
+
+If configured a port_forward_list, it tries to find the next free port and configure a port forwarding with iptables.
+
+
+=head1 OPTIONS
+
+
+    domain_name           : name of domain to create
+
+    vm_image_file         : file to qcow2 image to be used for domain
+
+    login_user            : user to be used to login via console
+
+    login_pass            : password to be used to login via console
+
+    images_dir            : directory where the images can be found
+
+    management_interface  :
+
+    management_network    :
+
+    forward_port_list     : list of ports to forward from host_interface`s IP to VM
+
+    memory                : memory in KB to be used by VM
+
+    vcpu                  : number of cpus for VM
+
+    use_9p                : create a share folder between host and guest using 9p
+
+
+=head1 CONTEXT
+
+=head2 getters
+
+ domain_name
+
+ login_user
+
+ login_pass
+
+ use_cache
+
+ vm_template_file
+
+ vm_image_file
+
+ host_interface
+
+=head2 setters
+
+ vm_image_file
+
+ ipaddress
+
+=head1 DEFAULTS
+
+ images_dir     /var/lib/libvirt/images
+
+ vcpu           1
+
+ memory         1024 MB
+
+ use_9p         0
+
+
+=cut
+
