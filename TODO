@@ -7,20 +7,21 @@
   * Make Logs available in web
   * implement request_role
 
-* [DIST] Restore port forward on reboot
+* [DIST] 
+  * Restore port forward on reboot
+  * create packages for Ubuntu/Debian
 
 * [CLI] commands to implement:
-  * snapshot      - shutdown VM, remove old snapshots, take a current snapshot
-  * revert        - revert to last snapshot
-  * ip            - print current ip of domain
-  * login         - login on remote instance
-  * trigger       - trigger job on remote instance
-  * guests        - print list of current guests
-  * rhistory      - remote history
-  * history       - local history
-  * rlog          - print log of remote job
-  * ci            - commit job definition to remote server
-  * co            - checkout job definition from remote server
+  * devel
+    * snapshot      - shutdown VM, remove old snapshots, take a current snapshot
+    * revert        - revert to last snapshot
+  * server
+    * trigger       - trigger job on remote instance
+    * history       - local history
+    * rhistory      - remote history
+    * rlog          - print log of remote job
+    * ci            - commit job definition to remote server
+    * co            - checkout job definition from remote server
   
 * [CLI] implement storage per project ( $PRJDIR/.kanku )
 

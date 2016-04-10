@@ -147,7 +147,6 @@ sub session_valid {
   my $self = shift;
   return 0 if ( ! -f $self->_cookie_jar_file );
 
-
   $self->ua->cookie_jar->load();
 
   my $request = HTTP::Request->new(POST => $self->login_url);
@@ -160,6 +159,38 @@ sub session_valid {
     return $result->{authenticated};
   } else {
      die $response->status_line;
+  }
+
+}
+
+sub get_json {
+  my $self = shift;
+  my %opts = @_;
+
+  die "No path given!\n" if ( ! $opts{path} );
+
+  return 0 if ( ! -f $self->_cookie_jar_file );
+
+  $self->ua->cookie_jar->load();
+
+  my $url = $self->apiurl.'/rest/'. $opts{path} .".json";
+
+
+  my $request = HTTP::Request->new(GET => $url);
+
+  $self->cookie_jar->add_cookie_header( $request );
+
+  
+  $self->logger->debug("Sending reques to url: $url");
+  $self->logger->debug("\n".$request->as_string);
+
+  my $response = $self->ua->request($request);
+
+  if ($response->is_success) {
+    my $result = decode_json($response->decoded_content);
+    return $result;
+  } else {
+     die $response->status_line ."\n";
   }
 
 }

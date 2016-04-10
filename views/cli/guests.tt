@@ -1,0 +1,10 @@
+##### Guest List:[% FOREACH guest IN guest_list.keys %]
+================================================================================
+[% guest_list.$guest.domain_name %]
+  FORWARDED PORTS:
+    [% FOREACH ip IN guest_list.$guest.forwarded_ports.keys %][% ip %]:[% FOREACH port IN guest_list.$guest.forwarded_ports.$ip.keys %]
+          [% port %] -- [% guest_list.$guest.forwarded_ports.$ip.$port %][% END %][% END %]
+  Network Interfaces:
+    [% FOREACH nic IN guest_list.$guest.nics %] * [% nic.name %]
+      [% FOREACH addr IN nic.addrs %]* [% addr.addr %] / [% addr.prefix %][% END %][% END %]
+[% END %]
