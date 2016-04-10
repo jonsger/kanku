@@ -305,6 +305,36 @@ get '/rest/guest/list.:format' => sub {
   }
 };
 
+post '/rest/login.:format' => sub {
+
+  if ( session 'logged_in_user' ) {
+    # user is authenticated by valid session
+    return { authenticated => 1 };
+  }
+
+  if ( ! params->{username} || ! params->{password} ) {
+    # could not get username/password combo
+    return { authenticated => 0 };
+  }
+
+  my ($success, $realm) = authenticate_user(
+    params->{username}, params->{password}
+  );
+
+  if ($success) {
+    # user successfully authenticated by username/password
+    session logged_in_user => params->{username};
+    session logged_in_user_realm => $realm;
+
+    return { authenticated => 1 };
+  } else {
+    # could not authrenticate user
+    return { authenticated => 0 };
+  }
+
+};
+
+
 __PACKAGE__->meta->make_immutable();
 
 true;
