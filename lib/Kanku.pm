@@ -334,6 +334,13 @@ post '/rest/login.:format' => sub {
 
 };
 
+get '/rest/logout.:format' => sub {
+
+    app->destroy_session;
+
+    return { authenticated => 0 };
+};
+
 
 __PACKAGE__->meta->make_immutable();
 
