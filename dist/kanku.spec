@@ -53,6 +53,7 @@ Requires: perl(Dancer2::Plugin::DBIC)
 Requires: perl(Dancer2::Plugin::Auth::Extensible)
 Requires: perl(Dancer2::Plugin::Auth::Extensible::Provider::DBIC)
 Requires: perl(File::HomeDir)
+Requires: perl(Template::Plugin::Filter::ANSIColor)
 
 %description
 TODO: add some meaningful description

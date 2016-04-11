@@ -77,8 +77,10 @@ sub execute {
   # some useful options (see below for full list)
   my $template_path = Kanku::Config->instance->app_base_path->stringify . '/views/cli/';
   my $config = {
-    INCLUDE_PATH => $template_path,
-    INTERPOLATE  => 1,               # expand "$var" in plain text
+    INCLUDE_PATH  => $template_path,
+    INTERPOLATE   => 1,               # expand "$var" in plain text
+    POST_CHOMP    => 1,
+    PLUGIN_BASE   => 'Template::Plugin::Filter',
   };
 
   # create Template object
@@ -86,11 +88,9 @@ sub execute {
   my $input 	= 'guests.tt';
   my $output 	= '';
   # process input template, substituting variables
-  $template->process($input, $data, \$output)
+  $template->process($input, $data)
                || die $template->error()->as_string();
 
-  print Dumper($data->{guest_list});
-  print $output;
 
 }
 
