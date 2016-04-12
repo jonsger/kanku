@@ -1,0 +1,23 @@
+[% USE Filter::ANSIColor 'color' %]
+[% USE date(format = '%Y/%m/%d %H:%M:%S') %]
+##### Job List:
+[% FOREACH job IN jobs %]
+================================================================================
+[% IF job.state == 'succeed' %]
+[% job.name | color 'green' +%] ([% job.id %])
+[% ELSIF job.state == 'failed' %]
+[% job.name | color 'red' +%] ([% job.id %])
+[% ELSIF job.state == 'running' %]
+[% job.name | color 'blue' +%] ([% job.id %])
+[% ELSE %]
+[% job.name | color 'yellow' +%] ([% job.id %])
+[% END %]
+
+  Duration : [% job.duration +%]
+  State    : [% job.state +%]
+  Job
+      created  : [% date.format(job.creation_time) +%]
+      started  : [% date.format(job.start_time) +%]
+      finished : [% date.format(job.end_time) +%]
+
+[% END %]
