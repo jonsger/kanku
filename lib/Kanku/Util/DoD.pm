@@ -82,6 +82,13 @@ has download_url => (
   }
 );
 
+has api_url => (
+  is      =>'rw',
+  isa     =>'Str',
+  lazy    => 1,
+  default => "https://api.opensuse.org"
+);
+
 has get_image_file_from_url_cb => (
   is      => 'rw',
   isa     => 'CodeRef',
@@ -102,6 +109,7 @@ has get_image_file_from_url => (
       repository  => $self->repository,
       arch        => $self->arch,
       package     => $self->package,
+      apiurl      => $self->api_url,
       use_oscrc   => 1
     );
     my $record = $self->get_image_file_from_url_cb->($self,$build_results->binarylist());
@@ -117,7 +125,7 @@ has [qw/skip_all_checks skip_check_project skip_check_package use_cache/ ] => (i
 
 sub download {
   my $self  = shift;
-  my $ua    = Net::OBS::Client->new(use_oscrc=>1)->user_agent();
+  my $ua    = Net::OBS::Client->new(use_oscrc=>1,apiurl=>$self->api_url)->user_agent();
   my $fn    = $self->get_image_file_from_url()->{filename};
   my $url   = $self->download_url . $fn;
   my $file  = $self->images_dir() . "/" . $fn;
@@ -149,7 +157,8 @@ sub check_before_download {
           name     => $self->project,
           repository  => $self->repository,
           arch        => $self->arch,
-          use_oscrc   => 1
+          apiurl      => $self->api_url,
+          use_oscrc   => 1,
       );
 
       if ( $prj->dirty or $prj->code ne 'published' ) {
@@ -163,6 +172,7 @@ sub check_before_download {
           project     => $self->project,
           repository  => $self->repository,
           arch        => $self->arch,
+          apiurl      => $self->api_url,
           use_oscrc   => 1
       );
 

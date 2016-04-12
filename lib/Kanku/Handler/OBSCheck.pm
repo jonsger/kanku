@@ -36,12 +36,13 @@ has dod_object => (
       project             => $self->project,
       package             => $self->package,
       api_url             => $self->api_url,
-      use_cache           => $self->use_cache
+      use_cache           => $self->use_cache,
     )
   },
 );
 
 has ['api_url','project','package'] => (is=>'rw',isa=>'Str',required=>1);
+has ['base_url']                    => (is=>'rw',isa=>'Str');
 
 has _changed => (is=>'rw',isa=>'Bool',default=>0);
 
@@ -99,6 +100,9 @@ sub execute {
   my $self = shift;
   my $last_run  = $self->last_run_result();
   my $dod       = $self->dod_object();
+
+  if ( $self->base_url ) { $dod->base_url($self->base_url) };
+
   my $binary    = $dod->get_image_file_from_url();
   my $ctx       = $self->job()->context();
 
