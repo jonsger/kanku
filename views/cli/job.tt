@@ -1,0 +1,36 @@
+[% USE Filter::ANSIColor 'color' %]
+[% USE date(format = '%Y/%m/%d %H:%M:%S') %]
+################################## Job Result: #################################
+[% IF state == 'succeed' %]
+# [% name | color 'green' +%] ([% id %])
+[% ELSIF state == 'failed' %]
+# [% name | color 'red' +%] ([% id %])
+[% ELSIF state == 'running' %]
+# [% name | color 'blue' +%] ([% id %])
+[% ELSE %]
+# [% name | color 'yellow' +%] ([% id %])
+[% END %]
+################################################################################
+[% FOREACH task IN subtasks %]
+================================================================================
+[% IF task.state == 'succeed' %]
+[% task.name | color 'green' +%] ([% task.id %])
+[% ELSIF task.state == 'failed' %]
+[% task.name | color 'red' +%] ([% task.id %])
+[% ELSIF task.state == 'running' %]
+[% task.name | color 'blue' +%] ([% task.id %])
+[% ELSE %]
+[% task.name | color 'yellow' +%] ([% task.id %])
+[% END %]
+================================================================================
+RESULT:
+
+[% IF task.result.error_message %]
+[% task.result.error_message %]
+[% ELSE %]
+  prepare  : [% task.result.prepare.message +%]
+  execute  : [% task.result.execute.message +%]
+  finalize : [% task.result.finalize.message +%]
+[% END %]
+[% END %]
+================================================================================
