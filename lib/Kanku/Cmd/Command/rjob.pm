@@ -20,7 +20,7 @@ use Moose;
 use Data::Dumper;
 use Term::ReadKey;
 use Kanku::Remote;
-use YAML qw/LoadFile DumpFile/;
+use YAML qw/LoadFile DumpFile Dump/;
 use POSIX;
 
 
@@ -53,7 +53,6 @@ has id => (
   isa           => 'Str',
   is            => 'rw',
   documentation => 'ID of job on your kanku remote instance.',
-  required      => 1,
 );
 
 has full => (
@@ -61,6 +60,20 @@ has full => (
   isa           => 'Bool',
   is            => 'rw',
   documentation => 'show full output of error messages',
+);
+
+has config => (
+  traits        => [qw(Getopt)],
+  isa           => 'Bool',
+  is            => 'rw',
+  documentation => 'show config of remote job',
+);
+
+has name => (
+  traits        => [qw(Getopt)],
+  isa           => 'Str',
+  is            => 'rw',
+  documentation => 'name of remote job',
 );
 
 sub abstract { "show result of tasks from a specified remote job" }
@@ -85,52 +98,75 @@ sub execute {
     return 1;
   }
 
-  my $kr =  Kanku::Remote->new(
-    apiurl   => $self->apiurl,
-  );
+  if ( $self->config ) {
 
-  my $data = $kr->get_json( path => "job/".$self->id );
+      if ( ! $self->name ) {
+        $logger->error("No parameter --name given");
+        exit 1;
+      }
 
-  if ( ! $self->full ) {
-    foreach my $task (@{$data->{subtasks}}) {
-      if ( $task->{result}->{error_message} ) {
-        my @lines = split(/\n/,$task->{result}->{error_message});
-        my $max_lines = 10;
-        if ( @lines > $max_lines ) {
-          my $ml = $max_lines;
-          my @tmp;
-          while ($max_lines) {
-            my $line = pop(@lines);
-            push(@tmp,$line);
-            $max_lines--;
+      my $kr =  Kanku::Remote->new(
+        apiurl   => $self->apiurl,
+      );
+
+      my $data = $kr->get_json( path => "job/config/".$self->name);
+
+      print $data->{config};      
+
+  } else {
+
+      if ( ! $self->id ) {
+        $logger->error("No parameter --id given");
+        exit 1;
+      }
+
+      my $kr =  Kanku::Remote->new(
+        apiurl   => $self->apiurl,
+      );
+
+      my $data = $kr->get_json( path => "job/".$self->id );
+
+      if ( ! $self->full ) {
+        foreach my $task (@{$data->{subtasks}}) {
+          if ( $task->{result}->{error_message} ) {
+            my @lines = split(/\n/,$task->{result}->{error_message});
+            my $max_lines = 10;
+            if ( @lines > $max_lines ) {
+              my $ml = $max_lines;
+              my @tmp;
+              while ($max_lines) {
+                my $line = pop(@lines);
+                push(@tmp,$line);
+                $max_lines--;
+              }
+              push(@tmp,"","...","TRUNCATING to $ml lines - use --full to see full output");
+              $task->{result}->{error_message} = join("\n",reverse @tmp) . "\n";
+
+            }
           }
-          push(@tmp,"","...","TRUNCATING to $ml lines - use --full to see full output");
-          $task->{result}->{error_message} = join("\n",reverse @tmp) . "\n";
-
         }
       }
-    }
+
+
+      # some useful options (see below for full list)
+      my $template_path = Kanku::Config->instance->app_base_path->stringify . '/views/cli/';
+      my $config = {
+        INCLUDE_PATH  => $template_path,
+        INTERPOLATE   => 1,               # expand "$var" in plain text
+        POST_CHOMP    => 1,
+        PLUGIN_BASE   => 'Template::Plugin',
+      };
+
+      #print Dumper($data);
+      # create Template object
+      my $template  = Template->new($config);
+      my $input 	= 'job.tt';
+      my $output 	= '';
+      # process input template, substituting variables
+      $template->process($input, $data)
+                   || die $template->error()->as_string();
+
   }
-
-
-  # some useful options (see below for full list)
-  my $template_path = Kanku::Config->instance->app_base_path->stringify . '/views/cli/';
-  my $config = {
-    INCLUDE_PATH  => $template_path,
-    INTERPOLATE   => 1,               # expand "$var" in plain text
-    POST_CHOMP    => 1,
-    PLUGIN_BASE   => 'Template::Plugin',
-  };
-
-  #print Dumper($data);
-  # create Template object
-  my $template  = Template->new($config);
-  my $input 	= 'job.tt';
-  my $output 	= '';
-  # process input template, substituting variables
-  $template->process($input, $data)
-               || die $template->error()->as_string();
-
 
 }
 

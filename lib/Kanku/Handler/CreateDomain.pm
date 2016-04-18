@@ -33,6 +33,7 @@ has [qw/
       images_dir            ipaddress
       management_interface  management_network
       forward_port_list     images_dir
+      short_hostname
 /] => (is => 'rw',isa=>'Str');
 
 has [qw/memory vcpu/] => (is => 'rw',isa=>'Int');
@@ -121,6 +122,29 @@ sub execute {
       "mount -a"
     );
   }
+
+  my $hostname;
+
+  if ($self->short_hostname) {
+    $hostname = $self->short_hostname;
+  } else {
+    $hostname = $self->domain_name;
+    $hostname =~ s/\./-DOT-/g;
+  }
+
+  # set hostname unique to avoid problems with duplicate in dhcp
+  $con->cmd(
+    "echo $hostname > /etc/hostname",
+    "hostname $hostname",
+  );
+
+  # make sure that dhcp server gets updated
+  if ( $self->management_interface ) {
+    $con->cmd(
+      "ifdown " . $self->management_interface,
+      "ifup " . $self->management_interface,
+    );
+  };
 
   $con->logout();
 

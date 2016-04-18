@@ -234,6 +234,16 @@ post '/rest/job/trigger/:name.:format' => require_any_role [qw/Admin User/] =>  
   }
 };
 
+get '/rest/job/config/:name.:format' => require_any_role [qw/Admin User/] =>  sub {
+
+  my $cfg = Kanku::Config->instance();
+
+  return {
+    config => $cfg->job_config_plain(param('name'))
+  }
+};
+
+
 get '/rest/gui_config/job.:format' => sub {
   my $cfg = Kanku::Config->instance();
   my @config = ();
