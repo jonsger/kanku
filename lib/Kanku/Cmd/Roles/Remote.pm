@@ -14,17 +14,12 @@
 # Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 #
-package Kanku::Cmd::Command::rjobs;
+package Kanku::Cmd::Roles::Remote;
 
-use Moose;
-use Data::Dumper;
-use Term::ReadKey;
+use Moose::Role;
+use  Log::Log4perl;
+use YAML qw/LoadFile/;
 use Kanku::Remote;
-use YAML qw/LoadFile DumpFile/;
-use POSIX;
-
-
-extends qw(MooseX::App::Cmd::Command);
 
 has apiurl => (
   traits        => [qw(Getopt)],
@@ -32,6 +27,22 @@ has apiurl => (
   is            => 'rw',
   cmd_aliases   => 'a',
   documentation => 'Url to your kanku remote instance',
+);
+
+has user => (
+  traits        => [qw(Getopt)],
+  isa           => 'Str',
+  is            => 'rw',
+  cmd_aliases   => 'u',
+  documentation => 'Login user to to connect to your kanku remote instance',
+);
+
+has password => (
+  traits        => [qw(Getopt)],
+  isa           => 'Str',
+  is            => 'rw',
+  cmd_aliases   => 'p',
+  documentation => 'Login password to connect to your kanku remote instance',
 );
 
 has rc_file => (
@@ -48,14 +59,8 @@ has settings => (
   default       => sub {{}}
 );
 
-sub abstract { "list job history on your remote kanku instance" }
-
-sub description { 
-  "list job history on your remote kanku instance"
-}
-
-sub execute {
-  my $self  = shift;
+sub _connect_restapi {
+  my $self = shift;
   my $logger  = Log::Log4perl->get_logger;
 
   if ( ! $self->apiurl ) { 
@@ -74,52 +79,7 @@ sub execute {
     apiurl   => $self->apiurl,
   );
 
-  my $data = $kr->get_json( path => "jobs/list" );
-
-  # some useful options (see below for full list)
-  my $template_path = Kanku::Config->instance->app_base_path->stringify . '/views/cli/';
-  my $config = {
-    INCLUDE_PATH  => $template_path,
-    INTERPOLATE   => 1,               # expand "$var" in plain text
-    POST_CHOMP    => 1,
-    PLUGIN_BASE   => 'Template::Plugin',
-  };
-
-  foreach my $job ( @{$data->{jobs}} ) {
-    if ( $job->{start_time} ) {
-      my $et = ($job->{end_time}) ? $job->{end_time} : time();
-      $job->{duration} = duration( $et - $job->{start_time});
-    } else {
-      $job->{duration} = "Not started yet";
-    }
-  }
-
-  # create Template object
-  my $template  = Template->new($config);
-  my $input 	= 'jobs.tt';
-  my $output 	= '';
-  # process input template, substituting variables
-  $template->process($input, $data)
-               || die $template->error()->as_string();
-
-
+  return $kr;
 }
-
-sub duration {
-  my $t = shift;
-  # Calculate hours
-  my $h = floor($t/(60*60));
-  # Remove complete hours
-  $t = $t - $h*60*60;
-  # Calculate minutes
-  my $m = floor($t/60);
-  # Calculate seconds
-  my $s = $t - ( $m * 60 );
-
-  return sprintf("%02d:%02d:%02d",$h,$m,$s);
-
-}
-
-__PACKAGE__->meta->make_immutable;
 
 1;

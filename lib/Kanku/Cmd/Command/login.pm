@@ -24,43 +24,7 @@ use YAML qw/LoadFile DumpFile/;
 
 extends qw(MooseX::App::Cmd::Command);
 
-has apiurl => (
-  traits        => [qw(Getopt)],
-  isa           => 'Str',
-  is            => 'rw',
-  cmd_aliases   => 'a',
-  documentation => 'Url to your kanku remote instance',
-);
-
-has user => (
-  traits        => [qw(Getopt)],
-  isa           => 'Str',
-  is            => 'rw',
-  cmd_aliases   => 'u',
-  documentation => 'Login user to to connect to your kanku remote instance',
-);
-
-has password => (
-  traits        => [qw(Getopt)],
-  isa           => 'Str',
-  is            => 'rw',
-  cmd_aliases   => 'p',
-  documentation => 'Login password to connect to your kanku remote instance',
-);
-
-has rc_file => (
-  traits        => [qw(Getopt)],
-  isa           => 'Str',
-  is            => 'rw',
-  documentation => 'Config file to load and store settings',
-  default       => "$ENV{HOME}/.kankurc"
-);
-
-has settings => (
-  isa           => 'HashRef',
-  is            => 'rw',
-  default       => sub {{}}
-);
+with 'Kanku::Cmd::Roles::Remote';
 
 sub abstract { "login to your remote kanku instance" }
 

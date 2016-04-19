@@ -1,0 +1,18 @@
+# Local commands
+
+* login
+* logout
+
+# Remote commands
+
+* rhistory
+** --list     | -l 
+** --details  | -d job_id 
+* rjob
+** --list     | -l
+** --details  | -d job_name (TODO: create view)
+** --trigger  | -t job_name (TODO: not implemented yet)
+** --config   | -c job_name
+* rguest
+** --list     | -l 
+** --details  | -d guest_name

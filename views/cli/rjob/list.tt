@@ -1,0 +1,6 @@
+[% USE Filter::ANSIColor 'color' %]
+Job Name
+================================================================================
+[% FOREACH job IN job_names %]
+- [% job +%]
+[% END %]

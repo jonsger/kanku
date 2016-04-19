@@ -14,7 +14,7 @@
 # Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 #
-package Kanku::Cmd::Command::rguests;
+package Kanku::Cmd::Command::rguest;
 
 use Moose;
 use Data::Dumper;
@@ -24,27 +24,8 @@ use YAML qw/LoadFile DumpFile/;
 
 extends qw(MooseX::App::Cmd::Command);
 
-has apiurl => (
-  traits        => [qw(Getopt)],
-  isa           => 'Str',
-  is            => 'rw',
-  cmd_aliases   => 'a',
-  documentation => 'Url to your kanku remote instance',
-);
-
-has rc_file => (
-  traits        => [qw(Getopt)],
-  isa           => 'Str',
-  is            => 'rw',
-  documentation => 'Config file to load and store settings',
-  default       => "$ENV{HOME}/.kankurc"
-);
-
-has settings => (
-  isa           => 'HashRef',
-  is            => 'rw',
-  default       => sub {{}}
-);
+with 'Kanku::Cmd::Roles::Remote';
+with 'Kanku::Cmd::Roles::RemoteCommand';
 
 sub abstract { "list guests on your remote kanku instance" }
 
@@ -56,21 +37,17 @@ sub execute {
   my $self  = shift;
   my $logger  = Log::Log4perl->get_logger;
 
-  if ( ! $self->apiurl ) { 
-    if ( -f $self->rc_file ) {
-      $self->settings(LoadFile($self->rc_file));
-      $self->apiurl( $self->settings->{apiurl} || '');
-    }
+  if ( $self->list ) {
+    $self->_list();
+  } else {
+    $logger->warn("Please specify a command <--list>");
   }
 
-  while ( ! $self->apiurl ) {
-    $logger->error("No apiurl found - Please login");
-    return 1;
-  }
+}
 
-  my $kr =  Kanku::Remote->new(
-    apiurl   => $self->apiurl,
-  );
+sub _list {
+  my $self  = shift;
+  my $kr =  $self->_connect_restapi();
 
   my $data = $kr->get_json( path => "guest/list" );
 

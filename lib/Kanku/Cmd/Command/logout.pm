@@ -24,27 +24,7 @@ use YAML qw/LoadFile DumpFile/;
 
 extends qw(MooseX::App::Cmd::Command);
 
-has apiurl => (
-  traits        => [qw(Getopt)],
-  isa           => 'Str',
-  is            => 'rw',
-  cmd_aliases   => 'a',
-  documentation => 'Url to your kanku remote instance',
-);
-
-has rc_file => (
-  traits        => [qw(Getopt)],
-  isa           => 'Str',
-  is            => 'rw',
-  documentation => 'Config file to load and store settings',
-  default       => "$ENV{HOME}/.kankurc"
-);
-
-has settings => (
-  isa           => 'HashRef',
-  is            => 'rw',
-  default       => sub {{}}
-);
+with 'Kanku::Cmd::Roles::Remote';
 
 sub abstract { "logout from your remote kanku instance" }
 
@@ -58,30 +38,7 @@ sub execute {
   my $self  = shift;
   my $logger  = Log::Log4perl->get_logger;
 
-  # Please not the priority of options
-  # * command line options
-  # * rc_file options
-  # * manual input
-  
-  if ( -f $self->rc_file ) {
-
-    $self->settings(LoadFile($self->rc_file));
-   
-    if ( ! $self->apiurl ) { 
-      $self->apiurl( $self->settings->{apiurl} || '');
-    }
-  }
-
-  while ( ! $self->apiurl ) {
-    print "Please enter your apiurl: ";
-    my $url = <STDIN>;
-    chomp($url);
-    $self->apiurl($url) if ($url);
-  }
-
-  my $kr =  Kanku::Remote->new(
-    apiurl   => $self->apiurl,
-  );
+  my $kr =  $self->connect_restapi();
 
   if ( $kr->logout() ) {
     delete $self->settings->{$self->apiurl};
