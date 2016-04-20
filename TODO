@@ -1,7 +1,6 @@
 * [DOC] Howto setup kanku more secure
   * https (via apache)
   * regular user priviliges
-  * simple cli guide
 
 * [UI]
   * Make Logs available in web
@@ -18,8 +17,6 @@
   * server
     * trigger       - trigger job on remote instance
     * history       - local history
-    * rhistory      - remote history
-    * rlog          - print log of remote job
     * ci            - commit job definition to remote server
     * co            - checkout job definition from remote server
   
@@ -28,3 +25,6 @@
 * [BACKEND]
   * systemd service file for kanku-scheduler
   * systemd service file for kanku.psig/plackup
+
+* [REFACTOR]
+  * cli commands should have process_template method
