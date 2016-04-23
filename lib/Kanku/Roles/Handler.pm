@@ -42,6 +42,11 @@ has 'job' => (
   isa => 'Object'
 );
 
+has 'schema' => (
+  is  => 'rw',
+  isa => 'Object'
+);
+
 sub prepare {
 
   return {

@@ -144,7 +144,7 @@ sub run_job {
 
       $logger->trace("final args for $mod:\n".Dumper(\%final_args));
 
-      my $obj = $mod->new(%final_args,job=>$job);
+      my $obj = $mod->new(%final_args,job=>$job,schema=>$schema);
 
       if ( $last_result && $last_result->result() ) {
         my $str = $last_result->result();
