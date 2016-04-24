@@ -35,7 +35,6 @@ use feature 'say';
 has project => (
   is      => 'rw',
   isa     => 'Str',
-  default => 'OBS:Server:Unstable'
 );
 
 has repository => (

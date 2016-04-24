@@ -20,7 +20,7 @@ use Moose;
 use Kanku::Util::CurlHttpDownload;
 use feature 'say';
 use Data::Dumper;
-
+use File::Copy;
 extends 'Kanku::Handler::HTTPDownload';
 
 with 'Kanku::Roles::Handler';
@@ -33,7 +33,6 @@ sub prepare {
   my $self = shift;
   my $ctx  = $self->job()->context();
 
-
   $self->offline(1)   if ($ctx->{offline});
   $self->use_cache(1) if ($ctx->{use_cache});
 
@@ -42,9 +41,14 @@ sub prepare {
     message => "Preparation finished successfully"
   };
 }
+
 sub execute {
   my $self = shift;
   my $ctx  = $self->job()->context();
+
+  if ( $self->offline ) {
+    return $self->get_from_history();
+  }
 
   if ( $ctx->{vm_image_url} ) {
     $self->url($ctx->{vm_image_url});
@@ -55,11 +59,6 @@ sub execute {
               );
 
   $curl->output_file($self->_calc_output_file());
-
-  if ( $self->offline ) {
-    $self->use_cache(1);
-    $curl->offline(1);
-  }
 
   if ( $self->use_cache ) {
     $ctx->{use_cache} = 1;
@@ -79,6 +78,8 @@ sub execute {
     [$tmp_file,$ctx->{vm_image_file}]
   );
 
+  $self->update_history($tmp_file);
+
   return {
     state => 'succeed',
     message => "Sucessfully downloaded image to $tmp_file"
@@ -96,10 +97,62 @@ sub _calc_output_file {
     # TODO: this is hardcoded and only quick and dirty
     # should be more flexible
     # needs introduction of a file suffix which is set by OBSCheck
-    $output_file =  $ctx->{vm_image_dir}."/".$ctx->{domain_name}.".qcow2";
+    $output_file =  $ctx->{images_dir}."/".$ctx->{domain_name}.".qcow2";
   } 
   
   return $output_file;
+}
+
+sub update_history {
+  my $self = shift;
+
+  my $rs = $self->schema->resultset('ImageDownloadHistory')->update_or_create(
+    {
+      vm_image_url    => $self->job->context->{vm_image_url},
+      vm_image_file   => shift,
+      download_time   => time()
+    },
+    { key => 'primary' }
+  );
+
+}
+
+sub get_from_history {
+  my $self = shift;
+  my $ctx = $self->job->context;
+
+  my $rs = $self->schema->resultset('ImageDownloadHistory')->find(
+    {
+      vm_image_url    => $self->job->context->{vm_image_url},
+    }
+  );
+
+  die "Could not find result for vm_image_url: $ctx->{vm_image_url}\n" unless $rs;
+
+  $rs->vm_image_file;
+
+  $ctx->{vm_image_file} |= $ctx->{images_dir} . "/" . $ctx->{domain_name} . ".qcow2";
+
+  $self->logger->info("Copying ".$rs->vm_image_file." to ".$ctx->{vm_image_file});
+
+  if ( -f $ctx->{vm_image_file} ) {
+    my $user = Kanku::Config->instance->config()->{qemu}->{user} || 'qemu';
+
+    my ($login,$pass,$uid,$gid) = getpwnam($user)
+        or die "$user not in passwd file";
+
+    $self->logger->debug("Changing ownership of $ctx->{vm_image_file} to uid $uid and gid $gid");
+
+    chown $uid, $gid, $ctx->{vm_image_file};
+  }
+
+  copy($rs->vm_image_file, $ctx->{vm_image_file}) or die "Copy failed: $!";
+  
+  return {
+    state => 'succeed',
+    message => "Sucessfully found vm_image_file '$ctx->{vm_image_file}' in database"
+  };
+
 }
 
 1;
@@ -141,8 +194,6 @@ This handler downloads a file from a given url to the local filesystem and sets 
 =head2 getters
 
   vm_image_url
-
-  vm_image_dir
 
   domain_name
 

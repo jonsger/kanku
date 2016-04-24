@@ -98,6 +98,11 @@ sub prepare {
 
 sub execute {
   my $self = shift;
+
+  if ($self->offline) {
+    return $self->get_from_history();
+  }
+
   my $last_run  = $self->last_run_result();
   my $dod       = $self->dod_object();
 
@@ -152,6 +157,8 @@ sub execute {
 
   $ctx->{vm_image_url} = $binary->{url};
 
+  $self->update_history();
+
   return {
     code    => 0,
     state   => 'succeed',
@@ -159,6 +166,45 @@ sub execute {
   };
 }
 
+sub update_history {
+  my $self = shift;
+
+  my $rs = $self->schema->resultset('ObsCheckHistory')->update_or_create(
+    {
+      api_url     => $self->api_url,
+      project     => $self->project,
+      package     => $self->package,
+      check_time  => time(),
+      vm_image_url=> $self->job->context->{vm_image_url}
+    },{
+      unique_obscheck => [$self->api_url,$self->project,$self->package]
+    }
+  );   
+
+};
+
+sub get_from_history {
+  my $self = shift;
+  my $ctx  = $self->job->context;
+  my $rs = $self->schema->resultset('ObsCheckHistory')->find(
+    {
+      api_url     => $self->api_url,
+      project     => $self->project,
+      package     => $self->package,
+    }
+  );   
+
+  die "Could not found last entry in database" if (! $rs);
+
+  $ctx->{vm_image_url} = $rs->vm_image_url;
+
+  return {
+    code    => 0,
+    state   => 'succeed',
+    message => "Sucessfully fetch vm_image_url '".$ctx->{vm_image_url}."' from database"
+  };
+  
+};
 
 1;
 __END__

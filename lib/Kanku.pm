@@ -16,7 +16,7 @@ use Kanku::Config;
 use Kanku::Schema;
 use Kanku::Util::IPTables;
 
-our $VERSION = '0.0.1';
+our $VERSION = '0.0.2';
 
 prepare_serializer_for_format;
 

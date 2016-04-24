@@ -26,7 +26,7 @@ with 'Kanku::Roles::Logger';
 has [qw/
         api_url         project         package
         vm_image_file   vm_image_url    vm_template_file
-        domain_name     host_interface  vm_image_dir
+        domain_name     host_interface  images_dir
     /
 ] => (is=>'rw',isa=>'Str');
 
@@ -67,7 +67,7 @@ has gui_config => (
 #          label => 'Package'
 #        },
         {
-          param => 'vm_image_dir',
+          param => 'images_dir',
           type  => 'text',
           label => 'VM Image Directory'
         },
@@ -88,8 +88,9 @@ has gui_config => (
 sub execute {
   my $self = shift;
   my $ctx  = $self->job()->context();
-  for my $var (qw/domain_name vm_template_file host_interface vm_image_dir/) {
+  for my $var (qw/domain_name vm_template_file host_interface images_dir/) {
     if ($self->$var()){
+      $self->logger->debug("Setting variable $var in context to ".$self->$var());
       $ctx->{$var} = $self->$var();
     }
   }
@@ -144,8 +145,6 @@ For further explaination of these options please have a look at the correspondin
       domain_name
 
       host_interface
-
-      vm_image_dir
 
       skip_all_checks
 

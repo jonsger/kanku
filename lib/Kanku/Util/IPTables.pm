@@ -152,7 +152,18 @@ sub add_forward_rules_for_domain {
   
   my $portlist      = { tcp =>[],udp=>[] };
   my $host_ip       = $self->host_ipaddress;
+
+  if (! $host_ip ) {
+      $self->logger->warn("No ipaddress found for host_interface '".$self->host_interface."'");
+      return undef
+  }
+
   my $guest_ip      = $self->guest_ipaddress;
+  if (! $guest_ip ) {
+      $self->logger->warn("No ipaddress found for guest domain '".$self->domain_name."'");
+      return undef
+  }
+
 
   foreach my $rule (@$forward_rules) {
     if ($rule =~ /^(tcp|udp):(\d+)$/i ) {
