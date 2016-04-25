@@ -130,6 +130,11 @@ make install DESTDIR=%{buildroot}
 /opt/kanku/views/request_roles.tt
 /opt/kanku/views/settings.tt
 /opt/kanku/views/signup.tt
+%dir /opt/kanku/views/cli/
+/opt/kanku/views/cli/guests.tt
+/opt/kanku/views/cli/job.tt
+/opt/kanku/views/cli/jobs.tt
+/opt/kanku/views/cli/rjob/list.tt
 
 %changelog
 * Thu Mar 10 2016 Frank Schreiner - 0.0.1-0.1
