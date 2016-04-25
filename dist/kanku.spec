@@ -137,6 +137,9 @@ make install DESTDIR=%{buildroot}
 /opt/kanku/views/cli/rjob/list.tt
 
 %changelog
+* Mon Apr 25 2016 Frank Schreiner - 0.0.2-0.1
+- introduced offline mode and dbmigreate command
+
 * Thu Mar 10 2016 Frank Schreiner - 0.0.1-0.1
 - initial version
 
