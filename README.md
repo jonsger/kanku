@@ -110,3 +110,11 @@ dbic-migration populate
 # KNOWN ISSUES
 
 * In openSUSE Leap 42.1 you have to enter the root password on each interaction with libvirt.
+
+# UPGRADE
+
+After an upgrade of your kanku package you should run
+
+```
+kanku dbmigrate
+```
