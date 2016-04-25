@@ -135,6 +135,8 @@ make install DESTDIR=%{buildroot}
 /opt/kanku/views/cli/job.tt
 /opt/kanku/views/cli/jobs.tt
 /opt/kanku/views/cli/rjob/list.tt
+%dir /opt/kanku/views/cli/rjob
+/opt/kanku/views/cli/rjob/*.tt
 
 %changelog
 * Mon Apr 25 2016 Frank Schreiner - 0.0.2-0.1
