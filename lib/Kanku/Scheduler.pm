@@ -23,6 +23,7 @@ use Kanku::Config;
 use Kanku::Job;
 use JSON::XS;
 use Data::Dumper;
+use Try::Tiny;
 has 'schema' => (is=>'rw',isa=>'Object');
 
 sub run {
@@ -32,22 +33,30 @@ sub run {
 
   $logger->warn("Running Kanku::Scheduler");
 
-    while (1) {
+  # Set all running jobs to failed on startup
+  # TODO: In a more distributed setup we need some
+  # other mechanism here
+  #
+  my @running_jobs = $schema->resultset('JobHistory')->search({ state => 'running' });
 
-      $self->create_scheduled_jobs();
+  foreach my $job (@running_jobs) {
+    $job->update({ state=>'failed' });
+  }
 
-      # TODO: JobList must be generate from database
-      #
-      my $job_list = $self->get_todo_list();
+  while (1) {
+    $self->create_scheduled_jobs();
 
+    # TODO: JobList must be generate from database
+    #
+    my $job_list = $self->get_todo_list();
 
-      foreach my $job (@$job_list) {
-        $self->run_job($job);
-      }
-
-      # TODO: we need a better delay algorithm here
-      sleep 5;
+    foreach my $job (@$job_list) {
+      $self->run_job($job);
     }
+
+    # TODO: we need a better delay algorithm here
+    sleep 5;
+  }
 }
 
 sub run_job {
@@ -85,7 +94,7 @@ sub run_job {
   my $previous_task_state=undef;
   my $args = {};
 
-  eval {
+  try {
       my $args_string = $job->db_object->args();
 
       if ($args_string) {
@@ -94,16 +103,17 @@ sub run_job {
 
       die "args not containting a HashRef" if (ref($args) ne "HASH" );
 
-  };
-
-  if ($@) {
-    $logger->error($@);
-    $job->result(encode_json({error_message=>$@}));
+  }
+  catch {
+    my $e = $_;
+    
+    $logger->error($e);
+    $job->result(encode_json({error_message=>$e}));
     $job->state('failed');
     $job->end_time(time());
     $job->update_db();
     return 1
-  }
+  };
 
 
   $logger->trace("  -- args:".Dumper($args));
@@ -125,7 +135,9 @@ sub run_job {
     });
 
     # execute subtask
-    eval {
+    my $state = undef;
+    my $result = undef;
+    try {
 
 
       my $mod = $sub_task->{use_module};
@@ -159,16 +171,6 @@ sub run_job {
 
       $out{finalize} = $obj->finalize();
 
-    };
-
-    my $state = undef;
-    my $result = undef;
-    if ($@) {
-      $logger->error($@);
-      $result = encode_json({error_message=>$@});
-      $state  = 'failed';
-      $job->state($state);
-    } else {
       $result = encode_json(\%out);
       $state  = 'succeed';
       foreach my  $step ( "prepare","execute","finalize") {
@@ -181,6 +183,14 @@ sub run_job {
 
       }
     }
+    catch {
+      my $e = $_;
+
+      $logger->error($e);
+      $result = encode_json({error_message=>$e});
+      $state  = 'failed';
+      $job->state($state);
+    };
 
     $sub_job->update({
       state => $state,
