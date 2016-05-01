@@ -69,7 +69,7 @@ has gui_config => (
         {
           param => 'images_dir',
           type  => 'text',
-          label => 'VM Image Directory'
+          label => 'Image Directory'
         },
         {
           param => 'domain_name',
