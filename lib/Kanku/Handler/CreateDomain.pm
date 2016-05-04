@@ -144,6 +144,8 @@ sub execute {
       "ifdown " . $self->management_interface,
       "ifup " . $self->management_interface,
     );
+  } else {
+    $self->logger->warn("No management_interface set. Your dhcp-server will not get updated hostname");
   };
 
   $con->logout();
