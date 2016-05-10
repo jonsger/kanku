@@ -1,3 +1,9 @@
+# VM commands
+
+* startvm
+* stopvm (like "virsh shutdown <domain>)
+** --force (like "virsh destroy <domain>)
+
 # Local commands
 
 * login
