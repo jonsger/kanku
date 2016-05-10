@@ -93,7 +93,7 @@ sub execute {
 
   my $job_config = $cfg->job_config($self->job_name);
 
-  die "No such job found" if (! $job_config);
+  die "No such job found\n" if (! $job_config);
 
   my $ds = $schema->resultset('JobHistory')->create({
       name          => $self->job_name,
@@ -127,11 +127,12 @@ sub execute {
   if ( $result eq "succeed" ) {
       $logger->info("domain_name : " . ( $job->context->{domain_name} || ''));
       $logger->info("ipaddress   : " . ( $job->context->{ipaddress}   || ''));
+  } elsif ( $result eq "skipped" ) {
+    $logger->warn("Job was skipped");
+    $logger->warn("Please see log to find out why");
   } else {
-
       $logger->error("Failed to create domain: " . ( $job->context->{domain_name} || ''));
       $logger->error("ipaddress   : " . ( $job->context->{ipaddress}   || ''));
-
   };
 
 }

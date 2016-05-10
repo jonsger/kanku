@@ -27,6 +27,7 @@ use Cwd;
 use Net::IP;
 use Kanku::Util::VM::Console;
 use Data::Dumper;
+use XML::XPath;
 
 has [qw/
       image_file    domain_name   vcpu        memory
@@ -198,7 +199,7 @@ sub get_ipaddress {
     return $self->_get_ip_from_dhcp();
 
   }
-  
+
 
 }
 
@@ -211,13 +212,55 @@ sub remove_domain {
     if ($dom->get_state == 1 ) {
       $dom->destroy();
     }
+
+    my @snapshots = $dom->list_snapshots();
+    for my $snap (@snapshots) {
+      $snap->delete;
+    }
+
     $dom->undefine(
       Sys::Virt::Domain::UNDEFINE_MANAGED_SAVE
     );
+
   };
 
   die $@->message . "\n" if $@;
 
+}
+
+sub create_snapshot {
+  my $self    = shift;
+  my $dom     = $self->dom;
+
+  my $disks   = $self->get_disk_list;
+
+
+}
+
+sub get_disk_list {
+  my $self    	= shift;
+  my %opts    	= @_;
+  my $result    = [];
+  my $dom     	= $self->dom;
+  my $xml     	= $opts{xml} || $dom->get_xml_description;
+
+  my $xp        = XML::XPath->new( xml => $xml );
+  my $xp_result = $xp->find("//domain/devices/disk");
+
+  foreach my $node ($xp_result->get_nodelist) {
+	my $disk = {};
+	my $sources = $xp->find('./source',$node);
+	foreach my $source ( $sources->get_nodelist ) {
+	  $disk->{source_file} = $source->getAttribute("file");
+	}
+	my $targets = $xp->find('./target',$node);
+	foreach my $target ( $targets->get_nodelist ) {
+	  $disk->{target_device} = $target->getAttribute("dev");
+	}
+	push(@{$result},$disk);
+  }
+
+  return $result;
 }
 
 sub _get_ip_from_console {

@@ -18,7 +18,7 @@ package Kanku::Handler::OBSCheck;
 
 use Moose;
 use Kanku::Util::DoD;
-use feature 'say';
+use Try::Tiny;
 use Data::Dumper;
 with 'Kanku::Roles::Handler';
 with 'Kanku::Roles::Logger';
@@ -98,7 +98,7 @@ sub prepare {
 
 sub execute {
   my $self = shift;
-
+  
   if ($self->offline) {
     return $self->get_from_history();
   }
@@ -109,6 +109,7 @@ sub execute {
   if ( $self->base_url ) { $dod->base_url($self->base_url) };
 
   my $binary    = $dod->get_image_file_from_url();
+
   my $ctx       = $self->job()->context();
 
   # check if $binary is HashRef to prevent Moose from
@@ -152,7 +153,22 @@ sub execute {
   }
 
   if ( ! $self->use_cache ) {
-    $dod->check_before_download();
+    try {
+      $dod->check_before_download();
+    }
+    catch {
+      my $e = $_;
+      if (! ref($e) && $e =~ /^(Project|Package) not ready yet$/ ) {
+        $self->logger->warn($e);
+        $self->job->skipped(1);
+        return {
+          code    => 0,
+          state   => 'skipped',
+          message => $e
+        };
+      }
+      die $e;
+    };
   }
 
   $ctx->{vm_image_url} = $binary->{url};

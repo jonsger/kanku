@@ -161,7 +161,7 @@ sub check_before_download {
       );
 
       if ( $prj->dirty or $prj->code ne 'published' ) {
-        die "Project not ready yet";
+        die "Project not ready yet\n";
       }
   }
 
@@ -176,7 +176,7 @@ sub check_before_download {
       );
 
       if ( $pkg->code ne 'succeeded' ) {
-        die "Package not ready yet";
+        die "Package not ready yet\n";
       }
   }
 
