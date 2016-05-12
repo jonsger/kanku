@@ -184,6 +184,24 @@ function get_job_history () {
   );
 }
 
+function change_page(page_counter) {
+  var new_val = parseInt($("#page").val()) + page_counter;
+  $("#page").val(new_val);
+}
+function next_page() {
+  change_page(1);
+  get_job_history();
+  if ( parseInt($("#page").val()) > 1 ) {
+    $("#previous_page").prop("disabled",false);
+  }
+}
+function previous_page() {
+  change_page(-1);
+  get_job_history();
+  if ( parseInt($("#page").val()) <= 1 ) {
+    $("#previous_page").prop("disabled",true);
+  }
+}
 $( document ).ready(function() {
   get_job_history();
 
@@ -191,6 +209,21 @@ $( document ).ready(function() {
     console.log("state value:" +  this.value );
     console.log("state name:" +  cb );
     $( this ).change(get_job_history);
+  });
+
+  $("#next_page").click(function () {
+    next_page();
+  });
+  $("#previous_page").click(function () {
+    previous_page();
+  });
+
+  if ( parseInt($("#page").val()) <= 1 ) {
+    $("#previous_page").prop("disabled",true);
+  }
+
+  $("#limit").change(function () {
+    get_job_history();
   });
 
 });

@@ -87,7 +87,7 @@ has ua => (
     return LWP::UserAgent->new(
         cookie_jar => $_[0]->cookie_jar,
         ssl_opts => {
-          verify_hostname => 0, 
+          verify_hostname => 0,
           SSL_verify_mode => 0x00
         }
     );
@@ -173,14 +173,20 @@ sub get_json {
 
   $self->ua->cookie_jar->load();
 
-  my $url = $self->apiurl.'/rest/'. $opts{path} .".json";
+  my @param_arr;
 
+  while ( my ($p,$v) = each(%{$opts{params}}) ) {
+    push(@param_arr,"$p=$v" );
+  }
+
+  my $param_string = join("&",@param_arr);
+
+  my $url = $self->apiurl.'/rest/'. $opts{path} .".json" . ( ($param_string) ? "?$param_string" : '' ) ;
 
   my $request = HTTP::Request->new(GET => $url);
 
   $self->cookie_jar->add_cookie_header( $request );
 
-  
   $self->logger->debug("Sending reques to url: $url");
   $self->logger->debug("\n".$request->as_string);
 

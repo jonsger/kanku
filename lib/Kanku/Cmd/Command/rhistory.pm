@@ -38,6 +38,22 @@ has full => (
   documentation => 'show full output of error messages',
 );
 
+has limit => (
+  traits        => [qw(Getopt)],
+  isa           => 'Int',
+  is            => 'rw',
+  documentation => 'limit output to X rows',
+);
+
+has page => (
+  traits        => [qw(Getopt)],
+  isa           => 'Int',
+  is            => 'rw',
+  documentation => 'show page X of job history',
+);
+
+
+
 
 sub abstract { "list job history on your remote kanku instance" }
 
@@ -60,7 +76,12 @@ sub _list {
 
   my $kr =  $self->_connect_restapi();
 
-  my $data = $kr->get_json( path => "jobs/list" );
+  my %params = (
+    limit => $self->limit || 10,
+    page  => $self->page || 1,
+  );
+
+  my $data = $kr->get_json( path => "jobs/list" , params => \%params );
 
   # some useful options (see below for full list)
   my $template_path = Kanku::Config->instance->app_base_path->stringify . '/views/cli/';

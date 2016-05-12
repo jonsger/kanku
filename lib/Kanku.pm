@@ -34,7 +34,7 @@ sub get_defaults_for_views {
   return {
     roles           => $roles,
     logged_in_user  => $logged_in_user ,
-    messagebar      => $messagebar
+    messagebar      => $messagebar,
   };
 };
 
@@ -49,7 +49,7 @@ get '/' => sub {
 };
 
 get '/job_history' => sub {
-    template 'job_history' , { %{ get_defaults_for_views() } };
+    template 'job_history' , { %{ get_defaults_for_views() }, page => ( param('page') || 1 ) };
 };
 
 get '/job' => require_any_role [qw/Admin User/] => sub {
@@ -171,6 +171,11 @@ get '/signup' => sub {
 any '/rest/jobs/list.:format' => sub {
   my $limit = param('limit') || 10;
 
+  my %opts = (
+    rows => $limit,
+    page => param('page') || 1,
+  );
+
   my $rs = schema('default')->resultset('JobHistory')->search(
                   {
                     state => param('state') || [qw/succeed running failed/],
@@ -179,7 +184,7 @@ any '/rest/jobs/list.:format' => sub {
                     order_by =>{
                       -desc  =>'id'
                     },
-                    rows=>$limit
+                    %opts
                   }
               );
 

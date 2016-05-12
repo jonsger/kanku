@@ -1,4 +1,5 @@
 <h1>Job History</h1>
+<div id=history_settings>
 <form>
 <div class=row>
   <div class="col col-md-2">
@@ -38,12 +39,37 @@
         </h4>
   </div>
 </div>
+<input type=hidden name=page id=page value=[% page %]>
 
+<div id=top_pager class=row>
+  <div class="col col-md-10">
+  </div>
+  <div class="col col-md-2">
+  Show rows:
+  <select id=limit name=limit>
+    <option>5</option>
+    <option selected>10</option>
+    <option>20</option>
+    <option>50</option>
+    <option>100</option>
+  </select>
+  </div>
+</div>
 </form>
-
+</div>
 
 <div id=job_history>
 
+</div>
+<div id=bottom_pager class=row>
+<div class="col-md-4"></div>
+<div class="col-md-2">
+  <button id=previous_page type="button" class="btn btn-default">&lt;&lt;&lt;</button>
+</div>
+<div class="col-md-2">
+  <button id=next_page type="button" class="btn btn-default">&gt;&gt;&gt;</button>
+</div>
+<div class="col-md-4"></div>
 </div>
 
 <script id="job_history_header" type="x-tmpl-mustache">
