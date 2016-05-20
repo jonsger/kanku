@@ -28,6 +28,7 @@ use Net::IP;
 use Kanku::Util::VM::Console;
 use Data::Dumper;
 use XML::XPath;
+use Try::Tiny;
 
 has [qw/
       image_file    domain_name   vcpu        memory
@@ -207,9 +208,11 @@ sub remove_domain {
   my $self    = shift;
   my $dom     = $self->dom;
 
-  eval {
+  try {
     # Shutdown domain immediately (poweroff)
-    if ($dom->get_state == 1 ) {
+    my ($dom_state, $reason) = $dom->get_state;
+    if ($dom_state == Sys::Virt::Domain::STATE_RUNNING ) {
+      $self->logger->debug("Trying to destroy domain");
       $dom->destroy();
     }
 
@@ -222,10 +225,9 @@ sub remove_domain {
       Sys::Virt::Domain::UNDEFINE_MANAGED_SAVE
     );
 
+  } catch {
+    die $_->message ."\n";
   };
-
-  die $@->message . "\n" if $@;
-
 }
 
 sub create_snapshot {

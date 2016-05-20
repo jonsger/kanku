@@ -20,6 +20,7 @@ use Moose;
 use Kanku::Util::VM;
 use Kanku::Util::IPTables;
 use Sys::Virt;
+use Try::Tiny;
 with 'Kanku::Roles::Handler';
 
 has [qw/uri domain_name/] => (is => 'rw',isa=>'Str');
@@ -34,11 +35,11 @@ sub execute {
 
   my $vm    = Kanku::Util::VM->new( domain_name => $self->domain_name );
 
-  eval {
+  try {
     $vm->remove_domain();
+  } catch {
+    $self->logger->warn("Error while removing domain: ".$self->domain_name."\n$_");
   };
-
-  $self->logger->warn("Error while removing domain: ".$self->domain_name) if $@;
 
   my $ipt = Kanku::Util::IPTables->new(domain_name=>$self->domain_name);
 
