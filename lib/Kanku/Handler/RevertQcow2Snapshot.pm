@@ -1,0 +1,120 @@
+# Copyright (c) 2016 SUSE LLC
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program (see the file COPYING); if not, write to the
+# Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
+#
+package Kanku::Handler::RevertQcow2Snapshot;
+
+use Moose;
+use Kanku::Config;
+use Sys::Guestfs;
+#use Kanku::Util::VM;
+#use Kanku::Util::IPTables;
+
+#use IO::Uncompress::AnyUncompress qw(anyuncompress $AnyUncompressError) ;
+#use File::Copy qw/copy/;
+
+#use Data::Dumper;
+with 'Kanku::Roles::Handler';
+
+has [qw/disk_image_file/] => (is => 'rw',isa=>'Str');
+
+has [qw/
+      snapshot_id
+/] => (is => 'rw',isa=>'Int');
+
+#has gui_config => (
+#  is => 'ro',
+#  isa => 'ArrayRef',
+#  lazy => 1,
+#  default => sub {
+#      [
+#        {
+#          param => 'forward_port_list',
+#          type  => 'text',
+#          label => 'List of Forwarded Ports'
+#        },
+#      ];
+#  }
+#);
+#
+#sub prepare {
+#
+#  return {
+#    code    => 0,
+#    message => "Nothing todo"
+#  };
+#}
+
+sub execute {
+  my $self = shift;
+
+  my $s_id = $self->snapshot_id || 1;
+
+  my $cmd = "qemu-img snapshot -a $s_id " . $self->disk_image_file;
+  my @out = `$cmd 2>&1`;
+
+  if ( $? ) {
+    my $err = join ("\n",@out);
+    die "$err\n";
+  }
+
+  return {
+    code    => 0,
+    message => "Reverted disk " . $self->disk_image_file ." successfully to snapshot: $s_id"
+  };
+
+}
+
+1;
+
+__END__
+
+=head1 NAME
+
+Kanku::Handler::CreateDisk
+
+=head1 SYNOPSIS
+
+Here is an example how to configure the module in your jobs file or KankuFile
+
+  -
+    use_module: Kanku::Handler::CreateDisk
+    options:
+      disk_image_file: domain-additional-disk.qcow2
+      format: qcow2
+      ....
+
+=head1 DESCRIPTION
+
+This handler creates a new disk from the given parameters.
+
+
+=head1 OPTIONS
+
+
+    disk_image_file       : filename of the disk to create
+
+    format                : formate of the disk to create (qcow2, raw, ...)
+
+=head1 CONTEXT
+
+=head2 getters
+
+=head2 setters
+
+=head1 DEFAULTS
+
+=cut
+
