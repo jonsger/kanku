@@ -266,20 +266,18 @@ get '/rest/gui_config/job.:format' => sub {
         require "$mod2require";
         my $tmp = [];
         my $can = $mod->can("gui_config");
-        if ( $can ) {
-          $tmp = $can->();
+        $tmp = $can->();
 
-          foreach my $opt (@$tmp) {
-            $defaults->{$opt->{param}} = $sub_tasks->{options}->{$opt->{param}};
-          }
-          push(@{ $job_config->{sub_tasks} },
-              {
-                use_module => $mod,
-                gui_config => $tmp,
-                defaults   => $defaults
-              }
-          );
+        foreach my $opt (@$tmp) {
+          $defaults->{$opt->{param}} = $sub_tasks->{options}->{$opt->{param}};
         }
+        push(@{ $job_config->{sub_tasks} },
+            {
+              use_module => $mod,
+              gui_config => $tmp,
+              defaults   => $defaults
+            }
+        );
     }
   }
 

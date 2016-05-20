@@ -93,6 +93,7 @@ sub run_job {
 
   my $previous_task_state=undef;
   my $args = {};
+  my $parse_args_failed=0;
 
   try {
       my $args_string = $job->db_object->args();
@@ -101,8 +102,8 @@ sub run_job {
         $args = decode_json($args_string);
       }
 
-      die "args not containting a HashRef" if (ref($args) ne "HASH" );
-
+      die "args not containting a ArrayRef" if (ref($args) ne "ARRAY" );
+      
   }
   catch {
     my $e = $_;
@@ -112,11 +113,14 @@ sub run_job {
     $job->state('failed');
     $job->end_time(time());
     $job->update_db();
-    return 1
+    $parse_args_failed=1;
   };
 
+  return 1 if $parse_args_failed;
 
   $logger->trace("  -- args:".Dumper($args));
+
+  my $task_counter = 0;
 
   foreach my $sub_task (@{$job_definition}) {
 
@@ -142,11 +146,10 @@ sub run_job {
 
       my $mod = $sub_task->{use_module};
       die "Now use_module definition in config (job: $job)" if ( ! $mod );
-      if ($args->{$mod} ) {
-        die "args for $mod not a HashRef" if ( ref($args->{$mod}) ne 'HASH' )
-      }
+      my $mod_args = $args->[$task_counter] || {};
 
-      my $mod_args = $args->{$mod} || {};
+      die "args for $mod not a HashRef" if ( ref($mod_args) ne 'HASH' );
+
       my $mod2require = $mod;
       $mod2require =~ s|::|/|g;
       $mod2require = $mod2require . ".pm";
@@ -182,6 +185,8 @@ sub run_job {
         }
 
       }
+
+      $task_counter++;
     }
     catch {
       my $e = $_;

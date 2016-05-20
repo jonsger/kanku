@@ -19,6 +19,9 @@
   </div>
   <div class="panel-body" style='display:none' id="jp_body_{{ id }}">
       <form role=form id="job_args_{{ name }}">
+{{#task_list}}
+{{{.}}}
+{{/task_list}}
       </form>
   </div>
   <div class="panel-footer">
@@ -34,8 +37,13 @@
 </script>
 
 <script id="template_module_header" type="x-tmpl-mustache">
+<div class=job_task_list id=job_{{ name }}>
   <h4><span class="label label-default" style="display:block;">{{ use_module }}</span></h4>
   <input type=hidden name="use_module" value="{{ use_module }}">
+{{#task_args}}
+{{{.}}}
+{{/task_args}}
+</div>
 </script>
 
 <script id="template_formgroup_text" type="x-tmpl-mustache">

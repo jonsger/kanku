@@ -47,6 +47,14 @@ has 'schema' => (
   isa => 'Object'
 );
 
+has gui_config => (
+  is => 'ro',
+  isa => 'ArrayRef',
+  lazy => 1,
+  default => sub { [] }
+);
+
+
 sub prepare {
 
   return {

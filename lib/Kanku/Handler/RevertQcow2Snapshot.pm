@@ -34,20 +34,25 @@ has [qw/
       snapshot_id
 /] => (is => 'rw',isa=>'Int');
 
-#has gui_config => (
-#  is => 'ro',
-#  isa => 'ArrayRef',
-#  lazy => 1,
-#  default => sub {
-#      [
-#        {
-#          param => 'forward_port_list',
-#          type  => 'text',
-#          label => 'List of Forwarded Ports'
-#        },
-#      ];
-#  }
-#);
+has gui_config => (
+  is => 'ro',
+  isa => 'ArrayRef',
+  lazy => 1,
+  default => sub {
+      [
+        {
+          param => 'disk_image_file',
+          type  => 'text',
+          label => 'Path to file to revert'
+        },
+        {
+          param => 'snapshot_id',
+          type  => 'text',
+          label => 'Id of snapshot to apply'
+        },
+      ];
+  }
+);
 #
 #sub prepare {
 #

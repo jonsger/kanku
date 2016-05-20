@@ -17,7 +17,7 @@
 
 
 Name:           kanku
-Version:        0.0.2
+Version:        0.0.3
 Release:        0.1
 License:        GPL-3.0
 Summary:        Development and continuous integration made easy
@@ -139,6 +139,10 @@ make install DESTDIR=%{buildroot}
 /opt/kanku/views/cli/rjob/*.tt
 
 %changelog
+* Fri May 20 2016 Frank Schreiner - 0.0.3-0.1
+- new cli remote commands
+- refactor of parameter handling in UI and scheduler
+
 * Mon Apr 25 2016 Frank Schreiner - 0.0.2-0.1
 - introduced offline mode and dbmigreate command
 

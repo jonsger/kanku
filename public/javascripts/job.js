@@ -43,10 +43,11 @@ function schedule_job(job_name) {
 
   save_settings(job_name);
 
-  var data = {};
+  var data = [];
   var cur_class_id = undefined;
 
   var input_elements = $("#job_args_" + job_name ).find("input");
+  var sub_task_counter = -1;
 
   $.each(
     input_elements,
@@ -55,13 +56,14 @@ function schedule_job(job_name) {
 
       if ( this.name == 'use_module' ) {
         cur_class_id = this.value;
-        data[cur_class_id]={};
+        sub_task_counter = sub_task_counter + 1
+        data[sub_task_counter]={};
       } else {
-        if ( cur_class_id ) {
+        if ( sub_task_counter > -1 ) {
           if ( this.type == "checkbox" ) {
-            data[cur_class_id][this.name] = this.checked;
+            data[sub_task_counter][this.name] = this.checked;
           } else {
-            data[cur_class_id][this.name] = this.value;
+            data[sub_task_counter][this.name] = this.value;
           }
         }
       }
@@ -164,38 +166,20 @@ $( document ).ready(
         }
 
 
-        
-
         $.each(
           gui_config.config,
           function (job_id) {
             //console.log("job_name " + this.job_name);
 
             var job_name = this.job_name;
-
-            var rendered = Mustache.render(
-                        header_template,
-                        {
-                          name          : this.job_name,
-                          id            : this.job_name
-                        }
-            );
-
-            $("#job_list").append(rendered);
+            var task_list = [];
 
             $.each(
               this.sub_tasks,
               function (subtask_id) {
                   var defaults = this.defaults;
-                  $("#job_args_"+job_name).append(
-                    Mustache.render(
-                      template_module_header,
-                      {
-                        use_module: this.use_module
-                      }
-                    )
-                  );
 
+                  var task_list_task_args = [];
                   $.each(
                     this.gui_config,
                     function (param_id) {
@@ -203,7 +187,7 @@ $( document ).ready(
                       var final_jobid = this.param + "_" +job_id + "_" + subtask_id + "_" + param_id;
                       //console.log("              value: "+ obj[final_jobid]);
                       var value = obj[final_jobid] || defaults[this.param];
-                      $("#job_args_"+job_name).append(
+                      task_list_task_args.push(
                         Mustache.render(
                                   tmpl,
                                   {
@@ -218,11 +202,34 @@ $( document ).ready(
                       );
                     }
                   );
+                  //$("#job_args_"+job_name).append(
+                  task_list.push(
+                    Mustache.render(
+                      template_module_header,
+                      {
+                        name      : job_name,
+                        use_module: this.use_module,
+                        task_args: task_list_task_args
+                      }
+                    )
+                  );
 
               }
             );
+            var rendered = Mustache.render(
+                        header_template,
+                        {
+                          name          : this.job_name,
+                          id            : this.job_name,
+                          task_list     : task_list
+                        }
+            );
+
+            $("#job_list").append(rendered);
           }
         );
+
+
 
         var j_string = Cookies.get("kanku_job");
         var obj;
