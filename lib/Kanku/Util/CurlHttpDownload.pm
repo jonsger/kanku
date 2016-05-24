@@ -62,6 +62,12 @@ has [ qw/use_cache use_temp_file offline/ ] => (
   default   => 0
 );
 
+has cache_dir => (
+  is        =>'rw',
+  isa       =>'Str',
+  lazy      => 1
+  default   => sub { Path::Class::Dir->new($ENV{HOME},".kanku","cache") }
+}
 
 sub download {
   my $self  = shift;
@@ -75,7 +81,7 @@ sub download {
       $self->logger("ATTENTION: You have set output_dir _and_ output_file - output_file will be preferred");
     }
     if ( $self->use_cache ) {
-      $file = Path::Class::File->new($ENV{HOME},".kanku","cache",$self->output_file);
+      $file = Path::Class::File->new($self->cache_dir,$self->output_file);
     } else {
       $file = Path::Class::File->new($self->output_file);
     }
