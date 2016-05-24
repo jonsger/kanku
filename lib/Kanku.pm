@@ -49,15 +49,15 @@ get '/' => sub {
 };
 
 get '/job_history' => sub {
-    template 'job_history' , { %{ get_defaults_for_views() }, page => ( param('page') || 1 ) };
+    template 'job_history' , { %{ get_defaults_for_views() }, page => ( param('page') || 1 ), kanku => { module => 'History'} };
 };
 
 get '/job' => require_any_role [qw/Admin User/] => sub {
-    template 'job' , { %{ get_defaults_for_views() } };
+    template 'job' , { %{ get_defaults_for_views() } , kanku => { module => 'Job' }  };
 };
 
 get '/guest' => sub {
-    template 'guest' , { %{ get_defaults_for_views() } };
+    template 'guest' , { %{ get_defaults_for_views() }, kanku => { module => 'Guest' } };
 };
 
 get '/login/denied' => sub {
@@ -65,20 +65,20 @@ get '/login/denied' => sub {
 };
 
 get '/admin' => requires_role Admin =>  sub {
-    template 'admin' , { %{ get_defaults_for_views() } };
+    template 'admin' , { %{ get_defaults_for_views() }, kanku => { module => 'Administration' } };
 };
 
 get '/settings' => requires_role User =>  sub {
-    template 'settings' , { %{ get_defaults_for_views() } };
+    template 'settings' , { %{ get_defaults_for_views() }, kanku => { module => 'Settings' } };
 };
 
 get '/request_roles' => require_login sub {
-    template 'request_roles' , { %{ get_defaults_for_views() } };
+    template 'request_roles' , { %{ get_defaults_for_views() }, kanku => { module => 'Request Roles' } };
 };
 ### LOGIN / SIGNIN
 
 get '/login' => sub {
-    template 'login' , { return_url => params->{return_url} };
+    template 'login' , { return_url => params->{return_url} , kanku => { module => 'Login' } };
 };
 
 post '/login' => sub {
