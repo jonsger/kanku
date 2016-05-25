@@ -10,6 +10,7 @@ install:
 	install -m 755 -d $(DESTDIR)$(PREFIX)
 	install -m 755 -d $(DESTDIR)$(PREFIX)/etc
 	install -m 755 -d $(DESTDIR)$(PREFIX)/var/log
+	install -m 755 -d $(DESTDIR)$(PREFIX)/var/cache
 	install -m 755 -d $(DESTDIR)$(PREFIX)/share
 	install -m 755 -d $(DESTDIR)/etc/sudoers.d/
 	install -m 755 -d $(DESTDIR)/etc/apache2/conf.d

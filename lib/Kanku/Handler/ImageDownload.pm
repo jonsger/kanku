@@ -18,6 +18,7 @@ package Kanku::Handler::ImageDownload;
 
 use Moose;
 use Kanku::Util::CurlHttpDownload;
+use Path::Class::Dir;
 use feature 'say';
 use Data::Dumper;
 use File::Copy;
@@ -28,6 +29,7 @@ with 'Kanku::Roles::Logger';
 
 has ['vm_image_file','url'] => (is=>'rw',isa=>'Str');
 has ['use_cache','offline'] => (is=>'rw',isa=>'Bool',default=>0);
+has ['cache_dir'] => (is=>'rw',isa=>'Str');
 
 sub prepare {
   my $self = shift;
@@ -35,6 +37,7 @@ sub prepare {
 
   $self->offline(1)   if ($ctx->{offline});
   $self->use_cache(1) if ($ctx->{use_cache});
+  $self->cache_dir($ctx->{cache_dir}) if ($ctx->{cache_dir});
 
   return {
     state => 'succeed',
@@ -63,6 +66,9 @@ sub execute {
   if ( $self->use_cache ) {
     $ctx->{use_cache} = 1;
     $curl->use_cache(1);
+    if ( $self->cache_dir ) {
+      $curl->cache_dir(Path::Class::Dir->new($self->cache_dir));
+    }
   } else {
     $curl->use_temp_file(1);
   }

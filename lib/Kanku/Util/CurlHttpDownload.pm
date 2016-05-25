@@ -24,6 +24,7 @@ use LWP::UserAgent;
 use File::Temp qw/ :mktemp /;
 use File::Copy;
 use Path::Class::File;
+use Path::Class::Dir;
 use Kanku::Config;
 
 with 'Kanku::Roles::Logger';
@@ -64,10 +65,10 @@ has [ qw/use_cache use_temp_file offline/ ] => (
 
 has cache_dir => (
   is        =>'rw',
-  isa       =>'Str',
-  lazy      => 1
+  isa       =>'Object',
+  lazy      => 1,
   default   => sub { Path::Class::Dir->new($ENV{HOME},".kanku","cache") }
-}
+);
 
 sub download {
   my $self  = shift;

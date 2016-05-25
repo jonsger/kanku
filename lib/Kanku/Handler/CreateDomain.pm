@@ -23,7 +23,7 @@ use Kanku::Util::IPTables;
 
 use IO::Uncompress::AnyUncompress qw(anyuncompress $AnyUncompressError) ;
 use File::Copy qw/copy/;
-
+use Path::Class::File;
 use Data::Dumper;
 with 'Kanku::Roles::Handler';
 
@@ -41,6 +41,9 @@ has [qw/memory vcpu/] => (is => 'rw',isa=>'Int');
 has [qw/use_9p/] => (is => 'rw',isa=>'Bool');
 
 has "+images_dir" => (default=>"/var/lib/libvirt/images");
+
+has ['cache_dir'] => (is=>'rw',isa=>'Str');
+
 
 has gui_config => (
   is => 'ro',
@@ -64,6 +67,7 @@ sub prepare {
   $self->domain_name($ctx->{domain_name}) if ( ! $self->domain_name && $ctx->{domain_name});
   $self->login_user($ctx->{login_user})   if ( ! $self->login_user  && $ctx->{login_user});
   $self->login_pass($ctx->{login_pass})   if ( ! $self->login_pass  && $ctx->{login_pass});
+  $self->cache_dir($ctx->{cache_dir}) if ($ctx->{cache_dir});
 
   return {
     code    => 0,
@@ -174,37 +178,36 @@ sub _create_image_file_from_cache {
   my $self = shift;
   my $ctx  = $self->job()->context();
 
-    my $final_file;
-    if ( $ctx->{vm_image_file} =~ /\.(qcow2|raw|img)\.(gz|bz2|xz)$/ ) {
-      my $in = $ENV{HOME}."/.kanku/cache/". $ctx->{vm_image_file};
-      $final_file = $self->images_dir . "/" . $self->domain_name .".$1";
+  my $final_file;
+  my $in = Path::Class::File->new($self->cache_dir,$ctx->{vm_image_file});
+  if ( $ctx->{vm_image_file} =~ /\.(qcow2|raw|img)\.(gz|bz2|xz)$/ ) {
+    $final_file = $self->images_dir . "/" . $self->domain_name .".$1";
 
-      $self->logger->info("Uncompressing $in");
-      $self->logger->info("  to $final_file");
+    $self->logger->info("Uncompressing $in");
+    $self->logger->info("  to $final_file");
 
-      unlink $final_file;
+    unlink $final_file;
 
-      anyuncompress $in => $final_file
-        or die "anyuncompress failed: $AnyUncompressError\n";;
-
-
-    } elsif( $ctx->{vm_image_file} =~ /\.(qcow2|raw|img)$/ ) {
-      my $in = $ENV{HOME}."/.kanku/cache/". $ctx->{vm_image_file};
-      $final_file = $self->images_dir . "/" . $self->domain_name .".$1";
-
-      $self->logger->info("Copying $in");
-      $self->logger->info("  to $final_file");
+    anyuncompress $in => $final_file
+      or die "anyuncompress failed: $AnyUncompressError\n";;
 
 
-      unlink $final_file;
+  } elsif( $ctx->{vm_image_file} =~ /\.(qcow2|raw|img)$/ ) {
+    $final_file = $self->images_dir . "/" . $self->domain_name .".$1";
 
-      copy($in,$final_file) or die "Copy failed: $!\n";
+    $self->logger->info("Copying $in");
+    $self->logger->info("  to $final_file");
 
-    } else {
 
-      die "Unknown extension for disk file ".$ctx->{vm_image_file}."\n";
+    unlink $final_file;
 
-    }
+    copy($in,$final_file) or die "Copy failed: $!\n";
+
+  } else {
+
+    die "Unknown extension for disk file ".$ctx->{vm_image_file}."\n";
+
+  }
 
   return $final_file;
 }

@@ -26,7 +26,8 @@ with 'Kanku::Roles::Logger';
 has [qw/
         api_url         project         package
         vm_image_file   vm_image_url    vm_template_file
-        domain_name     host_interface  images_dir
+        domain_name     host_interface
+        cache_dir       images_dir
     /
 ] => (is=>'rw',isa=>'Str');
 
@@ -88,7 +89,7 @@ has gui_config => (
 sub execute {
   my $self = shift;
   my $ctx  = $self->job()->context();
-  for my $var (qw/domain_name vm_template_file host_interface images_dir/) {
+  for my $var (qw/domain_name vm_template_file host_interface images_dir cache_dir/) {
     if ($self->$var()){
       $self->logger->debug("Setting variable $var in context to ".$self->$var());
       $ctx->{$var} = $self->$var();
