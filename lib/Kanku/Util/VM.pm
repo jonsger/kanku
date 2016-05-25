@@ -208,6 +208,8 @@ sub remove_domain {
   my $self    = shift;
   my $dom     = $self->dom;
 
+  return 0 if ( ! $dom );
+
   try {
     # Shutdown domain immediately (poweroff)
     my ($dom_state, $reason) = $dom->get_state;
@@ -228,6 +230,8 @@ sub remove_domain {
   } catch {
     die $_->message ."\n";
   };
+
+  return 0;
 }
 
 sub create_snapshot {
