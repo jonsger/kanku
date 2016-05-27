@@ -40,8 +40,15 @@ sub run {
   my @running_jobs = $schema->resultset('JobHistory')->search({ state => 'running' });
 
   foreach my $job (@running_jobs) {
-    $job->update({ state=>'failed' });
+    $job->update({ state=>'failed', end_time => time() });
   }
+
+  my @no_end_time_jobs = $schema->resultset('JobHistory')->search({ end_time => 0 });
+
+  foreach my $job (@no_end_time_jobs) {
+    $job->update({ state=>'failed', end_time => time() });
+  }
+
 
   while (1) {
     $self->create_scheduled_jobs();
@@ -92,7 +99,7 @@ sub run_job {
   $job->update_db();
 
   my $previous_task_state=undef;
-  my $args = {};
+  my $args = [];
   my $parse_args_failed=0;
 
   try {
