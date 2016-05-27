@@ -19,9 +19,10 @@ package Kanku::Handler::GIT;
 use Moose;
 
 use Data::Dumper;
-
+use Path::Class qw/file dir/;
 use namespace::autoclean;
-
+use IPC::Run qw/run/;
+use URI;
 
 with 'Kanku::Roles::Handler';
 with 'Kanku::Roles::Logger';
@@ -31,9 +32,10 @@ has [qw/  ipaddress
           publickey_path
           privatekey_path passphrase  username
           giturl          revision    destination
+          remote_url      cache_dir
     /] => (is=>'rw',isa=>'Str');
 
-has 'submodules' => (is=>'rw',isa=>'Bool');
+has [ 'submodules' , 'mirror' ] => (is=>'rw',isa=>'Bool');
 
 has gui_config => (
   is => 'ro',
@@ -56,6 +58,16 @@ has gui_config => (
           type  => 'text',
           label => 'Revision'
         },
+        {
+          param => 'mirror',
+          type  => 'checkbox',
+          label => 'Mirror mode'
+        },
+        {
+          param => 'remote_url',
+          type  => 'text',
+          label => 'Remote Url (only for mirror mode)'
+        },
       ];
   }
 );
@@ -63,15 +75,51 @@ has gui_config => (
 
 sub prepare {
   my $self = shift;
+  my $ctx  = $self->job->context;
 
   die "No giturl given"  if (! $self->giturl );
 
+  if ( $self->mirror ) {
+    $self->_prepare_mirror();
+  }
+
+  # inherited by Kanku::Roles::SSH
   $self->get_defaults();
 
   return {
     code => 0,
     message => "Preparation successful"
   };
+}
+
+sub _prepare_mirror {
+  my $self = shift;
+  my $ctx  = $self->job->context;
+
+  $self->cache_dir( ( $self->cache_dir || $ctx->{cache_dir} || '' ) );
+  die "No cache_dir specified!\n" if ( ! $self->cache_dir );
+  die "remote_url needed when using mirror mode\n" if ( ! $self->remote_url );
+
+  my $remote_uri = URI->new($self->remote_url);
+  my $mirror_dir = dir($self->cache_dir(),'git',$remote_uri->host,$remote_uri->path);
+
+  my @io;
+  my @cmd;
+
+  if ( -d $mirror_dir ) {
+    @cmd = ( 'git', '-C', $mirror_dir->stringify,'remote','update' );
+  } else {
+    if ( ! -d $mirror_dir->parent ) {
+      $self->logger->info(sprintf("Creating parent for mirror dir '%s'",$mirror_dir->parent));
+      $mirror_dir->parent->mkpath;
+    }
+    @cmd = ( 'git', 'clone', '--mirror', $remote_uri->as_string, $mirror_dir->stringify );
+  }
+
+  $self->logger->info("Running command '@cmd'");
+  run \@cmd ,\$io[0],\$io[1],\$io[2] || die "git $?\n";
+
+
 }
 
 sub execute {
