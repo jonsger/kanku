@@ -18,3 +18,4 @@ lib/x86_64-linux-thread-multi/perllocal.pod
 lib/x86_64-linux-thread-multi/auto/Kanku/.packlist
 *.bak
 kanku-*tar.xz
+t/tmp
