@@ -1,0 +1,6 @@
+<network>
+  <name>kanku</name>
+  <forward mode='bridge'/>
+  <bridge name='kanku-br0'/>
+  <virtualport type='openvswitch'/>
+</network>

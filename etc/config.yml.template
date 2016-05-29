@@ -11,6 +11,18 @@ qemu:
   user: qemu
   images_dir: /var/lib/libvirt/images
 
+libvirt_network:
+  name:                kanku
+  bridge:              kanku-br0
+  vlan:                kanku-vlan1
+  host_ip:             192.168.199.1
+  network:             192.168.199.0/24
+  dhcp_range:          192.168.199.66,192.168.199.254
+  start_dhcp:          1
+  is_gateway:          1
+  remotes:
+    - 192.168.6.22
+  
 Kanku::Util::IPTables:
   start_port: 49001
 
