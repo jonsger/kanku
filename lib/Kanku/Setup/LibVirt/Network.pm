@@ -59,7 +59,7 @@ sub prepare_ovs {
 		my $port = "$vlan-$port_counter";
 		system('ovs-vsctl','port-to-br',$port);
 		if ( $? > 0 ) {
-		
+
 				$self->logger->info("Adding port $port on bridge $br");
 				system('ovs-vsctl','add-port',$br,$port);
 				system('ovs-vsctl','set','Interface',$port,'type=vxlan',"options:remote_ip=$remote");
@@ -69,10 +69,14 @@ sub prepare_ovs {
 	}
 
 	my $ip = new Net::IP ($ncfg->{network});
-	$self->logger->debug("range: ".$ip->mask);
-	system("ifconfig",$br,$ncfg->{host_ip},'netmask',$ip->mask);
 
-		
+	my @cmd = ("ifconfig",$br,$ncfg->{host_ip},'netmask',$ip->mask);
+
+	$self->logger->debug("Configuring interface with command '@cmd'");
+
+	system(@cmd);
+
+
 }
 
 sub bridge_down {
@@ -163,7 +167,7 @@ sub configure_iptables {
 		$self->logger->error("No netmask configured");
 		return 1;
 	}
-	
+
 	my $ip = new Net::IP ($ncfg->{network});
 	if ( ! $ip ) {
 		$self->logger->debug("Bad network configuration");
@@ -171,7 +175,7 @@ sub configure_iptables {
 	}
 
 	my $prefix = $ip->prefix;
-	
+
 	$self->logger->debug("prefix: $prefix");
 
 	my $rules = [
@@ -197,7 +201,7 @@ sub configure_iptables {
 			$self->logger->error("Error: $ipt[2]");
 		} 
 	}
-	
+
 	return 0;
 }
 
@@ -262,7 +266,7 @@ sub cleanup_iptables {
 	my $prefix = $ip->prefix;
 	my $netreg = qr/!?\Q$prefix\E/;
 	my $brreg  = $ncfg->{bridge};
-	
+
 	@cmdout = `iptables -L FORWARD -n -v --line-numbers`;
 
 	for my $line (@cmdout ) {

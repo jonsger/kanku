@@ -14,7 +14,7 @@ Example:
 cat <<EOF > /etc/libvirt/hooks/network
 #!/bin/bash
 
-/opt/kanku/bin/kanku-network-setup.pl $@
+/opt/kanku/bin/kanku-network-setup.pl \$@
 EOF
 chmod 755 /etc/libvirt/hooks/network
 systemctl restart libvirtd.service
