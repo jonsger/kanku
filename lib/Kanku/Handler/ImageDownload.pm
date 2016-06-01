@@ -22,6 +22,7 @@ use Path::Class::Dir;
 use feature 'say';
 use Data::Dumper;
 use File::Copy;
+use Try::Tiny;
 extends 'Kanku::Handler::HTTPDownload';
 
 with 'Kanku::Roles::Handler';
@@ -74,10 +75,31 @@ sub execute {
   }
 
   $self->logger->debug("Using output file: ".$curl->output_file);
-  
+
   $ctx->{vm_image_file} = $curl->output_file;
 
-  my $tmp_file = $curl->download();
+  my $tmp_file;
+
+  try {
+    $tmp_file = $curl->download();
+  } catch {
+    my $e = $_;
+
+    die $e if ( $e !~ /'404'$/);
+    die $e if ( ! $ctx->{obs_direct_url} );
+
+    $self->logger->warn("Failed to download: ".$curl->url);
+
+    $self->logger->debug("obs_direct_url = $ctx->{obs_direct_url}");
+    $curl->url($ctx->{obs_direct_url});
+    $self->logger->info("Trying alternate url ".$curl->url);
+
+    $curl->username($ctx->{obs_username}) if $ctx->{obs_username};
+    $curl->password($ctx->{obs_password}) if $ctx->{obs_password};
+
+    $tmp_file = $curl->download();
+
+  };
 
   push(
     @{$ctx->{"Kanku::Handler::FileMove"}->{files_to_move}},
@@ -104,8 +126,8 @@ sub _calc_output_file {
     # should be more flexible
     # needs introduction of a file suffix which is set by OBSCheck
     $output_file =  $ctx->{images_dir}."/".$ctx->{domain_name}.".qcow2";
-  } 
-  
+  }
+
   return $output_file;
 }
 
@@ -153,7 +175,7 @@ sub get_from_history {
   }
 
   copy($rs->vm_image_file, $ctx->{vm_image_file}) or die "Copy failed: $!";
-  
+
   return {
     state => 'succeed',
     message => "Sucessfully found vm_image_file '$ctx->{vm_image_file}' in database"

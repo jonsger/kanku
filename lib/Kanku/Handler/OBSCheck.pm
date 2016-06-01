@@ -171,7 +171,11 @@ sub execute {
     };
   }
 
-  $ctx->{vm_image_url} = $binary->{url};
+  $ctx->{vm_image_url}   = $binary->{url};
+  $ctx->{obs_direct_url} = $binary->{bin_url};
+  $self->logger->debug("obs_direct_url = $ctx->{obs_direct_url}");
+  $ctx->{obs_username}   = $binary->{obs_username};
+  $ctx->{obs_password}   = $binary->{obs_password};
 
   $self->update_history();
 

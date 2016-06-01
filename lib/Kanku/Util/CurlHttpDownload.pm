@@ -20,13 +20,12 @@ use Moose;
 use Data::Dumper;
 use HTTP::Request;
 use Template;
-use LWP::UserAgent;
+use Kanku::Util::HTTPMirror;
 use File::Temp qw/ :mktemp /;
 use File::Copy;
 use Path::Class::File;
 use Path::Class::Dir;
 use Kanku::Config;
-
 with 'Kanku::Roles::Logger';
 
 use feature 'say';
@@ -68,6 +67,11 @@ has cache_dir => (
   isa       =>'Object',
   lazy      => 1,
   default   => sub { Path::Class::Dir->new($ENV{HOME},".kanku","cache") }
+);
+
+has [qw/username password/] => (
+  is        => 'rw',
+  isa       => 'Str',
 );
 
 sub download {
@@ -116,9 +120,16 @@ sub download {
       $self->logger->debug("Downloading $url");
       $self->logger->debug("  to file ".$file->stringify);
 
-      my $ua    = LWP::UserAgent->new();
+      my $ua    = Kanku::Util::HTTPMirror->new();
 
-      my $res = $ua->mirror ($url, $file->stringify);
+      my %request;
+
+      if ( $self->username && $self->password ) {
+        $request{request} = HTTP::Request->new(GET=>$url);
+        $request{request}->authorization_basic($self->username,$self->password);
+      }
+
+      my $res = $ua->mirror(url => $url, file=> $file->stringify,%request);
 
       if ( $res->code == 200 ) {
         $self->logger->debug("  download succeed");
