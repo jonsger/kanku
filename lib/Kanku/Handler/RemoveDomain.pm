@@ -25,9 +25,34 @@ with 'Kanku::Roles::Handler';
 
 has [qw/uri domain_name/] => (is => 'rw',isa=>'Str');
 
+has [qw/disabled/] => (is => 'rw',isa=>'Bool');
+
+has gui_config => (
+  is => 'ro',
+  isa => 'ArrayRef',
+  lazy => 1,
+  default => sub {
+      [
+        {
+          param => 'disabled',
+          type  => 'checkbox',
+          label => 'Disabled'
+        },
+      ];
+  }
+);
+
+
 sub execute {
 
   my $self = shift;
+
+  if ( $self->disabled ) {
+      return {
+        code    => 0,
+        message => "Skipped removing domain " . $self->domain_name ." because of disabled job"
+      }
+  }
 
   if ( $self->job()->context()->{domain_name} ) {
     $self->domain_name($self->job()->context()->{domain_name});
