@@ -44,7 +44,7 @@ if ( @ARGV < 3 ) {
   print "Usage: $basename <domain_name> <host_interface> <rule_1> [rule_n]
 Example: 
 
-# $basename obs-server tcp:443 tcp:22
+# $basename obs-server eth0 tcp:443 tcp:22
 
 ";
 
