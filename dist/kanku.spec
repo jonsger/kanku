@@ -17,8 +17,8 @@
 
 
 Name:           kanku
-Version:        0.0.3
-Release:        0.1
+Version:        0.0.4
+Release:        1.0
 License:        GPL-3.0
 Summary:        Development and continuous integration made easy
 Url:            https://github.com/M0ses/kanku
@@ -101,9 +101,12 @@ make install DESTDIR=%{buildroot}
 %config /opt/kanku/etc/templates/obs-server.tt2
 
 %dir /opt/kanku/etc/jobs
-%config /opt/kanku/etc/jobs/obs-server.yml.template
-%config /opt/kanku/etc/jobs/sles11sp3.yml.template
-%config /opt/kanku/etc/jobs/obs-server-26.yml.template
+%dir /opt/kanku/etc/jobs/examples
+%config /opt/kanku/etc/jobs/examples
+%config /opt/kanku/etc/jobs/examples/obs-server.yml
+%config /opt/kanku/etc/jobs/examples/obs-server-26.yml
+%config /opt/kanku/etc/jobs/examples/sles11sp3.yml
+
 %config /opt/kanku/etc/log4perl.conf
 
 %dir /etc/sudoers.d
@@ -139,6 +142,15 @@ make install DESTDIR=%{buildroot}
 /opt/kanku/views/cli/rjob/*.tt
 
 %changelog
+* Sun Jun 19 2016 Frank Schreiner <m0ses@samaxi.de> 0.0.4-1.1
+- fixed version of contrib/port_forward.pl
+- RemoveDomain can be disabled now by gui
+- download via OBS api
+- initial version of openvswitch integration
+- moved job template to examples directory
+- added mirror mode to GIT handler
+
+
 * Fri May 20 2016 Frank Schreiner - 0.0.3-0.1
 - new cli remote commands
 - refactor of parameter handling in UI and scheduler
