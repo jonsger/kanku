@@ -86,10 +86,12 @@ make install DESTDIR=%{buildroot}
 %attr(755,root,root) /opt/kanku/bin/kanku-apache2.psig
 %attr(755,root,root) /opt/kanku/bin/kanku-app.psgi
 %attr(755,root,root) /opt/kanku/bin/kanku
+%attr(755,root,root) /opt/kanku/bin/kanku-network-setup.pl
 
 %dir /opt/kanku/etc/
 %ghost /opt/kanku/etc/config.yml
 %config /opt/kanku/etc/console-log.conf
+%config /opt/kanku/etc/kanku-network-setup-logging.conf
 %config /opt/kanku/etc/config.yml.template
 
 %dir /opt/kanku/etc/templates
@@ -102,7 +104,6 @@ make install DESTDIR=%{buildroot}
 
 %dir /opt/kanku/etc/jobs
 %dir /opt/kanku/etc/jobs/examples
-%config /opt/kanku/etc/jobs/examples
 %config /opt/kanku/etc/jobs/examples/obs-server.yml
 %config /opt/kanku/etc/jobs/examples/obs-server-26.yml
 %config /opt/kanku/etc/jobs/examples/sles11sp3.yml
