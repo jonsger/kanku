@@ -69,6 +69,8 @@ sub execute {
     $curl->use_cache(1);
     if ( $self->cache_dir ) {
       $curl->cache_dir(Path::Class::Dir->new($self->cache_dir));
+    } else {
+      $ctx->{cache_dir} |= $curl->cache_dir();
     }
   } else {
     $curl->use_temp_file(1);

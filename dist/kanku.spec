@@ -17,7 +17,7 @@
 
 
 Name:           kanku
-Version:        0.0.4
+Version:        0.0.5
 Release:        1.0
 License:        GPL-3.0
 Summary:        Development and continuous integration made easy
@@ -143,6 +143,10 @@ make install DESTDIR=%{buildroot}
 /opt/kanku/views/cli/rjob/*.tt
 
 %changelog
+* Sun Jun 19 2016 Frank Schreiner <m0ses@samaxi.de> - 0.0.5-1.0
+- fixed cache_dir problem with CreateDomain
+- fixed specfile problems
+
 * Sun Jun 19 2016 Frank Schreiner <m0ses@samaxi.de> 0.0.4-1.1
 - fixed version of contrib/port_forward.pl
 - RemoveDomain can be disabled now by gui
