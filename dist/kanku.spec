@@ -18,7 +18,7 @@
 
 Name:           kanku
 Version:        0.0.5
-Release:        1.0
+Release:        2.0
 License:        GPL-3.0
 Summary:        Development and continuous integration made easy
 Url:            https://github.com/M0ses/kanku
@@ -143,6 +143,9 @@ make install DESTDIR=%{buildroot}
 /opt/kanku/views/cli/rjob/*.tt
 
 %changelog
+* Mon Jun 20 2016 Frank Schreiner - 0.0.5-2.0
+- fixed libvirtd setup for leap
+
 * Sun Jun 19 2016 Frank Schreiner <m0ses@samaxi.de> - 0.0.5-1.0
 - fixed cache_dir problem with CreateDomain
 - fixed specfile problems

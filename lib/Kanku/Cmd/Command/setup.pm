@@ -190,7 +190,7 @@ sub _execute_devel_setup {
 
   $self->_chown_images_dir();
 
-  $self->_change_run_user_for_libvirtd();
+  $self->_configure_libvirtd_access();
 
   $self->_setup_database();
 
@@ -335,7 +335,7 @@ sub _setup_database {
 
 }
 
-sub _change_run_user_for_libvirtd {
+sub _configure_libvirtd_access {
   my $self    = shift;
   my $logger  = $self->logger;
 
@@ -353,6 +353,33 @@ sub _change_run_user_for_libvirtd {
   }
 
   $conf->spew(\@lines);
+
+  my $dconf = file("/etc/libvirt/libvirtd.conf");
+
+  $logger->debug("Setting user ".$user." in ". $conf->stringify);
+
+  @lines = $dconf->slurp;
+  my $defaults = {
+    unix_sock_group	    => 'libvirt',
+    unix_sock_ro_perms	    => '0777',
+    unix_sock_rw_perms	    => '0770',
+    unix_sock_admin_perms   => '0700',
+    auth_unix_ro	    => 'none',
+    auth_unix_rw	    => 'none'
+  };
+  my $seen={};
+  foreach my $line ( splice(@lines) ) {
+    if ( $line =~ s/^#?((unix_sock_group|unix_sock_ro_perms|unix_sock_rw_perms|unix_sock_admin_perms|auth_unix_ro|auth_unix_rw).*)/$1/ ) {
+      $seen->{$2} = 1;
+    }
+    push(@lines,$line);
+  }
+
+  for my $key (keys(%{$defaults})) {
+    push(@lines,"$key = \"$defaults->{$key}\"\n") unless $seen->{$key};
+  }
+
+  $dconf->spew(\@lines);
 
   system("service libvirtd restart");
 
