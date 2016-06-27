@@ -266,6 +266,8 @@ pass = ".$self->osc_pass."
 ";
 
   $rc->spew($rc_txt);
+  
+  $self->_chown($rc);
 
 }
 
