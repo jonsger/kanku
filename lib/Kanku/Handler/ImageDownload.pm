@@ -32,6 +32,8 @@ has ['vm_image_file','url'] => (is=>'rw',isa=>'Str');
 has ['use_cache','offline'] => (is=>'rw',isa=>'Bool',default=>0);
 has ['cache_dir'] => (is=>'rw',isa=>'Str');
 
+has "+distributable" => ( default => 1 );
+
 sub prepare {
   my $self = shift;
   my $ctx  = $self->job()->context();

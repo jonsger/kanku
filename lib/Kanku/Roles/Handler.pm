@@ -54,6 +54,14 @@ has gui_config => (
   default => sub { [] }
 );
 
+has distributable => (
+  is	  => 'ro',
+  isa	  => 'Int',
+  # 0 - not distributable
+  # 1 - send to one worker
+  # 2 - send to all workers
+  default => 0
+);
 
 sub prepare {
 
