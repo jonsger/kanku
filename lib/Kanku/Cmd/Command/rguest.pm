@@ -19,6 +19,7 @@ package Kanku::Cmd::Command::rguest;
 use Moose;
 use Data::Dumper;
 use Term::ReadKey;
+use Try::Tiny;
 use Kanku::Remote;
 use YAML qw/LoadFile DumpFile/;
 
@@ -47,7 +48,13 @@ sub execute {
 
 sub _list {
   my $self  = shift;
-  my $kr =  $self->_connect_restapi();
+
+  my $kr;
+  try {
+	$kr = $self->_connect_restapi();
+  } catch {
+	exit 1;
+  };
 
   my $data = $kr->get_json( path => "guest/list" );
 

@@ -22,6 +22,7 @@ use Term::ReadKey;
 use Kanku::Remote;
 use YAML qw/LoadFile DumpFile Dump/;
 use POSIX;
+use Try::Tiny;
 
 
 extends qw(MooseX::App::Cmd::Command);
@@ -62,14 +63,25 @@ sub execute {
         exit 1;
       }
 
-      my $kr =  $self->_connect_restapi();
+	  my $kr;
+	  try {
+		$kr = $self->_connect_restapi();
+	  } catch {
+		exit 1;
+	  };
 
       my $data = $kr->get_json( path => "job/config/".$self->name);
 
       print $data->{config};      
 
   } elsif ($self->list) {
-      my $kr =  $self->_connect_restapi();
+
+	  my $kr;
+	  try {
+		$kr = $self->_connect_restapi();
+	  } catch {
+		exit 1;
+	  };
 
       my $data = $kr->get_json( path => "gui_config/job");
 
@@ -93,7 +105,13 @@ sub execute {
 				   || die $template->error()->as_string();
  
   } elsif ($self->details) {
-    my $kr =  $self->_connect_restapi();
+
+	my $kr;
+	try {
+	  $kr = $self->_connect_restapi();
+	} catch {
+	  exit 1;
+	};
 
     my $data = $kr->get_json( path => "gui_config/job");
 	my $job_config;

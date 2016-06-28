@@ -22,7 +22,7 @@ use Term::ReadKey;
 use Log::Log4perl;
 use YAML qw/LoadFile DumpFile/;
 use POSIX;
-
+use Try::Tiny;
 use Kanku::Remote;
 
 extends qw(MooseX::App::Cmd::Command);
@@ -74,7 +74,12 @@ sub execute {
 sub _list {
   my $self = shift;
 
-  my $kr =  $self->_connect_restapi();
+  my $kr;
+  try {
+	$kr = $self->_connect_restapi();
+  } catch {
+	exit 1;
+  };
 
   my %params = (
     limit => $self->limit || 10,
@@ -119,7 +124,12 @@ sub _details {
         return 1;
       }
 
-      my $kr = $self->_connect_restapi();
+      my $kr;
+	  try {
+		$kr = $self->_connect_restapi();
+	  } catch {
+		exit 1;
+	  };
 
       my $data = $kr->get_json( path => "job/".$self->details );
 
