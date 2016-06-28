@@ -70,9 +70,9 @@ sub _connect_restapi {
     }
   }
 
-  while ( ! $self->apiurl ) {
+  if ( ! $self->apiurl ) {
     $logger->error("No apiurl found - Please login");
-    return 1;
+	die "No apiurl found!";
   }
 
   my $kr =  Kanku::Remote->new(
