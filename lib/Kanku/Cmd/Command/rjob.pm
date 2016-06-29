@@ -32,24 +32,18 @@ with 'Kanku::Cmd::Roles::RemoteCommand';
 
 has config => (
   traits        => [qw(Getopt)],
-  isa           => 'Bool',
-  is            => 'rw',
-  cmd_aliases	=> 'c',
-  documentation => 'show config of remote job',
-);
-
-has name => (
-  traits        => [qw(Getopt)],
   isa           => 'Str',
   is            => 'rw',
-  cmd_aliases	=> 'n',
-  documentation => 'name of remote job',
+  cmd_aliases	=> 'c',
+  documentation => '(*) show config of remote job. Remote job name mandatory',
 );
 
 sub abstract { "show result of tasks from a specified remote job" }
 
-sub description { 
-  "show result of tasks from a specified job on your remote instance"
+sub description {  
+  "show result of tasks from a specified job on your remote instance
+
+" . $_[0]->description_footer;
 }
 
 sub execute {
@@ -57,31 +51,25 @@ sub execute {
   my $logger  = Log::Log4perl->get_logger;
 
   if ( $self->config ) {
+    my $kr;
+    try {
+      $kr = $self->_connect_restapi();
+    } catch {
+      exit 1;
+    };
 
-      if ( ! $self->name ) {
-        $logger->error("No parameter --name given");
-        exit 1;
-      }
-
-	  my $kr;
-	  try {
-		$kr = $self->_connect_restapi();
-	  } catch {
-		exit 1;
-	  };
-
-      my $data = $kr->get_json( path => "job/config/".$self->name);
+      my $data = $kr->get_json( path => "job/config/".$self->config);
 
       print $data->{config};      
 
   } elsif ($self->list) {
 
-	  my $kr;
-	  try {
-		$kr = $self->_connect_restapi();
-	  } catch {
-		exit 1;
-	  };
+    my $kr;
+    try {
+      $kr = $self->_connect_restapi();
+    } catch {
+      exit 1;
+    };
 
       my $data = $kr->get_json( path => "gui_config/job");
 
@@ -106,12 +94,12 @@ sub execute {
  
   } elsif ($self->details) {
 
-	my $kr;
-	try {
-	  $kr = $self->_connect_restapi();
-	} catch {
-	  exit 1;
-	};
+    my $kr;
+    try {
+      $kr = $self->_connect_restapi();
+    } catch {
+      exit 1;
+    };
 
     my $data = $kr->get_json( path => "gui_config/job");
 	my $job_config;
@@ -122,6 +110,8 @@ sub execute {
 		}
 	}
 	print Dumper($job_config);
+  } else {
+	$logger->warn("Please specify a command. Run 'kanku help rjob' for further information.");
   }
 }
 
