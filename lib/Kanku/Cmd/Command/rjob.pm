@@ -35,13 +35,15 @@ has config => (
   isa           => 'Str',
   is            => 'rw',
   cmd_aliases	=> 'c',
-  documentation => 'show config of remote job. Remote Job name mandatory',
+  documentation => '(*) show config of remote job. Remote job name mandatory',
 );
 
 sub abstract { "show result of tasks from a specified remote job" }
 
-sub description { 
-  "show result of tasks from a specified job on your remote instance" . $_[0]->description_footer;
+sub description {  
+  "show result of tasks from a specified job on your remote instance
+
+" . $_[0]->description_footer;
 }
 
 sub execute {

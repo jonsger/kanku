@@ -58,7 +58,9 @@ has page => (
 sub abstract { "list job history on your remote kanku instance" }
 
 sub description { 
-  "list job history on your remote kanku instance" . $_[0]->description_footer;
+  "list job history on your remote kanku instance
+
+" . $_[0]->description_footer;
 }
 
 sub execute {

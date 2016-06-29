@@ -31,7 +31,9 @@ with 'Kanku::Cmd::Roles::RemoteCommand';
 sub abstract { "list guests on your remote kanku instance" }
 
 sub description { 
-  "list guests on your remote kanku instance" . $_[0]->description_footer;
+  "list guests on your remote kanku instance
+
+" . $_[0]->description_footer;
 }
 
 sub execute {
