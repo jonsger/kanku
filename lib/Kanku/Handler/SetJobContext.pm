@@ -28,6 +28,7 @@ has [qw/
         vm_image_file   vm_image_url    vm_template_file
         domain_name     host_interface
         cache_dir       images_dir
+	os_instance_name os_image_id
     /
 ] => (is=>'rw',isa=>'Str');
 
@@ -82,6 +83,11 @@ has gui_config => (
           type  => 'text',
           label => 'VM Template File'
         },
+        {
+          param => 'os_instance_name',
+          type  => 'text',
+          label => 'Name for OpenStack instance'
+        },
       ];
   }
 );
@@ -89,7 +95,7 @@ has gui_config => (
 sub execute {
   my $self = shift;
   my $ctx  = $self->job()->context();
-  for my $var (qw/domain_name vm_template_file host_interface images_dir cache_dir/) {
+  for my $var (qw/domain_name vm_template_file host_interface images_dir cache_dir os_instance_name os_image_id/) {
     if ($self->$var()){
       $self->logger->debug("Setting variable $var in context to ".$self->$var());
       $ctx->{$var} = $self->$var();

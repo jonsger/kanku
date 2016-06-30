@@ -54,7 +54,7 @@ Requires: perl(Dancer2::Plugin::Auth::Extensible)
 Requires: perl(Dancer2::Plugin::Auth::Extensible::Provider::DBIC)
 Requires: perl(File::HomeDir)
 Requires: perl(Template::Plugin::Filter::ANSIColor)
-
+Requires: perl(Sys::Guestfs)
 %description
 TODO: add some meaningful description
  to be more verbose

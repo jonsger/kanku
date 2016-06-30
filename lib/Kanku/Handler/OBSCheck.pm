@@ -126,9 +126,8 @@ sub execute {
       ! $self->job->triggered and
       ! $self->skip_all_checks
   ) {
-
-  # TODO: implement offline mode
-  #
+    # TODO: implement offline mode
+    #
     my $prep_result = $last_run->{prepare}->{binary};
     foreach my $key (qw/mtime filename size/) {
       my $bv = $binary->{$key} || '';
@@ -176,6 +175,8 @@ sub execute {
   $self->logger->debug("obs_direct_url = $ctx->{obs_direct_url}");
   $ctx->{obs_username}   = $binary->{obs_username};
   $ctx->{obs_password}   = $binary->{obs_password};
+  $ctx->{obs_project}    = $self->project;
+  $ctx->{obs_package}    = $self->package;
 
   $self->update_history();
 
