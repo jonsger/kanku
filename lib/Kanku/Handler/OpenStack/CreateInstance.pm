@@ -30,7 +30,9 @@ has [qw/name  availability_zone key_name floating_network_id/]	  => ( is => 'rw'
 has [qw/min_count max_count flavorRef/]	  => ( is => 'rw', isa => 'Int', default => 1 );
 has [qw/networks security_groups/]	  => ( is => 'rw', isa => 'ArrayRef' );
 
-has [qw/os_auth_url os_tenant_name os_username os_password import_from/ ] => (
+has query_delay => (is => 'rw', isa => 'Int' , default => 10);
+
+has [qw/os_auth_url os_tenant_name os_username os_password/ ] => (
   is	  => 'rw',
   isa	  => 'Str',
 );
@@ -46,10 +48,6 @@ sub prepare {
   my $self = shift;
   my $ctx  = $self->job()->context();
 
-  $self->import_from($ctx->{vm_image_url}) if ( $ctx->{vm_image_url} && ! $self->import_from());
-
-  die "No import_from set\n" if ( ! $self->import_from );
-
   my $osa = $self->osa;
 
   $osa->os_auth_url($self->os_auth_url)	      if $self->os_auth_url;
@@ -57,11 +55,9 @@ sub prepare {
   $osa->os_password($self->os_password)	      if $self->os_password;
   $osa->os_tenant_name($self->os_tenant_name) if $self->os_tenant_name;
 
-  $self->name($ctx->{os_instance_name})	      if $ctx->{os_instance_name};
+  $self->name($ctx->{os_instance_name})	      if ( $ctx->{os_instance_name} && ! $self->name );
 
   die "No name for instance set!\n" unless $self->name;
-#  die "No container_format set in image_properties\n" unless $self->image_properties->{container_format};
-#  die "No disk_format set in image_properties\n"      unless $self->image_properties->{disk_format};
 
   return {
     state => 'succeed',
@@ -76,15 +72,6 @@ sub execute {
   my $osa = $self->osa;
   my $servers = $osa->service(name => 'nova');
 
-  my $script = <<EOF
-#!/bin/bash
-
-systemctl enable sshd.service
-
-systemctl start sshd.service
-
-EOF
-;
   # mandatory parameters
   my $data = {
     name              => $self->name,
@@ -92,7 +79,6 @@ EOF
     max_count	      => $self->max_count,
     flavorRef	      => $self->flavorRef,
     imageRef	      => $ctx->{os_image_id},
-    user_data	      => encode_base64($script),
   };
 
   # optional parameters
@@ -100,7 +86,6 @@ EOF
   $data->{networks}	      = $self->networks		  if $self->networks;
   $data->{security_groups}    = $self->security_groups	  if $self->security_groups;
   $data->{availability_zone}  = $self->availability_zone  if $self->availability_zone;
-  
 
   my $response = $servers->instance_create($data);
 
@@ -119,9 +104,8 @@ sub finalize {
   my $nova	= $self->osa->service(name => 'nova');
   my $server_id	= $ctx->{os_instance_id};
 
-  my $delay   = 10;
   my $status  = '';
-#
+
   if ( $server_id ) {
     while (1) {
       my $instance = $nova->instance_detail($server_id);
@@ -131,7 +115,7 @@ sub finalize {
       $status = $instance->{status};
       last if ( $status eq 'ACTIVE' );
 
-      sleep($delay);
+      sleep($self->query_delay);
     }
   } else {
     die "No server id found in job context";
@@ -165,44 +149,46 @@ __END__
 
 =head1 NAME
 
-Kanku::Handler::OpenStack::Image
+Kanku::Handler::OpenStack::CreateInstance
+
 =head1 SYNOPSIS
 
 Here is an example how to configure the module in your jobs file or KankuFile
-FIXME: This has to be updated
   -
-    use_module: Kanku::Handler::ImageDownload
+    use_module: Kanku::Handler::OpenStack::CreateInstance
     options:
-      use_cache: 1
-      url: http://example.com/path/to/image.qcow2
-      output_file: /tmp/mydomain.qcow2
-
+      networks:
+        -
+          uuid: 8cce38fd-443f-4b87-8ea5-ad2dc184064f
+      security_groups:
+        -
+          name: kanku
+      flavorRef: 5
+      key_name: admin
+      floating_network_id: 0d00a5bd-d07c-4206-b87d-807ca98b44b4
+      availability_zone: nova
 
 =head1 DESCRIPTION
 
-This handler downloads a file from a given url to the local filesystem and sets vm_image_file.
+This handler creates a new server instance in openstack. It uses the image from $job->context->{os_image_id}
 
 =head1 OPTIONS
 
-  url             : url to download file from
-
-  vm_image_file   : absolute path to file where image will be store in local filesystem
-
-  offline         : proceed in offline mode ( skip download and set use_cache in context)
-
-  use_cache       : use cached files in users cache directory
 
 =head1 CONTEXT
 
 =head2 getters
 
-  vm_image_url
+  os_instance_name
 
-  domain_name
+  os_image_id
+
+  os_instance_id
 
 =head2 setters
 
-  vm_image_file
+  ipaddress: only set if floating_network_id is given
+
 
 =head1 DEFAULTS
 

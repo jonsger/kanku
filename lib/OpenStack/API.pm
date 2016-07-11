@@ -13,11 +13,37 @@ use OpenStack::API::Nova;
 use OpenStack::API::Quantum;
 use OpenStack::API::Neutron;
 
+=head1 NAME
+
+OpenStack::API
+
+=head1 SYNOPSIS
+
+  my $osa = OpenStack::API->new();
+
+  my $osa->authenticate();
+
+  my $nova = $osa->service(type => 'compute');
+
+=head1 ATTRIBUTES
+
+=head2 os_auth_url
+
+default: $ENV{OS_AUTH_URL}
+
+=cut
+
 has os_auth_url => (
   is	  => 'rw',
   isa	  => 'Str',
   default => $ENV{OS_AUTH_URL} || '',
 );
+
+=head2 os_tenant_name
+
+default: $ENV{OS_TENANT_NAME}
+
+=cut
 
 has os_tenant_name => (
   is	  => 'rw',
@@ -25,11 +51,23 @@ has os_tenant_name => (
   default => $ENV{OS_TENANT_NAME} || '',
 );
 
+=head2 os_username
+
+default: $ENV{OS_USERNAME}
+
+=cut
+
 has os_username => (
   is	  => 'rw',
   isa	  => 'Str',
   default => $ENV{OS_USERNAME} || '',
 );
+
+=head2 os_password
+
+default: $ENV{OS_PASSWORD}
+
+=cut
 
 has os_password => (
   is	  => 'rw',
@@ -58,6 +96,10 @@ has __api_versions => (
 
 );
 
+=head2 os_auth_api_version
+
+=cut
+
 has os_auth_api_version => (
   is	  => 'rw',
   isa	  => 'Str',
@@ -68,12 +110,21 @@ has os_auth_api_version => (
   }
 );
 
+=head1 METHODS
+
+=head2 tokens_url
+
+=cut
+
 sub tokens_url {
   my ($self) = @_;
   return $self->__api_versions->{$self->os_auth_api_version}->{tokens_url};
 }
 
-# curl -X POST $OS_AUTH_URL/tokens  -H "Content-Type: application/json"   -d '{"auth": {"tenantName": "'"$OS_TENANT_NAME"'", "passwordCredentials": {"username": "'"$OS_USERNAME"'", "password": "'"$OS_PASSWORD"'"}}}'
+=head2 authenticate
+
+=cut
+
 sub authenticate {
   my ($self) = @_;
 
@@ -113,6 +164,13 @@ sub _auth_json_string {
   return encode_json($struct);
 
 }
+=head2 service
+  
+  my $nova    = $osa->service(type => 'compute');
+
+  my $glance  = $osa->service(name => 'glance');
+
+=cut
 
 sub service {
   my ($self,$key,$value) = @_;
@@ -125,7 +183,7 @@ sub service {
   die "Ambiguous result for service with $key is $value!" if (@service > 1);
 
   my $mod = "OpenStack::API::" . ucfirst($service[0]->{name});
-#print "$mod -> new\n";
+
   return $mod->new(%{$service[0]},access => $self);
 
 }

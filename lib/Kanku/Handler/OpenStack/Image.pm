@@ -33,7 +33,7 @@ has [qw/os_auth_url os_tenant_name os_username os_password import_from/ ] => (
   isa	  => 'Str',
 );
 
-has osa => ( 
+has osa => (
   is	  => 'rw',
   isa	  => 'Object',
   lazy	  => 1,
@@ -133,8 +133,8 @@ sub finalize {
     while (1) {
       my $task = $images->task_detail($task_id);
 
-      die "Got no task details\n" unless $task; 
-      
+      die "Got no task details\n" unless $task;
+ 
       if ( $task->{status} eq 'success' ) {
 	 $ctx->{os_image_id} = $task->{result}->{image_id};
 	 last;
@@ -174,31 +174,35 @@ __END__
 =head1 NAME
 
 Kanku::Handler::OpenStack::Image
+
 =head1 SYNOPSIS
 
 Here is an example how to configure the module in your jobs file or KankuFile
-FIXME: This has to be updated
+
   -
-    use_module: Kanku::Handler::ImageDownload
+    use_module: Kanku::Handler::OpenStack::Image
     options:
-      use_cache: 1
-      url: http://example.com/path/to/image.qcow2
-      output_file: /tmp/mydomain.qcow2
+      import_from: http://...
+      import_from_format: qcow2
+      image_properties:
+        container_format: bare
+        disk_format:      qcow2
+        name:             Kanku OBS-Appliance Unstable
+        tags:
+          - testing
+      os_auth_url: ...
+      os_username: ...
+      os_password: ...
+      os_tenant_name: ...
 
 
 =head1 DESCRIPTION
 
-This handler downloads a file from a given url to the local filesystem and sets vm_image_file.
+This handler creates a task in openstack to download a file from a given url and waits for task being finished.
 
 =head1 OPTIONS
 
-  url             : url to download file from
-
-  vm_image_file   : absolute path to file where image will be store in local filesystem
-
-  offline         : proceed in offline mode ( skip download and set use_cache in context)
-
-  use_cache       : use cached files in users cache directory
+SEE in openstack API documentation
 
 =head1 CONTEXT
 
@@ -206,14 +210,23 @@ This handler downloads a file from a given url to the local filesystem and sets 
 
   vm_image_url
 
-  domain_name
-
 =head2 setters
 
-  vm_image_file
+  os_image_import_task_id
+
+  obs_project
+
+  obs_package
+
+  os_image_id
 
 =head1 DEFAULTS
 
 NONE
 
+=head1 SEE ALSO
+
+OpenStack::API
+
 =cut
+

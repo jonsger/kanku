@@ -55,6 +55,11 @@ Requires: perl(Dancer2::Plugin::Auth::Extensible::Provider::DBIC)
 Requires: perl(File::HomeDir)
 Requires: perl(Template::Plugin::Filter::ANSIColor)
 Requires: perl(Sys::Guestfs)
+Requires: perl(JSON::XS)
+Requires: perl(DBIx::Class)
+Requires: perl(DBIx::Class::Migration)
+Requires: perl(Template::Plugin::Filter::ANSIColor)
+
 %description
 TODO: add some meaningful description
  to be more verbose

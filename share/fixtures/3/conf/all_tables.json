@@ -1,41 +1,21 @@
 {
-   "has_many" : {
+   "sets" : [
+      {
+         "ids" : ["1","2"],
+         "class" : "Role"
+      },
+      {
+         "ids" : ["1"], 
+         "class" : "User"
+      },
+   ],
+   "belongs_to" : {
       "fetch" : 0
    },
    "might_have" : {
       "fetch" : 0
    },
-   "belongs_to" : {
-      "fetch" : 0
-   },
-   "sets" : [
-      {
-         "class" : "JobHistory",
-         "quantity" : 0
-      },
-      {
-         "class" : "JobHistorySub",
-         "quantity" : 0
-      },
-      {
-         "quantity" : "all",
-         "class" : "User"
-      },
-      {
-         "quantity" : "all",
-         "class" : 0
-      },
-      {
-         "quantity" : "all",
-         "class" : 0
-      },
-      {
-         "class" : "UserRoles",
-         "quantity" : "all"
-      },
-      {
-         "quantity" : "all",
-         "class" : "Role"
-      }
-   ]
+   "has_many" : {
+      "fetch" : 1
+   }
 }
