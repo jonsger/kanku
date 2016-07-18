@@ -44,6 +44,8 @@ has "+images_dir" => (default=>"/var/lib/libvirt/images");
 
 has ['cache_dir'] => (is=>'rw',isa=>'Str');
 
+has ['mnt_dir_9p'] => (is=>'rw',isa=>'Str');
+
 
 has gui_config => (
   is => 'ro',
@@ -120,10 +122,12 @@ sub execute {
   die "Could not get ipaddress from VM" unless $ip;
   $ctx->{ipaddress} = $ip;
 
+  my $mp = $self->mnt_dir_9p;
+
   if ($self->use_9p) {
     $con->cmd(
-      "mkdir -p /tmp/kanku",
-      'echo "kankushare /tmp/kanku 9p trans=virtio,version=9p2000.L 1 1" >> /etc/fstab',
+      "mkdir -p $mp",
+      "echo \"kankushare $mp 9p trans=virtio,version=9p2000.L 1 1\" >> /etc/fstab",
       "mount -a"
     );
   }
