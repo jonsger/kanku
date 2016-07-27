@@ -59,7 +59,7 @@ has settings => (
   default       => sub {{}}
 );
 
-sub _connect_restapi {
+sub connect_restapi {
   my $self = shift;
   my $logger  = Log::Log4perl->get_logger;
 

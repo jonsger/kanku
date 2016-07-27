@@ -52,7 +52,7 @@ sub _list {
 
   my $kr;
   try {
-	$kr = $self->_connect_restapi();
+	$kr = $self->connect_restapi();
   } catch {
 	exit 1;
   };

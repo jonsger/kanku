@@ -53,7 +53,7 @@ sub execute {
   if ( $self->config ) {
     my $kr;
     try {
-      $kr = $self->_connect_restapi();
+      $kr = $self->connect_restapi();
     } catch {
       exit 1;
     };
@@ -66,7 +66,7 @@ sub execute {
 
     my $kr;
     try {
-      $kr = $self->_connect_restapi();
+      $kr = $self->connect_restapi();
     } catch {
       exit 1;
     };
@@ -96,7 +96,7 @@ sub execute {
 
     my $kr;
     try {
-      $kr = $self->_connect_restapi();
+      $kr = $self->connect_restapi();
     } catch {
       exit 1;
     };
