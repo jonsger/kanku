@@ -28,10 +28,7 @@ with 'Kanku::Roles::Handler';
 with 'Kanku::Roles::Logger';
 with 'Kanku::Roles::SSH';
 
-has [qw/  ipaddress
-          publickey_path
-          privatekey_path passphrase  username
-          giturl          revision    destination
+has [qw/  giturl          revision    destination
           remote_url      cache_dir
     /] => (is=>'rw',isa=>'Str');
 
@@ -152,7 +149,7 @@ sub execute {
 
   return {
     code        => 0,
-    message     => "git clone from url ".$self->giturl." and checkout of revision ".$self->revision." was successful",
+    message     => "git clone from url ".$self->giturl." and checkout of revision ". ( $self->revision || '' ) ." was successful",
   };
 }
 
@@ -193,7 +190,7 @@ This handler logs into the guest os via ssh and clones/checks out a git reposito
 
 =head1 OPTIONS
 
-SEE ALSO Kanku::Handler::ExecuteCommandViaSSH
+SEE ALSO Kanku::Roles::SSH
 
   giturl      : url to clone git repository from
 
@@ -207,7 +204,7 @@ SEE ALSO Kanku::Handler::ExecuteCommandViaSSH
 
 =head2 getters
 
-SEE Kanku::Handler::ExecuteCommandViaSSH
+SEE Kanku::Roles::SSH
 
 =head2 setters
 
@@ -219,6 +216,6 @@ NONE
 
 =head1 SEE ALSO
 
-L<Kanku::Handler::ExecuteCommandViaSSH>
+L<Kanku::Roles::SSH>
 
 =cut

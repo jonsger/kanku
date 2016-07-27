@@ -34,10 +34,15 @@ has [ qw/job ssh2/ ] => (
   isa => 'Object'
 );
 
+has auth_type => (is=>'rw',isa=>'Str',default=>'agent');
+
 sub get_defaults {
   my $self = shift;
 
-  $self->privatekey_path("$ENV{HOME}/.ssh/id_rsa") if (! $self->privatekey_path );
+  if (! $self->privatekey_path ) {
+    $self->privatekey_path("$ENV{HOME}/.ssh/id_rsa");
+    $self->publickey_path($self->privatekey_path.".pub") if (! $self->publickey_path );
+  }
   $self->username('root') if (! $self->username );
   $self->ipaddress($self->job()->context()->{ipaddress});
 
@@ -56,12 +61,18 @@ sub connect {
 
   $ssh2->connect($ip) or die $!;
 
-  $ssh2->auth_publickey(
-    $self->username,
-    $self->publickey_path,
-    $self->privatekey_path,
-    $self->passphrase
-  );
+  if ( $self->auth_type eq 'publickey' ) {
+    $ssh2->auth_publickey(
+      $self->username,
+      $self->publickey_path,
+      $self->privatekey_path,
+      $self->passphrase
+    );
+  } elsif ( $self->auth_type eq 'agent' ) {
+    $ssh2->auth_agent($self->username);
+  } else {
+    die "ssh auth_type not known!\n"
+  }
 
   if ( ! $ssh2->auth_ok()  ) {
 
