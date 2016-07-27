@@ -44,7 +44,7 @@ has "+images_dir" => (default=>"/var/lib/libvirt/images");
 
 has ['cache_dir'] => (is=>'rw',isa=>'Str');
 
-has ['mnt_dir_9p'] => (is=>'rw',isa=>'Str');
+has ['mnt_dir_9p'] => (is => 'rw', isa => 'Str', default => '/tmp/kanku');
 
 
 has gui_config => (
