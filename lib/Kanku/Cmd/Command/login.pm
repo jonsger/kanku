@@ -35,7 +35,7 @@ sub execute {
   my $self  = shift;
   my $logger  = Log::Log4perl->get_logger;
 
-  # Please not the priority of options
+  # Please note the priority of options
   # * command line options
   # * rc_file options
   # * manual input
