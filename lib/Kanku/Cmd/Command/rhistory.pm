@@ -23,7 +23,6 @@ use Log::Log4perl;
 use YAML qw/LoadFile DumpFile/;
 use POSIX;
 use Try::Tiny;
-use Kanku::Remote;
 
 extends qw(MooseX::App::Cmd::Command);
 

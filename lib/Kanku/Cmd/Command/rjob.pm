@@ -19,7 +19,6 @@ package Kanku::Cmd::Command::rjob;
 use Moose;
 use Data::Dumper;
 use Term::ReadKey;
-use Kanku::Remote;
 use YAML qw/LoadFile DumpFile Dump/;
 use POSIX;
 use Try::Tiny;
@@ -58,9 +57,9 @@ sub execute {
       exit 1;
     };
 
-      my $data = $kr->get_json( path => "job/config/".$self->config);
+    my $data = $kr->get_json( path => "job/config/".$self->config);
 
-      print $data->{config};      
+    print $data->{config} if $data;
 
   } elsif ($self->list) {
 
@@ -71,26 +70,26 @@ sub execute {
       exit 1;
     };
 
-      my $data = $kr->get_json( path => "gui_config/job");
+    my $data = $kr->get_json( path => "gui_config/job");
 
-      my @job_names = sort ( map { $_->{job_name} } @{$data->{config}} );
+    my @job_names = sort ( map { $_->{job_name} } @{$data->{config}} );
 
-      # some useful options (see below for full list)
-	  my $template_path = Kanku::Config->instance->app_base_path->stringify . '/views/cli/';
-	  my $config = {
-		INCLUDE_PATH  => $template_path,
-		INTERPOLATE   => 1,               # expand "$var" in plain text
-		POST_CHOMP    => 1,
-		PLUGIN_BASE   => 'Template::Plugin',
-	  };
+    # some useful options (see below for full list)
+    my $template_path = Kanku::Config->instance->app_base_path->stringify . '/views/cli/';
+    my $config = {
+	  INCLUDE_PATH  => $template_path,
+	  INTERPOLATE   => 1,               # expand "$var" in plain text
+	  POST_CHOMP    => 1,
+	  PLUGIN_BASE   => 'Template::Plugin',
+    };
 
-	  # create Template object
-	  my $template  = Template->new($config);
-	  my $input     = 'rjob/list.tt';
-	  my $output    = '';
-	  # process input template, substituting variables
-	  $template->process($input, { job_names => \@job_names })
-				   || die $template->error()->as_string();
+    # create Template object
+    my $template  = Template->new($config);
+    my $input     = 'rjob/list.tt';
+    my $output    = '';
+    # process input template, substituting variables
+    $template->process($input, { job_names => \@job_names })
+			     || die $template->error()->as_string();
  
   } elsif ($self->details) {
 

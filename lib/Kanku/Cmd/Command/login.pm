@@ -19,7 +19,6 @@ package Kanku::Cmd::Command::login;
 use Moose;
 use Data::Dumper;
 use Term::ReadKey;
-use Kanku::Remote;
 use YAML qw/LoadFile DumpFile/;
 
 extends qw(MooseX::App::Cmd::Command);
@@ -62,11 +61,11 @@ sub execute {
     $self->apiurl($url) if ($url);
   }
 
-  my $kr =  Kanku::Remote->new(
-              apiurl   => $self->apiurl,
-            );
+  $logger->debug("apiurl: " .  $self->apiurl);
 
-  if ( $kr->session_valid ) {
+  $self->connect_restapi();
+
+  if ( $self->session_valid ) {
 
     $self->save_settings();
 
@@ -110,10 +109,10 @@ Password : ".$self->password."
 
 ");
 
-  $kr->user($self->user);
-  $kr->password($self->password);
+  $self->user($self->user);
+  $self->password($self->password);
 
-  if ( $kr->login() ) {
+  if ( $self->login() ) {
     # Store new default settings
     $self->save_settings(); 
     $logger->info("Login succeed!");
@@ -133,7 +132,8 @@ sub save_settings {
   DumpFile($self->rc_file,$self->settings);
 
   return 0;
-};
+}
+
 __PACKAGE__->meta->make_immutable;
 
 1;

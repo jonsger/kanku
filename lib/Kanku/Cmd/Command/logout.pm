@@ -19,7 +19,6 @@ package Kanku::Cmd::Command::logout;
 use Moose;
 use Data::Dumper;
 use Term::ReadKey;
-use Kanku::Remote;
 use YAML qw/LoadFile DumpFile/;
 
 extends qw(MooseX::App::Cmd::Command);
