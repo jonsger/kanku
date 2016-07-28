@@ -17,7 +17,7 @@
 
 
 Name:           kanku
-Version:        0.1.0
+Version:        0.1.1
 Release:        1.0
 License:        GPL-3.0
 Summary:        Development and continuous integration made easy
@@ -148,32 +148,3 @@ make install DESTDIR=%{buildroot}
 /opt/kanku/views/cli/rjob/*.tt
 
 %changelog
-* Fri Jul 01 2016 Frank Schreiner - 0.1.0-1.0
-- added handler for openstack
-
-* Mon Jun 20 2016 Frank Schreiner - 0.0.5-2.0
-- fixed libvirtd setup for leap
-
-* Sun Jun 19 2016 Frank Schreiner <m0ses@samaxi.de> - 0.0.5-1.0
-- fixed cache_dir problem with CreateDomain
-- fixed specfile problems
-
-* Sun Jun 19 2016 Frank Schreiner <m0ses@samaxi.de> 0.0.4-1.1
-- fixed version of contrib/port_forward.pl
-- RemoveDomain can be disabled now by gui
-- download via OBS api
-- initial version of openvswitch integration
-- moved job template to examples directory
-- added mirror mode to GIT handler
-
-
-* Fri May 20 2016 Frank Schreiner - 0.0.3-0.1
-- new cli remote commands
-- refactor of parameter handling in UI and scheduler
-
-* Mon Apr 25 2016 Frank Schreiner - 0.0.2-0.1
-- introduced offline mode and dbmigreate command
-
-* Thu Mar 10 2016 Frank Schreiner - 0.0.1-0.1
-- initial version
-
