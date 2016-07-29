@@ -128,7 +128,11 @@ sub execute {
     $con->cmd(
       "mkdir -p $mp",
       "echo \"kankushare $mp 9p trans=virtio,version=9p2000.L 1 1\" >> /etc/fstab",
-      "mount -a"
+      "mount -a",
+      "echo 'force_drivers+=\"9p 9pnet 9pnet_virtio\"' >> /etc/dracut.conf.d/98-kanku.conf",
+      "dracut --force",
+      # Be aware of the two spaces after delimiter
+      'grub2-install `cut -f2 -d\  /boot/grub2/device.map |head`'
     );
   }
 
