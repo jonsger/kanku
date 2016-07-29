@@ -17,7 +17,7 @@
 
 
 Name:           kanku
-Version:        0.1.1
+Version:        0.1.2
 Release:        1.0
 License:        GPL-3.0
 Summary:        Development and continuous integration made easy
