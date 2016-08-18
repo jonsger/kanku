@@ -3,8 +3,9 @@
 use strict;
 use warnings;
 use FindBin;
+use Plack::Builder;
 use lib "$FindBin::Bin/../lib";
 
 use Kanku;
 
-Kanku->to_app;
+builder { mount '/kanku' => Kanku->to_app };

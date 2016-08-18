@@ -107,7 +107,7 @@ sub exec_command {
     $out .= $buf;
   }
 
-  die $out if $chan->exit_status;
+  die "Command '$cmd' failed:\n\n$out\n" if $chan->exit_status;
 
   return $out;
 }
