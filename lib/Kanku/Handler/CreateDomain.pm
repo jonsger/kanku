@@ -46,6 +46,8 @@ has ['cache_dir'] => (is=>'rw',isa=>'Str');
 
 has ['mnt_dir_9p'] => (is => 'rw', isa => 'Str', default => '/tmp/kanku');
 
+has ['noauto_9p'] => (is => 'rw', isa => 'Bool');
+
 
 has gui_config => (
   is => 'ro',
@@ -127,7 +129,7 @@ sub execute {
   if ($self->use_9p) {
     $con->cmd(
       "mkdir -p $mp",
-      "echo \"kankushare $mp 9p trans=virtio,version=9p2000.L 1 1\" >> /etc/fstab",
+      "echo \"kankushare $mp 9p trans=virtio,version=9p2000.L".( $self->noauto_9p && ',noauto')." 1 1\" >> /etc/fstab",
       "mount -a",
       "echo 'force_drivers+=\"9p 9pnet 9pnet_virtio\"' >> /etc/dracut.conf.d/98-kanku.conf",
       "dracut --force",
@@ -272,6 +274,12 @@ If configured a port_forward_list, it tries to find the next free port and confi
 
     use_9p                : create a share folder between host and guest using 9p
 
+    cache_dir		  : set directory for caching images
+
+    mnt_dir_9p		  : set diretory to mount current working directory in vm. Only used if use_9p is set to true. (default: '/tmp/kanku')
+
+    noauto_9p		  : set noauto option for 9p directory in fstab.
+
 
 =head1 CONTEXT
 
@@ -291,6 +299,8 @@ If configured a port_forward_list, it tries to find the next free port and confi
 
  host_interface
 
+ cache_dir
+
 =head2 setters
 
  vm_image_file
@@ -307,6 +317,7 @@ If configured a port_forward_list, it tries to find the next free port and confi
 
  use_9p         0
 
+ mnt_dir_9p	/tmp/kanku
 
 =cut
 
