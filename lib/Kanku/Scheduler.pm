@@ -70,10 +70,9 @@ sub run_job {
   my $self    = shift;
   my $job     = shift;
   my $logger  = $self->logger();
-  my $cfg     = Kanku::Config->instance();
   my $schema  = $self->schema();
 
-  my $job_definition = $cfg->job_config($job->name());
+  my $job_definition = Kanku::Config->instance()->job_config($job->name());
 
   if (! $job_definition ) {
     # log error
@@ -98,9 +97,9 @@ sub run_job {
   $job->state("running");
   $job->update_db();
 
-  my $previous_task_state=undef;
-  my $args = [];
-  my $parse_args_failed=0;
+  my $state             = undef;
+  my $args              = [];
+  my $parse_args_failed = 0;
 
   try {
       my $args_string = $job->db_object->args();
@@ -131,103 +130,108 @@ sub run_job {
 
   foreach my $sub_task (@{$job_definition}) {
 
-    $logger->debug("Starting sub_task with handler module: ".$sub_task->{use_module});
-
-    my %out = ();
-    my $last_result = $self->get_last_run_result(
-                        $job->name,
-                        $sub_task->{use_module}
-                      );
-
-    my $sub_job = $schema->resultset('JobHistorySub')->create({
-      job_id  => $job->id,
-      name    => $sub_task->{use_module},
-      state   => 'running'
-    });
-
-    # execute subtask
-    my $state = undef;
-    my $result = undef;
-    try {
-
-
-      my $mod = $sub_task->{use_module};
-      die "Now use_module definition in config (job: $job)" if ( ! $mod );
-      my $mod_args = $args->[$task_counter] || {};
-
-      die "args for $mod not a HashRef" if ( ref($mod_args) ne 'HASH' );
-
-      my $mod2require = $mod;
-      $mod2require =~ s|::|/|g;
-      $mod2require = $mod2require . ".pm";
-      require "$mod2require";
-
-      my %final_args = (%{$sub_task->{options} || {}},%{$mod_args});
-
-      $logger->trace("final args for $mod:\n".Dumper(\%final_args));
-
-      my $obj = $mod->new(%final_args,job=>$job,schema=>$schema);
-
-      if ( $last_result && $last_result->result() ) {
-        my $str = $last_result->result();
-        $obj->last_run_result(decode_json($str));
-      }
-
-      $obj->logger($logger);
-
-      $out{prepare} = $obj->prepare();
-
-      $out{execute} = $obj->execute();
-
-      $out{finalize} = $obj->finalize();
-
-      $result = encode_json(\%out);
-      $state  = 'succeed';
-      foreach my  $step ( "prepare","execute","finalize") {
-
-        if (ref($out{$step}) eq "HASH" && $out{$step}->{message} ) {
-
-          $self->logger->debug("-- $sub_task->{use_module}\->$step: $out{$step}->{message}");
-
-        }
-
-      }
-
-      $task_counter++;
-    }
-    catch {
-      my $e = $_;
-
-      $logger->error($e);
-      $result = encode_json({error_message=>$e});
-      $state  = 'failed';
-      $job->state($state);
-    };
-
-    $sub_job->update({
-      state => $state,
-      result => $result
-    });
-
-    $job->update_db();
-
-    $previous_task_state = $state;
+    $state = $self->run_task($job, $sub_task, $task_counter, $args);
 
     last if ($state eq 'failed');
-    last if ( $job->skipped );
+
+    $task_counter++;
+
+    last if ($job->skipped);
 
   }
 
-  $job->state(
-    ( $job->skipped )
-      ? 'skipped'
-      : $previous_task_state
-  );
+  $job->state(($job->skipped) ? 'skipped' : $state);
   $job->end_time(time());
-
   $job->update_db();
 
   return $job->state;
+}
+
+sub run_task {
+  my ($self, $job, $sub_task, $task_counter, $args)   = @_;
+  my $logger                                          = $self->logger;
+  my $schema                                          = $self->schema();
+
+  $logger->debug("Starting sub_task with handler module: ".$sub_task->{use_module});
+
+  my %out = ();
+  my $last_result = $self->get_last_run_result(
+                      $job->name,
+                      $sub_task->{use_module}
+                    );
+
+  my $sub_job = $schema->resultset('JobHistorySub')->create({
+    job_id  => $job->id,
+    name    => $sub_task->{use_module},
+    state   => 'running'
+  });
+
+  # execute subtask
+  my $state = undef;
+  my $result = undef;
+  try {
+
+    my $mod = $sub_task->{use_module};
+    die "Now use_module definition in config (job: $job)" if ( ! $mod );
+    my $mod_args = $args->[$task_counter] || {};
+
+    die "args for $mod not a HashRef" if ( ref($mod_args) ne 'HASH' );
+
+    my $mod2require = $mod;
+    $mod2require =~ s|::|/|g;
+    $mod2require = $mod2require . ".pm";
+    require "$mod2require";
+
+    my %final_args = (%{$sub_task->{options} || {}},%{$mod_args});
+
+    $logger->trace("final args for $mod:\n".Dumper(\%final_args));
+
+    my $obj = $mod->new(%final_args,job=>$job,schema=>$schema);
+
+    if ( $last_result && $last_result->result() ) {
+      my $str = $last_result->result();
+      $obj->last_run_result(decode_json($str));
+    }
+
+    $obj->logger($logger);
+
+    $out{prepare} = $obj->prepare();
+
+    $out{execute} = $obj->execute();
+
+    $out{finalize} = $obj->finalize();
+
+    $result = encode_json(\%out);
+    $state  = 'succeed';
+    foreach my  $step ( "prepare","execute","finalize") {
+
+      if (ref($out{$step}) eq "HASH" && $out{$step}->{message} ) {
+
+        $self->logger->debug("-- $sub_task->{use_module}\->$step: $out{$step}->{message}");
+
+      }
+
+    }
+
+  }
+  catch {
+    my $e = $_;
+
+    $logger->error($e);
+    $result = encode_json({error_message=>$e});
+    $state  = 'failed';
+    $job->state($state);
+  };
+
+  $sub_job->update({
+    state => $state,
+    result => $result
+  });
+
+  $job->update_db();
+
+  return $state;
+
 }
 
 sub create_scheduled_jobs {
