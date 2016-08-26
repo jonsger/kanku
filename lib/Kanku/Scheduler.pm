@@ -224,12 +224,10 @@ sub get_last_run_result {
 
   if ( $job ) {
         my $subs = $job->job_history_subs();
-        return $subs->find({name => $sub_task});
+        return $subs->search({name => $sub_task},{order_by => { '-desc' =>'id'},limit=>1})->first();
   }
 
-
   return undef
-
 }
 
 sub get_last_job {
@@ -250,7 +248,6 @@ sub get_last_job {
                         limit=>1
                       }
                     );
-
 
   return $jobs_list->next();
 }
