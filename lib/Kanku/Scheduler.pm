@@ -21,6 +21,7 @@ with 'Kanku::Roles::Logger';
 
 use Kanku::Config;
 use Kanku::Job;
+use Kanku::Task;
 use JSON::XS;
 use Data::Dumper;
 use Try::Tiny;
@@ -130,7 +131,16 @@ sub run_job {
 
   foreach my $sub_task (@{$job_definition}) {
 
-    $state = $self->run_task($job, $sub_task, $task_counter, $args);
+    my $task = Kanku::Task->new(
+      job       => $job,
+      options   => $sub_task->{options} || {},
+      module    => $sub_task->{use_module},
+      schema    => $schema,
+      scheduler => $self,
+      args      => $args->[$task_counter],
+    );
+
+    $state = $task->run();
 
     last if ($state eq 'failed');
 
@@ -145,93 +155,6 @@ sub run_job {
   $job->update_db();
 
   return $job->state;
-}
-
-sub run_task {
-  my ($self, $job, $sub_task, $task_counter, $args)   = @_;
-  my $logger                                          = $self->logger;
-  my $schema                                          = $self->schema();
-
-  $logger->debug("Starting sub_task with handler module: ".$sub_task->{use_module});
-
-  my %out = ();
-  my $last_result = $self->get_last_run_result(
-                      $job->name,
-                      $sub_task->{use_module}
-                    );
-
-  my $sub_job = $schema->resultset('JobHistorySub')->create({
-    job_id  => $job->id,
-    name    => $sub_task->{use_module},
-    state   => 'running'
-  });
-
-  # execute subtask
-  my $state = undef;
-  my $result = undef;
-  try {
-
-    my $mod = $sub_task->{use_module};
-    die "Now use_module definition in config (job: $job)" if ( ! $mod );
-    my $mod_args = $args->[$task_counter] || {};
-
-    die "args for $mod not a HashRef" if ( ref($mod_args) ne 'HASH' );
-
-    my $mod2require = $mod;
-    $mod2require =~ s|::|/|g;
-    $mod2require = $mod2require . ".pm";
-    require "$mod2require";
-
-    my %final_args = (%{$sub_task->{options} || {}},%{$mod_args});
-
-    $logger->trace("final args for $mod:\n".Dumper(\%final_args));
-
-    my $obj = $mod->new(%final_args,job=>$job,schema=>$schema);
-
-    if ( $last_result && $last_result->result() ) {
-      my $str = $last_result->result();
-      $obj->last_run_result(decode_json($str));
-    }
-
-    $obj->logger($logger);
-
-    $out{prepare} = $obj->prepare();
-
-    $out{execute} = $obj->execute();
-
-    $out{finalize} = $obj->finalize();
-
-    $result = encode_json(\%out);
-    $state  = 'succeed';
-    foreach my  $step ( "prepare","execute","finalize") {
-
-      if (ref($out{$step}) eq "HASH" && $out{$step}->{message} ) {
-
-        $self->logger->debug("-- $sub_task->{use_module}\->$step: $out{$step}->{message}");
-
-      }
-
-    }
-
-  }
-  catch {
-    my $e = $_;
-
-    $logger->error($e);
-    $result = encode_json({error_message=>$e});
-    $state  = 'failed';
-    $job->state($state);
-  };
-
-  $sub_job->update({
-    state => $state,
-    result => $result
-  });
-
-  $job->update_db();
-
-  return $state;
-
 }
 
 sub create_scheduled_jobs {
