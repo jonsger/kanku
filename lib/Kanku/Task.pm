@@ -16,6 +16,12 @@
 #
 package Kanku::Task;
 
+=head1 NAME
+
+Kanku::Task - single task which executes a Handler
+
+=cut
+
 use Moose;
 with 'Kanku::Roles::Logger';
 
@@ -25,12 +31,62 @@ use JSON::XS;
 use Data::Dumper;
 use Try::Tiny;
 
+=head1 ATTRIBUTES
+
+=head2 schema    - a DBIx::Class::Schema object
+
+=cut
+
 has 'schema'     => (is=>'rw',isa=>'Object');
+
+=head2 job       - a Kanku::Job object of parent job
+
+=cut
+
 has 'job'        => (is=>'rw',isa=>'Object');
+
+=head2 scheduler - a Kanku::Scheduler object
+
+=cut
+
 has 'scheduler'  => (is=>'rw',isa=>'Object');
+
+=head2 module    - name of the Kanku::Handler::* module to be executed
+
+=cut
+
 has 'module'     => (is=>'rw',isa=>'Str');
+
+=head2 options   - options for the Handler from config file
+
+=cut
+
 has 'options'    => (is=>'rw',isa=>'HashRef',default=>sub {{}});
-has 'args'       => (is=>'rw',isa=>'HashRef');
+
+=head2 args      - arguments for the Handler from e.g. webfrontend
+
+optional arguments which could be used to overwrite options from the config file
+
+=cut
+
+has 'args'       => (is=>'rw',isa=>'HashRef',default=>sub {{}} );
+
+=head1 METHODS
+
+=head2 run - load and run the Handler given by $self->module
+
+This method tries to load the Kanku::Handler::$module and calls the following
+methods in exactly the given order
+
+  my $handler = Kanku::Handler::Example->new(..);
+
+  $handler->prepare();
+
+  $handler->execute();
+
+  $handler->finalize();
+
+=cut
 
 sub run {
   my ($self)  = @_;
