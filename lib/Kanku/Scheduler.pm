@@ -137,7 +137,7 @@ sub run_job {
       module    => $sub_task->{use_module},
       schema    => $schema,
       scheduler => $self,
-      args      => $args->[$task_counter],
+      args      => $args->[$task_counter] || {},
     );
 
     $state = $task->run();
