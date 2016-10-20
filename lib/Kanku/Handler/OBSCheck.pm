@@ -42,7 +42,7 @@ has dod_object => (
 );
 
 has ['api_url','project','package'] => (is=>'rw',isa=>'Str',required=>1);
-has ['base_url']                    => (is=>'rw',isa=>'Str');
+has ['base_url','repository']       => (is=>'rw',isa=>'Str');
 
 has _changed => (is=>'rw',isa=>'Bool',default=>0);
 
@@ -107,6 +107,8 @@ sub execute {
   my $dod       = $self->dod_object();
 
   if ( $self->base_url ) { $dod->base_url($self->base_url) };
+  $dod->base_url($self->base_url)     if $self->base_url;
+  $dod->repository($self->repository) if $self->repository;
 
   my $binary    = $dod->get_image_file_from_url();
 
