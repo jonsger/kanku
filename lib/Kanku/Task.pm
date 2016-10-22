@@ -125,6 +125,7 @@ sub run {
     my $mod2require = $mod;
     $mod2require =~ s|::|/|g;
     $mod2require = $mod2require . ".pm";
+    $logger->debug("Trying to load $mod2require");
     require "$mod2require";
 
     my %final_args = (%{$self->{options}},%{$mod_args});

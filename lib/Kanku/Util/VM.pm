@@ -85,6 +85,14 @@ has logger => (
   default => sub { Log::Log4perl->get_logger(); }
 );
 
+has wait_for_network => (
+  is => 'rw',
+  isa => 'Int',
+  lazy => 1,
+  default => 120
+);
+
+
 
 sub process_template {
   my $self = shift;
@@ -274,7 +282,6 @@ sub _get_ip_from_console {
   my $interface   = $self->management_interface();
 
 
-  my $ip_address  = undef;
   my $con  = $self->console;
 
   if (! $con->user_is_logged_in ) {
@@ -283,11 +290,31 @@ sub _get_ip_from_console {
 
   my $result = $con->cmd("LANG=C ip addr show $interface");
 
-  map { if ( $_ =~ /^\s+inet\s+([0-9\.]+)\// ) { $ip_address = $1 } } split(/\n/,$result->[0]);
+  my $wait = $self->wait_for_network;
 
-  $self->ipaddress($ip_address);
+  while ( $wait > 0) {
 
-  return $ip_address;
+    my $ipaddress  = undef;
+
+    map { if ( $_ =~ /^\s+inet\s+([0-9\.]+)\// ) { $ipaddress = $1 } } split(/\n/,$result->[0]);
+
+    if ($ipaddress) {
+      $self->ipaddress($ipaddress);
+      last;
+    } else {
+      $self->logger->debug("Could not get ip address form interface $interface.");
+      $self->logger->debug("Waiting another $wait seconds for network to come up");
+      $wait--;
+      sleep 1;
+    }
+  }
+
+  if (! $self->ipaddress) {
+    die "Could not get ip address for interface $interface within "
+      . $self->wait_for_network." seconds.";
+  }
+
+  return $self->ipaddress();
 }
 
 sub _get_ip_from_dhcp {
@@ -297,23 +324,43 @@ sub _get_ip_from_dhcp {
   my @nics          = $dom->get_interface_addresses(
                           Sys::Virt::Domain::INTERFACE_ADDRESSES_SRC_LEASE
                       );
+  my $ipaddress;
 
-  if (! $self->management_network() ) {
-    return $self->ipaddress($nics[0]->{addrs}->[0]->{addr});
-  }
 
-  my $mgmt_range    = Net::IP->new($self->management_network());
+  my $wait = $self->wait_for_network;
 
-  for my $nic (@nics) {
-    for my $addr (@{$nic->{addrs}}) {
-      my $ip = Net::IP->new($addr->{addr});
-      if ( $ip->overlaps($mgmt_range) == $IP_A_IN_B_OVERLAP ) {
-        return $self->ipaddress($ip->ip);
+  while ( $wait > 0) {
+
+      if (! $self->management_network() ) {
+        $ipaddress = $nics[0]->{addrs}->[0]->{addr};
+      } else {
+          my $mgmt_range    = Net::IP->new($self->management_network());
+
+          for my $nic (@nics) {
+            for my $addr (@{$nic->{addrs}}) {
+              my $ip = Net::IP->new($addr->{addr});
+              if ( $ip->overlaps($mgmt_range) == $IP_A_IN_B_OVERLAP ) {
+                $ipaddress = $ip->ip;
+              }
+            }
+          }
       }
-    }
+      last if $ipaddress;
+
+      $wait--;
+
+      $self->logger->debug("Could not get ip address form interface.");
+      $self->logger->debug("Waiting another $wait seconds for network to come up");
+
   }
 
-  return undef;
+  if (! $ipaddress) {
+    die "Could not get ip address for interface within "
+      . $self->wait_for_network." seconds.";
+  }
+
+  return $self->ipaddress($ipaddress);
+
 }
 
 __PACKAGE__->meta->make_immutable;
