@@ -44,8 +44,8 @@ sub execute {
       'state.apply',join(',',@{$self->states})
   );
 
-  system(@cmd);
   $self->logger->debug("COMMAND: '@cmd'");
+  system(@cmd);
   return {
     code        => 0,
     message     => "All commands on $ip executed successfully",
