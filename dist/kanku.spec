@@ -59,6 +59,7 @@ Requires: perl(JSON::XS)
 Requires: perl(DBIx::Class)
 Requires: perl(DBIx::Class::Migration)
 Requires: perl(Template::Plugin::Filter::ANSIColor)
+Requires: perl(File::LibMagic)
 
 %description
 TODO: add some meaningful description
