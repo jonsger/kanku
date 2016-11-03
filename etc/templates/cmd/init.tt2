@@ -23,7 +23,8 @@ jobs:
     options:
       api_url: https://api.opensuse.org
       project: home:M0ses:kanku:Images
-      package: openSUSE-Leap-42.1-JeOS
+      repository: images_leap_42_2
+      package: openSUSE-Leap-42.2-JeOS
   -
     use_module: Kanku::Handler::ImageDownload
     options:
