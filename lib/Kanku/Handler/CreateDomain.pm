@@ -19,6 +19,7 @@ package Kanku::Handler::CreateDomain;
 use Moose;
 use Kanku::Config;
 use Kanku::Util::VM;
+use Kanku::Util::VM::Image;
 use Kanku::Util::IPTables;
 
 use IO::Uncompress::AnyUncompress qw(anyuncompress $AnyUncompressError) ;
@@ -204,15 +205,16 @@ sub _create_image_file_from_cache {
 
 
   } elsif( $ctx->{vm_image_file} =~ /\.(qcow2|raw|img)$/ ) {
-    $final_file = $self->images_dir . "/" . $self->domain_name .".$1";
+    my $vol_name = $self->domain_name .".$1";
+    my $img = Kanku::Util::VM::Image->new(
+                vol_name 	=> $vol_name,
+                source_file 	=> $in->stringify
+	      );
 
-    $self->logger->info("Copying $in");
-    $self->logger->info("  to $final_file");
+    $final_file = $img->create_volume()->get_path();
 
 
-    unlink $final_file;
-
-    copy($in,$final_file) or die "Copy failed: $!\n";
+    $self->logger->info("Uploading $in via libvirt to $vol_name");
 
   } else {
 

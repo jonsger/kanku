@@ -148,9 +148,13 @@ sub process_template {
   }
 
   if ( ! -f $template_path.$input ) {
+    $self->logger->warn("Template file $template_path$input not found");
+    $self->logger->warn("Using internal template");
     my $template;
     while ( <DATA> ) { $template .= $_ };
     $input = \$template;
+  } else {
+    $self->logger->info("Using template file '$template_path$input'");
   }
 
   my $output = '';
@@ -397,10 +401,6 @@ __DATA__
       <target dev='hda' bus='ide'/>
       <address type='drive' controller='0' bus='0' target='0' unit='0'/>
     </disk>
-    <controller type='usb' index='0'>
-      <alias name='usb'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x2'/>
-    </controller>
     <controller type='pci' index='0' model='pci-root'>
       <alias name='pci.0'/>
     </controller>
@@ -423,16 +423,6 @@ __DATA__
       <target type='serial' port='0'/>
       <alias name='serial0'/>
     </console>
-    <input type='mouse' bus='ps2'/>
-    <input type='keyboard' bus='ps2'/>
-    <graphics type='vnc' port='-1' autoport='yes' listen='127.0.0.1'>
-      <listen type='address' address='127.0.0.1'/>
-    </graphics>
-    <video>
-      <model type='cirrus' vram='16384' heads='1'/>
-      <alias name='video0'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x0'/>
-    </video>
     <memballoon model='virtio'>
       <alias name='balloon0'/>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x04' function='0x0'/>
