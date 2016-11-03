@@ -29,6 +29,7 @@ has [qw/
         domain_name     host_interface
         cache_dir       images_dir
 	os_instance_name os_image_id
+	login_user	login_pass
     /
 ] => (is=>'rw',isa=>'Str');
 
@@ -95,7 +96,7 @@ has gui_config => (
 sub execute {
   my $self = shift;
   my $ctx  = $self->job()->context();
-  for my $var (qw/domain_name vm_template_file host_interface images_dir cache_dir os_instance_name os_image_id/) {
+  for my $var (qw/domain_name vm_template_file host_interface images_dir cache_dir os_instance_name os_image_id login_user login_pass/) {
     if ($self->$var()){
       $self->logger->debug("Setting variable $var in context to ".$self->$var());
       $ctx->{$var} = $self->$var();
