@@ -66,7 +66,7 @@ has cache_dir => (
   is        =>'rw',
   isa       =>'Object',
   lazy      => 1,
-  default   => sub { Path::Class::Dir->new($ENV{HOME},".kanku","cache") }
+  default   => sub { Path::Class::Dir->new($ENV{HOME},".cache","kanku") }
 );
 
 has [qw/username password/] => (
