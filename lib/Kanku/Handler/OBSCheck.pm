@@ -98,7 +98,7 @@ sub prepare {
 
 sub execute {
   my $self = shift;
-  
+
   if ($self->offline) {
     return $self->get_from_history();
   }
@@ -202,7 +202,7 @@ sub update_history {
     },{
       unique_obscheck => [$self->api_url,$self->project,$self->package]
     }
-  );   
+  );
 
 };
 
@@ -215,7 +215,7 @@ sub get_from_history {
       project     => $self->project,
       package     => $self->package,
     }
-  );   
+  );
 
   die "Could not found last entry in database" if (! $rs);
 
@@ -226,7 +226,7 @@ sub get_from_history {
     state   => 'succeed',
     message => "Sucessfully fetch vm_image_url '".$ctx->{vm_image_url}."' from database"
   };
-  
+
 };
 
 1;
@@ -255,11 +255,15 @@ This handler downloads a file from a given url to the local filesystem and sets 
 
 =head1 OPTIONS
 
-  api_url             : API url to OBS server 
+  api_url             : API url to OBS server
+
+  base_url            : Url to use for download
 
   project             : project name in OBS
 
   package             : package name to search for in project
+
+  repository          : repository name to search for in project/package
 
   skip_all_checks     : skip checks all checks on project/package on obs side before downloading image
 
