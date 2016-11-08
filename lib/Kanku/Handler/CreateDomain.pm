@@ -37,18 +37,32 @@ has [qw/
       short_hostname
 /] => (is => 'rw',isa=>'Str');
 
+has '+management_interface' => ( default => '');
+
+has '+management_network'   => ( default => '');
+
 has [qw/memory vcpu/] => (is => 'rw',isa=>'Int');
 
-has [qw/use_9p/] => (is => 'rw',isa=>'Bool');
+has '+memory'         => ( default => 1024*1024 );
 
-has "+images_dir" => (default=>"/var/lib/libvirt/images");
+has '+vcpu'           => ( default => 1 );
 
-has ['cache_dir'] => (is=>'rw',isa=>'Str');
+has [qw/use_9p/]      => (is => 'rw',isa=>'Bool',default=>0);
 
-has ['mnt_dir_9p'] => (is => 'rw', isa => 'Str', default => '/tmp/kanku');
+has "+images_dir"     => (default=>"/var/lib/libvirt/images");
 
-has ['noauto_9p'] => (is => 'rw', isa => 'Bool');
+has ['cache_dir']     => (is=>'rw',isa=>'Str');
 
+has ['mnt_dir_9p']    => (is => 'rw', isa => 'Str', default => '/tmp/kanku');
+
+has ['noauto_9p']     => (is => 'rw', isa => 'Bool');
+
+has empty_disks => (
+  is => 'rw',
+  isa => 'ArrayRef',
+  lazy => 1,
+  default => sub {[]}
+);
 
 has gui_config => (
   is => 'ro',
@@ -88,15 +102,16 @@ sub execute {
   my $cfg  = Kanku::Config->instance()->config();
 
   my $vm = Kanku::Util::VM->new(
-      vcpu                  => $self->vcpu                  || 1,
-      memory                => $self->memory                || 1024 * 1024,
+      vcpu                  => $self->vcpu,
+      memory                => $self->memory,
       domain_name           => $self->domain_name,
       images_dir            => $self->images_dir,
       login_user            => $self->login_user,
       login_pass            => $self->login_pass,
-      use_9p                => $self->use_9p                || 0,
-      management_interface  => $self->management_interface  || '',
-      management_network    => $self->management_network    || ''
+      use_9p                => $self->use_9p,
+      management_interface  => $self->management_interface,
+      management_network    => $self->management_network,
+      empty_disks           => $self->empty_disks
   );
 
   if ( $ctx->{use_cache} ) {

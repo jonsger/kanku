@@ -26,6 +26,8 @@ use Template;
 use Cwd;
 use Net::IP;
 use Kanku::Util::VM::Console;
+use Kanku::Util::VM::Image;
+use Sys::Virt::StorageVol;
 use Data::Dumper;
 use XML::XPath;
 use Try::Tiny;
@@ -33,15 +35,25 @@ use Try::Tiny;
 has [qw/
       image_file    domain_name   vcpu        memory
       images_dir    login_user    login_pass  template_file
-      ipaddress     uri
+      ipaddress     uri           disks_xml
       management_interface        management_network
     / ]  => ( is=>'rw', isa => 'Str');
 
-has _console      => ( is=>'rw', isa => 'Object' );
-has use_9p        => ( is=>'rw', isa => 'Bool' );
-
+has _console      => ( is => 'rw', isa => 'Object' );
+has use_9p        => ( is => 'rw', isa => 'Bool' );
+has empty_disks   => ( is => 'rw', isa => 'ArrayRef', default => sub {[]});
 has '+uri'        => ( default => 'qemu:///system');
 #has "+ipaddress"  => ( lazy => 1, default => sub { $self->get_ipaddress } );
+
+has vmm => (
+  is => 'rw',
+  isa => 'Object|Undef',
+  lazy => 1,
+  default => sub {
+    my $self = shift;
+    return Sys::Virt->new(uri => $self->uri);
+  }
+);
 
 has dom => (
   is => 'rw',
@@ -49,8 +61,8 @@ has dom => (
   lazy => 1,
   default => sub {
     my $self = shift;
-	die "Could not find domain_name\n" if ! $self->domain_name;
-    my $vmm = Sys::Virt->new(uri => $self->uri);
+    die "Could not find domain_name\n" if ! $self->domain_name;
+    my $vmm = $self->vmm();
     for my $dom ( $vmm->list_all_domains() ) {
       if ( $self->domain_name eq $dom->get_name ) {
         return $dom
@@ -78,6 +90,7 @@ has console => (
       return $con
   }
 );
+
 has logger => (
   is => 'rw',
   isa => 'Object',
@@ -93,9 +106,8 @@ has wait_for_network => (
 );
 
 
-
 sub process_template {
-  my $self = shift;
+  my ($self,$disk_xml) = @_;
 
   # some useful options (see below for full list)
   my $template_path = Kanku::Config->instance->app_base_path->stringify . '/etc/templates/';
@@ -119,7 +131,8 @@ sub process_template {
       domain_name   => $self->domain_name ,
       images_dir    => $self->images_dir  ,
       image_file    => $self->image_file  ,
-      hostshare     => ""
+      hostshare     => "",
+      disk_xml      => $disk_xml
     }
   };
 
@@ -166,9 +179,54 @@ sub process_template {
 
 }
 
+sub _generate_disk_xml {
+    my ($self,$unit,$file) = @_;
+
+    my $drive = "hd" . chr(97+$unit);
+    my $source = '';
+
+    return "
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2'/>
+      <source file='$file'/>
+      <target dev='$drive' bus='ide'/>
+      <address type='drive' controller='0' bus='0' target='0' unit='$unit'/>
+    </disk>
+";
+
+}
+
+sub create_empty_disks  {
+  my ($self) = @_;
+  my $unit   = 1;
+  my $xml;
+
+  for my $disk (@{$self->empty_disks}) {
+    my $img = Kanku::Util::VM::Image->new(
+                vol_name  => $self->domain_name ."-".$disk->{name}.".qcow2",
+                size      => $disk->{size},
+                vmm       => $self->vmm,
+                pool_name => $disk->{pool}   || 'default',
+		format    => $disk->{format} || 'qcow2'
+              );
+    my $vol = $img->create_volume();
+
+    $xml .= $self->_generate_disk_xml($unit,$vol->get_path);
+    $unit++;
+  }
+
+  return $xml;
+}
+
 sub create_domain {
   my $self  = shift;
-  my $xml   = $self->process_template();
+
+  my $disk_xml = $self->_generate_disk_xml(0,$self->image_file);
+
+  $disk_xml .= $self->create_empty_disks();
+
+
+  my $xml   = $self->process_template($disk_xml);
   my $vmm   = undef;
   my $dom   = undef;
 
@@ -395,12 +453,7 @@ __DATA__
   <on_crash>destroy</on_crash>
   <devices>
     <emulator>/usr/bin/qemu-kvm</emulator>
-    <disk type='file' device='disk'>
-      <driver name='qemu' type='qcow2'/>
-      <source file='[% domain.image_file %]'/>
-      <target dev='hda' bus='ide'/>
-      <address type='drive' controller='0' bus='0' target='0' unit='0'/>
-    </disk>
+    [% domain.disk_xml %]
     <controller type='pci' index='0' model='pci-root'>
       <alias name='pci.0'/>
     </controller>

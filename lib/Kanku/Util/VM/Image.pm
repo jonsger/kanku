@@ -31,11 +31,12 @@ use XML::XPath;
 use Try::Tiny;
 use File::LibMagic;
 
-has [qw/uri pool_name vol_name source_file/ ]  => ( is=>'rw', isa => 'Str');
+has [qw/uri pool_name vol_name source_file size format/ ]  => ( is=>'rw', isa => 'Str');
 
 
 has '+uri'       => ( default => 'qemu:///system');
 has '+pool_name' => ( default => 'default');
+has '+format'    => ( default => 'qcow2');
 
 has pool => (
   is => 'rw',
@@ -69,26 +70,77 @@ has logger => (
   default => sub { Log::Log4perl->get_logger(); }
 );
 
-
 sub create_volume {
   my $self = shift;
 
   $self->delete_volume();
 
-  $self->logger->info("Creating volume " . $self->vol_name);
+  $self->logger->info("Creating volume '" . ($self->vol_name || '')."'");
 
   my $xml  = "
 <volume type='file'>
   <name>" . $self->vol_name . "</name>
   <capacity unit='bytes'>". $self->get_image_size() ."</capacity>
+  <target>
+    <format type='".$self->format."'/>
+  </target>
 </volume>
 ";
 
   my $vol  = $self->pool->create_volume($xml);
 
-  my $vmm = $self->vmm();
-  my $st  = $self->vmm()->new_stream();
-  my $f   = $self->source_file();
+  $self->_copy_volume($vol) if $self->source_file;
+  
+  return $vol;
+
+}
+
+sub delete_volume {
+  my $self = shift;
+
+  my @volumes = $self->pool->list_all_volumes();
+  for my $vol (@volumes) {
+    die "Got no vol_name\n" if (!$self->vol_name);
+    $self->logger->debug("Checking volume " . ( $vol->get_name || '' ));
+    if ( $vol->get_name() eq $self->vol_name()) {
+      $self->logger->info("Deleting volume " . $vol->get_name);
+      $vol->delete(Sys::Virt::StorageVol::DELETE_NORMAL);
+    }
+  }
+}
+
+sub get_image_size {
+  my $self = shift;
+
+  if ( $self->source_file ) {
+    my $file = File::LibMagic->new();
+    my $info = $file->info_from_filename($self->source_file);
+
+    if ( $info->{description} =~ /^QEMU QCOW Image .* (\d+) bytes/ ) {
+      return $1;
+    } else {
+      my @stat = stat($self->source_file);
+      return $stat[7];
+    }
+  }
+
+  my $sh = { 
+             b => 1,                   k => 1024 ,              
+             m => 1024*1024,           g => 1024*1024*1024, 
+             t => 1024*1024*1024*1024, p => 1024*1024*1024*1024*1024 
+           };
+  if ($self->size =~ /^(\d+)([bkmgtp]m?)?/i ) {
+    return $1 * $sh->{lc($2)}
+  }
+
+  die "Size of volume '".$self->vol_name."' could not be determined\n";
+}
+
+sub _copy_volume {
+  my ($self, $vol) = @_;
+  my $vmm  = $self->vmm();
+  my $st   = $self->vmm()->new_stream();
+  my $f    = $self->source_file();
 
   open FILE, "<$f" or die "cannot open $f: $!";
 
@@ -120,39 +172,5 @@ sub create_volume {
   }
 
   close FILE or die "cannot save $f: $!";
-
-  return $vol;
-
 }
-
-sub delete_volume {
-  my $self = shift;
-
-  my @volumes = $self->pool->list_all_volumes();
-  for my $vol (@volumes) {
-    $self->logger->debug("Checking volume " . $vol->get_name);
-    if ( $vol->get_name() eq $self->vol_name()) {
-      $self->logger->info("Deleting volume " . $vol->get_name);
-      $vol->delete(Sys::Virt::StorageVol::DELETE_NORMAL);
-    }
-  }
-}
-
-sub get_image_size {
-  my $self = shift;
-
-  # FIXME: use File::LibMagic here
-
-  my $file = File::LibMagic->new();
-  my $info = $file->info_from_filename($self->source_file);
-
-  if ( $info->{description} =~ /^QEMU QCOW Image .* (\d+) bytes/ ) {
-    return $1;
-  } else {
-    my @stat = stat($self->source_file);
-    return $stat[7];
-  }
-
-}
-
 1;
