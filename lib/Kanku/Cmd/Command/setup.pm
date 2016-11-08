@@ -188,8 +188,6 @@ sub _execute_devel_setup {
 
   $self->_set_sudoers();
 
-  $self->_chown_images_dir();
-
   $self->_configure_libvirtd_access();
 
   $self->_setup_database();
@@ -393,20 +391,6 @@ sub _setup_local_schema {
   my $logger  = $self->logger;
 
   $logger->warn("_setup_local_schema not implemented yet");
-
-  return undef;
-}
-
-sub _chown_images_dir {
-  my $self    = shift;
-  my $logger  = $self->logger;
-
-  $logger->info("Changing ownership of ".$self->images_dir." to user ". $self->user);
-
-  my ($login,$pass,$uid,$gid) = getpwnam($self->user)
-        or die $self->user." not in passwd file\n";
-
-  $self->_chown($self->images_dir);
 
   return undef;
 }
