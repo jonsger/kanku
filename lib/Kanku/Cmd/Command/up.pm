@@ -37,7 +37,7 @@ has job_name => (
     traits        => [qw(Getopt)],
     isa           => 'Str',
     is            => 'rw',
-    #cmd_aliases   => 'X',
+    cmd_aliases   => 'j',
     documentation => 'job to run',
 );
 
