@@ -51,7 +51,17 @@ has vmm => (
   lazy => 1,
   default => sub {
     my $self = shift;
-    return Sys::Virt->new(uri => $self->uri);
+    try {
+      return Sys::Virt->new(uri => $self->uri);
+    }
+    catch {
+      my ($e) = @_;
+      if ( ref($e) eq 'Sys::Virt::Error' ){
+        die $e->stringify();
+      } else {
+        die $e
+      }
+    };
   }
 );
 
@@ -62,12 +72,22 @@ has dom => (
   default => sub {
     my $self = shift;
     die "Could not find domain_name\n" if ! $self->domain_name;
-    my $vmm = $self->vmm();
-    for my $dom ( $vmm->list_all_domains() ) {
-      if ( $self->domain_name eq $dom->get_name ) {
-        return $dom
+    try {
+      my $vmm = $self->vmm();
+      for my $dom ( $vmm->list_all_domains() ) {
+        if ( $self->domain_name eq $dom->get_name ) {
+          return $dom
+        }
       }
     }
+    catch {
+      my ($e) = @_;
+      if ( ref($e) eq 'Sys::Virt::Error' ){
+        die $e->stringify();
+      } else {
+        die $e
+      }
+    };
     return undef;
   }
 );
@@ -231,19 +251,33 @@ sub create_domain {
   my $dom   = undef;
 
   # connect to libvirtd
-  eval {
+  try {
     $vmm = Sys::Virt->new(uri => 'qemu:///system');
+  }
+  catch {
+    my ($e) = @_;
+    if ( ref($e) eq 'Sys::Virt::Error' ){
+      die $e->stringify();
+    } else {
+      die $e
+    }
   };
 
   die $@->message . "\n" if ($@);
 
   # create domain
-  eval {
+  try {
     $dom = $vmm->define_domain($xml);
     $dom->create;
+  }
+  catch {
+    my ($e) = @_;
+    if ( ref($e) eq 'Sys::Virt::Error' ){
+      die $e->stringify();
+    } else {
+      die $e
+    }
   };
-
-  die $@->message . "\n" if ($@);
 
   # return domain
   return $dom

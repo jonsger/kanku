@@ -19,7 +19,6 @@ package Kanku::Cmd::Command::ssh;
 use Moose;
 use Kanku::Config;
 use Kanku::Util::VM;
-use Sys::Virt;
 use Data::Dumper;
 use Net::IP;
 extends qw(MooseX::App::Cmd::Command);

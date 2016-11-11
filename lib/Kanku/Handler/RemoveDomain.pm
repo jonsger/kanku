@@ -19,7 +19,6 @@ package Kanku::Handler::RemoveDomain;
 use Moose;
 use Kanku::Util::VM;
 use Kanku::Util::IPTables;
-use Sys::Virt;
 use Try::Tiny;
 with 'Kanku::Roles::Handler';
 

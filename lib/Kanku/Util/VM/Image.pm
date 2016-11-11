@@ -86,12 +86,21 @@ sub create_volume {
   </target>
 </volume>
 ";
+  try {
+      my $vol  = $self->pool->create_volume($xml);
 
-  my $vol  = $self->pool->create_volume($xml);
+      $self->_copy_volume($vol) if $self->source_file;
 
-  $self->_copy_volume($vol) if $self->source_file;
-  
-  return $vol;
+      return $vol;
+  }
+  catch {
+    my ($e) = @_;
+    if ( ref($e) eq 'Sys::Virt::Error' ){
+      die $e->stringify();
+    } else {
+      die $e
+    }
+  };
 
 }
 
@@ -104,7 +113,17 @@ sub delete_volume {
     $self->logger->debug("Checking volume " . ( $vol->get_name || '' ));
     if ( $vol->get_name() eq $self->vol_name()) {
       $self->logger->info("Deleting volume " . $vol->get_name);
-      $vol->delete(Sys::Virt::StorageVol::DELETE_NORMAL);
+      try {
+        $vol->delete(Sys::Virt::StorageVol::DELETE_NORMAL);
+      }
+      catch {
+        my ($e) = @_;
+        if ( ref($e) eq 'Sys::Virt::Error' ){
+          die $e->stringify();
+        } else {
+          die $e
+        }
+      };
     }
   }
 }
@@ -124,10 +143,10 @@ sub get_image_size {
     }
   }
 
-  my $sh = { 
-             b => 1,                   k => 1024 ,              
-             m => 1024*1024,           g => 1024*1024*1024, 
-             t => 1024*1024*1024*1024, p => 1024*1024*1024*1024*1024 
+  my $sh = {
+             b => 1,                   k => 1024 ,
+             m => 1024*1024,           g => 1024*1024*1024,
+             t => 1024*1024*1024*1024, p => 1024*1024*1024*1024*1024
            };
   if ($self->size =~ /^(\d+)([bkmgtp]m?)?/i ) {
     return $1 * $sh->{lc($2)}

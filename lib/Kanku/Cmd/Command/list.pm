@@ -22,7 +22,6 @@ use Moose;
 #use Kanku::Job;
 #use Kanku::Util::VM;
 use Log::Log4perl;
-use Sys::Virt;
 extends qw(MooseX::App::Cmd::Command);
 with "Kanku::Cmd::Roles::Schema";
 
