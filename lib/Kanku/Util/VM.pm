@@ -72,11 +72,14 @@ has dom => (
   default => sub {
     my $self = shift;
     die "Could not find domain_name\n" if ! $self->domain_name;
+    my $dom_o = undef;
     try {
       my $vmm = $self->vmm();
       for my $dom ( $vmm->list_all_domains() ) {
         if ( $self->domain_name eq $dom->get_name ) {
-          return $dom
+          $self->logger->debug("Found domain with name ".$self->domain_name);
+          $dom_o = $dom;
+          return $dom;
         }
       }
     }
@@ -88,7 +91,7 @@ has dom => (
         die $e
       }
     };
-    return undef;
+    return $dom_o;
   }
 );
 
@@ -312,25 +315,34 @@ sub remove_domain {
   my $self    = shift;
   my $dom     = $self->dom;
 
-  return 0 if ( ! $dom );
+  $self->logger->debug("Trying to remove domain '".$self->domain_name."'");
+
+  if ( ! $dom ) {
+    $self->logger->info("Domain with name '".$self->domain_name."' not found");
+    return 0;
+  }
+
 
   try {
     # Shutdown domain immediately (poweroff)
     my ($dom_state, $reason) = $dom->get_state;
     if ($dom_state == Sys::Virt::Domain::STATE_RUNNING ) {
-      $self->logger->debug("Trying to destroy domain");
+      $self->logger->debug("Trying to destroy domain '".$dom->get_name."'");
       $dom->destroy();
     }
 
+    $self->logger->debug("Checking for snapshots of domain '".$dom->get_name."'");
     my @snapshots = $dom->list_snapshots();
     for my $snap (@snapshots) {
       $snap->delete;
     }
 
+    $self->logger->debug("Undefine domain '".$dom->get_name."'");
     $dom->undefine(
       Sys::Virt::Domain::UNDEFINE_MANAGED_SAVE
     );
 
+    $self->logger->debug("Successfully undefined domain '".$dom->get_name."'");
   } catch {
     die $_->message ."\n";
   };
