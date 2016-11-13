@@ -8,6 +8,23 @@
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
     <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<style>
+div.hidden_content {
+  visibility: hidden;
+  display: none;
+}
+div.show_content {
+  visibility: inline;
+  display: inline;
+}
+#navbar {
+  list-style-type: none;
+}
+#navbar li {
+  display: inline;
+}
+</style>
   </head>
   <body>
     <section class="page-header">
@@ -19,139 +36,147 @@
     </section>
 
     <section class="main-content">
-      <h1>
-<a id="disclaimer" class="anchor" href="#disclaimer" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>DISCLAIMER</h1>
-
-<p>This project is in a very early state (pre-alpha), so we not recommend to use on productive machines. </p>
-
-<h1>
-<a id="project-home" class="anchor" href="#project-home" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Project home</h1>
-
-<p><a href="https://github.com/M0ses/kanku">https://github.com/M0ses/kanku</a></p>
-
-<h1>
-<a id="working-linux-distributions" class="anchor" href="#working-linux-distributions" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Working linux distributions</h1>
-
-<p>At the moment kanku works only for 
-(at least with this guide, but kanku is pure perl + libvirt + qemu, so it should run on any linux distribution )</p>
-
-<ul>
-<li><p>openSUSE Tumbleweed</p></li>
-<li><p>openSUSE Leap 42.1</p></li>
+<ul id=navbar>
+  <li>
+    <a href='#' id='getting_started-btn'      class="btn_highlighted nav_btn" onclick=switch_to('getting_started')>Getting Started</a>
+  </li>
+  <li>
+    <a href='#' id='overview_and_concept-btn' class="btn_dark nav_btn" onclick=switch_to('overview_and_concept')>Overview and Concept</a>
+  </li>
+  <li>
+    <a href='#' id='faq-btn'                  class="btn_dark nav_btn" onclick=switch_to('faq')>FAQ</a>
+  </li>
+  <li>
+    <select id="os_version" onchange=change_os_version()>
+      <option value='<YOUR_OS_VERSION_ID_HERE>'>Please choose your OS</option>
+      <option value="openSUSE_Tumbleweed">openSUSE Tumbleweed</option>
+      <option value="openSUSE_Leap_42.2">openSUSE Leap 42.2</option>
+      <option value="openSUSE_Leap_42.1">openSUSE Leap 42.1</option>
+    </select>
+  </li>
 </ul>
+<!-- Getting started --> 
+<div id=getting_started-div class=page_container class=show_content>
+    <h1>
+    <a id="disclaimer" class="anchor" href="#disclaimer" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>DISCLAIMER</h1>
 
-<p>but feel free to send us your patches</p>
+    <p>This project is in a very early state, so we not recommend to use it in production.</p>
 
-<h1>
-<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation</h1>
+    <h1>
+    <a id="installation" class="anchor" href="#installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation</h1>
 
-<p>Please be aware, that you choose the right distribution. 
-This example works for openSUSE Tumbleweed.</p>
+    <h2>
+    <a id="automatic-installation-with-yast-one-click-install" class="anchor" href="#automatic-installation-with-yast-one-click-install" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Automatic installation with yast one-click-install</h2>
 
-<h2>
-<a id="automatic-installation-with-yast-one-click-install" class="anchor" href="#automatic-installation-with-yast-one-click-install" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Automatic installation with yast one-click-install</h2>
+    <p>You can find a yast one-click-install file in the download repositories</p>
 
-<p>You can find a yast one-click-install file in the download repositories</p>
+    <p><a id=ymp_link href="#">http://download.opensuse.org/repositories/home:/M0ses:/kanku/<span class=os_version_id></span>/kanku.ymp</a></p>
 
-<p><a href="http://download.opensuse.org/repositories/home:/M0ses:/kanku/openSUSE_Tumbleweed/kanku.ymp">http://download.opensuse.org/repositories/home:/M0ses:/kanku/openSUSE_Tumbleweed/kanku.ymp</a></p>
+    <h2>
+    <a id="manual-installation" class="anchor" href="#manual-installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Manual installation</h2>
 
-<h2>
-<a id="manual-installation" class="anchor" href="#manual-installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Manual installation</h2>
+    <h3>
+    <a id="configuration-of-software-respositories" class="anchor" href="#configuration-of-software-respositories" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Configuration of software respositories</h3>
 
-<h3>
-<a id="configuration-of-software-respositories" class="anchor" href="#configuration-of-software-respositories" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Configuration of software respositories</h3>
+    <pre><code>sudo zypper ar http://download.opensuse.org/repositories/devel:/languages:/perl/<span class=os_version_id></span>/devel:languages:perl.repo
+    sudo zypper ar http://download.opensuse.org/repositories/home:/M0ses:/Perl/<span class=os_version_id></span>/home:M0ses:Perl.repo
+    sudo zypper ar http://download.opensuse.org/repositories/home:/M0ses:/kanku/<span class=os_version_id></span>/home:M0ses:kanku.repo
+    sudo zypper ref -s
+    </code></pre>
 
-<pre><code>sudo zypper ar http://download.opensuse.org/repositories/devel:/languages:/perl/openSUSE_Tumbleweed/devel:languages:perl.repo
-sudo zypper ar http://download.opensuse.org/repositories/home:/M0ses:/Perl/openSUSE_Tumbleweed/home:M0ses:Perl.repo
-sudo zypper ar http://download.opensuse.org/repositories/home:/M0ses:/kanku/openSUSE_Tumbleweed/home:M0ses:kanku.repo
-sudo zypper ref -s
-</code></pre>
+    <h2>
+    <a id="installation-of-package" class="anchor" href="#installation-of-package" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation of package</h2>
 
-<h2>
-<a id="installation-of-package" class="anchor" href="#installation-of-package" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation of package</h2>
+    <pre><code>sudo zypper in kanku
+    </code></pre>
 
-<pre><code>sudo zypper in kanku
-</code></pre>
+    <h1>
+    <a id="setup-your-environment" class="anchor" href="#setup-your-environment" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Setup your environment</h1>
 
-<h1>
-<a id="setup-your-environment" class="anchor" href="#setup-your-environment" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Setup your environment</h1>
+    <pre><code>sudo /opt/kanku/bin/kanku setup --devel
 
-<pre><code>sudo /opt/kanku/bin/kanku setup --devel
+    sudo shutdown -r now
 
-sudo shutdown -r now
+    # after reboot, login, start termnial and change into your kanku home
+    </code></pre>
 
-# after reboot, login, start termnial and change into your kanku home
-</code></pre>
+    <h2>
+    <a id="preparing-a-new-project" class="anchor" href="#preparing-a-new-project" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Preparing a new Project</h2>
 
-<h2>
-<a id="preparing-a-new-project" class="anchor" href="#preparing-a-new-project" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Preparing a new Project</h2>
+    <p>init will create a default Kankufile which should give you a good starting
+    point. The option "--memory=..." defines the RAM of the virtual guest and is optional.
+    Default is 2G of RAM.</p>
 
-<p>init will create a default Kankufile which should give you a good starting
-point. The option "--memory=..." defines the RAM of the virtual guest and is optional.
-Default is 2G of RAM.</p>
+    <pre><code># create directory 
+    mkdir MyProject
 
-<pre><code># create directory 
-mkdir MyProject
+    # cd in project's directory
+    cd MyProject
 
-# cd in project's directory
-cd MyProject
+    kanku init --memory=512
+    </code></pre>
 
-kanku init --memory=512
-</code></pre>
+    <h1>
+    <a id="download-create-and-start-a-new-guest" class="anchor" href="#download-create-and-start-a-new-guest" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Download, create and start a new guest</h1>
 
-<h1>
-<a id="download-create-and-start-a-new-guest" class="anchor" href="#download-create-and-start-a-new-guest" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Download, create and start a new guest</h1>
+    <pre><code>kanku up
+    </code></pre>
 
-<pre><code>kanku up
-</code></pre>
+    <h1>
+    <a id="connect-to-new-machine" class="anchor" href="#connect-to-new-machine" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Connect to new machine</h1>
 
-<h1>
-<a id="connect-to-new-machine" class="anchor" href="#connect-to-new-machine" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Connect to new machine</h1>
+    <p>Per default, if it exists, your ssh key is added to the authorized keys file
+    Otherwise you can login as<br>
+    <ul>
+     <li>User: kanku / Password "kankusho"</li>
+     <li>User: root / Pasword "kankudai"</li>
+    </ul>
+    <b>Please change the passwords at first login</b>
+    </p>
 
-<p>Per default, if it exists, your ssh key is added to the authorized keys file
-Otherwise you can login with the default password "kankusho".
-The default root password is "kankudai".
-Please change the password after logging in 1st time for security concerns</p>
+    <pre><code>kanku ssh # (will connect as user kanku)
+    </code></pre>
+</div>
+<!-- Overview and Concept -->
+<div id=overview_and_concept-div class=hidden_content class=page_container>
+    <h1>
+    <a id="overview-and-concept" class="anchor" href="#overview-and-concept" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Overview and Concept</h1>
 
-<pre><code>kanku ssh # (will connect as user kanku)
-</code></pre>
+    <p><img src="https://raw.githubusercontent.com/M0ses/kanku/master/docs/kanku_overview.png" alt="Concept Diagram"></p>
+</div>
+<!-- FAQ --> 
+<div id=faq-div  class=hidden_content class=page_container>
+    <h1>
+    <a id="faq" class="anchor" href="#faq" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>FAQ</h1>
 
-<h1>
-<a id="overview-and-concept" class="anchor" href="#overview-and-concept" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Overview and Concept</h1>
+    <h2>
+    <a id="how-could-i-setup-the-database-manually-" class="anchor" href="#how-could-i-setup-the-database-manually-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>How could I setup the database manually ?</h2>
 
-<p><img src="https://raw.githubusercontent.com/M0ses/kanku/master/docs/kanku_overview.png" alt="Concept Diagram"></p>
+    <pre><code>export DBIC_MIGRATION_SCHEMA_CLASS=Kanku::Schema
+    export PERL5LIB=./lib:$PERL5LIB
 
-<h1>
-<a id="faq" class="anchor" href="#faq" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>FAQ</h1>
+    # (optional) dbic-migration status
 
-<h2>
-<a id="how-could-i-setup-the-database-manually-" class="anchor" href="#how-could-i-setup-the-database-manually-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>How could I setup the database manually ?</h2>
+    dbic-migration install
 
-<pre><code>export DBIC_MIGRATION_SCHEMA_CLASS=Kanku::Schema
-export PERL5LIB=./lib:$PERL5LIB
+    dbic-migration populate
+    </code></pre>
 
-# (optional) dbic-migration status
+    <h1>
+    <a id="known-issues" class="anchor" href="#known-issues" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>KNOWN ISSUES</h1>
 
-dbic-migration install
+    <ul>
+    <li>In openSUSE Leap 42.1 you have to enter the root password on each interaction with libvirt.</li>
+    </ul>
 
-dbic-migration populate
-</code></pre>
+    <h1>
+    <a id="upgrade" class="anchor" href="#upgrade" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>UPGRADE</h1>
 
-<h1>
-<a id="known-issues" class="anchor" href="#known-issues" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>KNOWN ISSUES</h1>
+    <p>After an upgrade of your kanku package you should run</p>
 
-<ul>
-<li>In openSUSE Leap 42.1 you have to enter the root password on each interaction with libvirt.</li>
-</ul>
-
-<h1>
-<a id="upgrade" class="anchor" href="#upgrade" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>UPGRADE</h1>
-
-<p>After an upgrade of your kanku package you should run</p>
-
-<pre><code>kanku dbmigrate
-</code></pre>
-
+    <pre><code>kanku dbmigrate
+    </code></pre>
+</div>
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/M0ses/kanku">Kanku</a> is maintained by <a href="https://github.com/M0ses">M0ses</a>.</span>
 
@@ -159,7 +184,46 @@ dbic-migration populate
       </footer>
 
     </section>
+<script>
+function change_os_version() {
+  var os_version_id = $('#os_version option:selected').val();
+  var ymp_link_address = "http://download.opensuse.org/repositories/home:/M0ses:/kanku/" + os_version_id + "/kanku.ymp";
+  console.log(os_version_id)
+  $(".os_version_id").each(function() {
+	$(this).text(os_version_id)
+    }
+  );
 
+  $("#ymp_link").attr('href',ymp_link_address);
+
+}
+function switch_to(container_id) {
+
+  var t_btn = $(this);
+
+  $('.nav_btn').each(function() {
+     console.log($(this).text());
+     $(this).removeClass("btn_highlighted");
+     $(this).addClass("nav_btn btn_dark");
+  });
+
+  $('#'+container_id+"-btn").removeClass("btn_dark")
+  $('#'+container_id+"-btn").addClass("nav_btn btn_highlighted")
+
+  $('.page_container').each(function() {
+     console.log(this.id);
+     $(this).removeClass("show_content");
+     $(this).addClass("page_container hidden_content");
+  });
+
+  $('#'+container_id+"-div").removeClass("hidden_content");
+  $('#'+container_id+"-div").addClass("page_container show_content");
+
+}
+$(function() {
+  change_os_version();
+});
+</script>
   
   </body>
 </html>

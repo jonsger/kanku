@@ -1,0 +1,50 @@
+#
+#Kanku::Util::IPTables:
+#  start_port: 49001
+
+domain_name: kanku-gh-pages
+default_job: kanku-job
+login_user: root
+login_pass: kankudai
+
+qemu:
+  user: frank
+
+jobs:
+ kanku-job:
+  -
+    use_module: Kanku::Handler::SetJobContext
+    options:
+      host_interface: eth0
+
+  -
+    use_module: Kanku::Handler::OBSCheck
+    options:
+      api_url: https://api.opensuse.org
+      project: home:M0ses:kanku:Images
+      repository: images_leap_42_2
+      package: openSUSE-Leap-42.2-JeOS
+  -
+    use_module: Kanku::Handler::ImageDownload
+    options:
+      use_cache: 1
+
+  -
+    use_module: Kanku::Handler::CreateDomain
+    options:
+      memory: 2097152
+      vcpu: 2
+      use_9p: 1
+      mnt_dir_9p: /srv/www/htdocs
+      images_dir: /var/lib/libvirt/images
+      #forward_port_list: tcp:22,tcp:443
+  -
+    use_module: Kanku::Handler::PrepareSSH
+
+  -
+    use_module: Kanku::Handler::ExecuteCommandViaSSH
+    options:
+      commands:
+        - zypper -n in apache2
+        - systemctl start apache2
+        - systemctl enable apache2
