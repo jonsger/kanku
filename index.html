@@ -10,7 +10,7 @@
     <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 <style>
-div.hidden_content {
+div.hidden_content, div.hidden_faq {
   visibility: hidden;
   display: none;
 }
@@ -23,6 +23,9 @@ div.show_content {
 }
 #navbar li {
   display: inline;
+}
+a.faq {
+  color: #159957
 }
 </style>
   </head>
@@ -79,9 +82,9 @@ div.show_content {
     <a id="configuration-of-software-respositories" class="anchor" href="#configuration-of-software-respositories" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Configuration of software respositories</h3>
 
     <pre><code>sudo zypper ar http://download.opensuse.org/repositories/devel:/languages:/perl/<span class=os_version_id></span>/devel:languages:perl.repo
-    sudo zypper ar http://download.opensuse.org/repositories/home:/M0ses:/Perl/<span class=os_version_id></span>/home:M0ses:Perl.repo
-    sudo zypper ar http://download.opensuse.org/repositories/home:/M0ses:/kanku/<span class=os_version_id></span>/home:M0ses:kanku.repo
-    sudo zypper ref -s
+sudo zypper ar http://download.opensuse.org/repositories/home:/M0ses:/Perl/<span class=os_version_id></span>/home:M0ses:Perl.repo
+sudo zypper ar http://download.opensuse.org/repositories/home:/M0ses:/kanku/<span class=os_version_id></span>/home:M0ses:kanku.repo
+sudo zypper ref -s
     </code></pre>
 
     <h2>
@@ -95,10 +98,10 @@ div.show_content {
 
     <pre><code>sudo /opt/kanku/bin/kanku setup --devel
 
-    sudo shutdown -r now
+sudo shutdown -r now
+</code></pre>
 
-    # after reboot, login, start termnial and change into your kanku home
-    </code></pre>
+    After successful reboot, login, start terminal and change into your kanku home
 
     <h2>
     <a id="preparing-a-new-project" class="anchor" href="#preparing-a-new-project" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Preparing a new Project</h2>
@@ -108,12 +111,12 @@ div.show_content {
     Default is 2G of RAM.</p>
 
     <pre><code># create directory 
-    mkdir MyProject
+mkdir MyProject
 
-    # cd in project's directory
-    cd MyProject
+# cd in project's directory
+cd MyProject
 
-    kanku init --memory=512
+kanku init --memory=512
     </code></pre>
 
     <h1>
@@ -134,9 +137,15 @@ div.show_content {
     <b>Please change the passwords at first login</b>
     </p>
 
-    <pre><code>kanku ssh # (will connect as user kanku)
-    </code></pre>
+    <pre><code># Connect with user kanku
+kanku ssh
+
+# Connect as user root
+kanku ssh -u root
+</code></pre>
 </div>
+
+
 <!-- Overview and Concept -->
 <div id=overview_and_concept-div class=hidden_content class=page_container>
     <h1>
@@ -149,33 +158,48 @@ div.show_content {
     <h1>
     <a id="faq" class="anchor" href="#faq" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>FAQ</h1>
 
-    <h2>
-    <a id="how-could-i-setup-the-database-manually-" class="anchor" href="#how-could-i-setup-the-database-manually-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>How could I setup the database manually ?</h2>
+      <h2>
+      <a id="a-howto_setup_the_database_manually" class="anchor faq" href="#howto_setup_the_database_manually" aria-hidden="true" onclick='open_faq(this.id)'><span aria-hidden="true" class="octicon octicon-link"></span>How could I setup the database manually?</a></h2>
+      <div class="faq-div hidden_faq" id="div-howto_setup_the_database_manually">
+        <pre><code>export DBIC_MIGRATION_SCHEMA_CLASS=Kanku::Schema
+export PERL5LIB=./lib:$PERL5LIB
 
-    <pre><code>export DBIC_MIGRATION_SCHEMA_CLASS=Kanku::Schema
-    export PERL5LIB=./lib:$PERL5LIB
+# (optional) dbic-migration status
 
-    # (optional) dbic-migration status
+dbic-migration install
 
-    dbic-migration install
+dbic-migration populate
+        </code></pre>
+      </div>
+      <h2>
+      <a id="a-where_can_i_find_images" class="anchor faq" href="#where_can_i_find_images" aria-hidden="true" onclick='open_faq(this.id)'><span aria-hidden="true" class="octicon octicon-link"></span>Where can I find prepared kanku images?</a></h2>
+      <div class="faq-div hidden_faq" id=div-where_can_i_find_images>
+        Have a look at <a href="https://build.opensuse.org/project/show/home:M0ses:kanku:Images">home:M0ses:kanku:Images</a> to get an overview of official kanku images. Keep in mind how to configure the selected image in kanku
+        <pre><code>
+-
+  use_module: Kanku::Handler::OBSCheck
+  options:
+    api_url: https://api.opensuse.org
+    project: home:M0ses:Kanku:Images
+    # package e.g. openSUSE-Leap-42.2-JeOS
+    package: &lt;package name&gt;
+    # e.g. images_leap_42_2
+    repository: &lt;repository name&gt;
 
-    dbic-migration populate
-    </code></pre>
-
+</code></pre>
+      </div>
+      <h2>
+      <a id="a-howto_upgrade_database" class="anchor faq" href="#howto_upgrade_database" aria-hidden="true" onclick='open_faq(this.id)'><span aria-hidden="true" class="octicon octicon-link"></span>How could I upgrade my database?</a></h1>
+      <div class="faq-div hidden_faq" id="div-howto_upgrade_database">
+        <p>After an upgrade of your kanku package you should run</p>
+        <pre><code>
+kanku dbmigrate
+        </code></pre>
+      </div>
     <h1>
     <a id="known-issues" class="anchor" href="#known-issues" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>KNOWN ISSUES</h1>
+      Please see the open issues on <a href=http://github.com/M0ses/kanku/issues>http://github.com/M0ses/kanku/issues</a>
 
-    <ul>
-    <li>In openSUSE Leap 42.1 you have to enter the root password on each interaction with libvirt.</li>
-    </ul>
-
-    <h1>
-    <a id="upgrade" class="anchor" href="#upgrade" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>UPGRADE</h1>
-
-    <p>After an upgrade of your kanku package you should run</p>
-
-    <pre><code>kanku dbmigrate
-    </code></pre>
 </div>
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/M0ses/kanku">Kanku</a> is maintained by <a href="https://github.com/M0ses">M0ses</a>.</span>
@@ -220,10 +244,28 @@ function switch_to(container_id) {
   $('#'+container_id+"-div").addClass("page_container show_content");
 
 }
+function open_faq(container_id) {
+  var cid = container_id.substring(2);
+  console.log("Container ID:"+cid);
+  var t_btn = $(this);
+
+  $('.faq-div').each(function() {
+     var t_id =  $(this).attr('id').substring(4);
+
+     console.log( t_id + " != "+ cid);
+     if ( t_id != cid ) {
+     	$(this).addClass("hidden_faq");
+     }
+  });
+
+  $('#div-'+cid).toggleClass("hidden_faq shown_faq")
+
+}
+
 $(function() {
   change_os_version();
 });
 </script>
-  
+ 
   </body>
 </html>
