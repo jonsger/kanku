@@ -41,13 +41,13 @@ a.faq {
     <section class="main-content">
 <ul id=navbar>
   <li>
-    <a href='#' id='getting_started-btn'      class="btn_highlighted nav_btn" onclick=switch_to('getting_started')>Getting Started</a>
+    <a href='#getting_started' id='getting_started-btn'      class="btn_highlighted nav_btn" onclick=switch_to('getting_started')>Getting Started</a>
   </li>
   <li>
-    <a href='#' id='overview_and_concept-btn' class="btn_dark nav_btn" onclick=switch_to('overview_and_concept')>Overview and Concept</a>
+    <a href='#overview_and_concept' id='overview_and_concept-btn' class="btn_dark nav_btn" onclick=switch_to('overview_and_concept')>Overview and Concept</a>
   </li>
   <li>
-    <a href='#' id='faq-btn'                  class="btn_dark nav_btn" onclick=switch_to('faq')>FAQ / Known Issues</a>
+    <a href='#faq' id='faq-btn'                  class="btn_dark nav_btn" onclick=switch_to('faq')>FAQ / Known Issues</a>
   </li>
   <li>
     <select id="os_version" onchange=change_os_version()>
@@ -156,7 +156,7 @@ kanku ssh -u root
 <!-- FAQ --> 
 <div id=faq-div  class=hidden_content class=page_container>
     <h1>
-    <a id="faq" class="anchor" href="#faq" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>FAQ</h1>
+    <a id="faq-href" class="anchor" href="#faq-href" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>FAQ</h1>
 
       <h2>
       <a id="a-howto_setup_the_database_manually" class="anchor faq" href="#howto_setup_the_database_manually" aria-hidden="true" onclick='open_faq(this.id)'><span aria-hidden="true" class="octicon octicon-link"></span>How could I setup the database manually?</a></h2>
@@ -261,9 +261,17 @@ function open_faq(container_id) {
   $('#div-'+cid).toggleClass("hidden_faq shown_faq")
 
 }
-
+function switch_to_anchor() {
+  var anchor = window.location.hash.substring(1);
+  console.log(anchor);
+  if ( anchor ) {
+  	switch_to(anchor);
+  }
+}
+// document.ready()
 $(function() {
   change_os_version();
+  switch_to_anchor();
 });
 </script>
  
