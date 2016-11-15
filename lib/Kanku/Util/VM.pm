@@ -490,9 +490,6 @@ __DATA__
     <apic/>
     <pae/>
   </features>
-  <cpu mode='host-model'>
-    <model fallback='allow'>qemu64</model>
-  </cpu>
   <clock offset='utc'/>
   <on_poweroff>destroy</on_poweroff>
   <on_reboot>restart</on_reboot>

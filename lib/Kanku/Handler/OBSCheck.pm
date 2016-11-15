@@ -42,6 +42,9 @@ has dod_object => (
 );
 
 has ['api_url','project','package'] => (is=>'rw',isa=>'Str',required=>1);
+
+has '+api_url' => (default=>"https://api.opensuse.org");
+
 has ['base_url','repository']       => (is=>'rw',isa=>'Str');
 
 has _changed => (is=>'rw',isa=>'Bool',default=>0);
