@@ -24,6 +24,7 @@ use Net::SSH2;
 use namespace::autoclean;
 
 with 'Kanku::Roles::Logger';
+use Kanku::Config;
 
 has [qw/  domain_name     ipaddress   publickey_path
           privatekey_path passphrase  username
@@ -34,7 +35,23 @@ has [ qw/job ssh2/ ] => (
   isa => 'Object'
 );
 
-has auth_type => (is=>'rw',isa=>'Str',default=>'agent');
+has auth_type => (
+  is=>'rw',
+  isa=>'Str',
+  lazy => 1,
+  default=>
+  sub {
+    my $logger = $_[0]->logger;
+    my $cfg = Kanku::Config->instance->config();
+    $logger->debug(Dumper($cfg));
+    my $class = __PACKAGE__;
+    $logger->debug("PACKAGE = $class");
+    if ( $cfg->{$class}->{auth_type}) {
+      return $cfg->{$class}->{auth_type};
+    }
+    return 'agent'
+  }
+);
 
 sub get_defaults {
   my $self = shift;
@@ -62,6 +79,7 @@ sub connect {
   $ssh2->connect($ip) or die $!;
 
   if ( $self->auth_type eq 'publickey' ) {
+    $self->logger->debug(" - ssh2: using auth_publickey");
     $ssh2->auth_publickey(
       $self->username,
       $self->publickey_path,
@@ -69,6 +87,7 @@ sub connect {
       $self->passphrase
     );
   } elsif ( $self->auth_type eq 'agent' ) {
+    $self->logger->debug(" - ssh2: using auth_agent");
     $ssh2->auth_agent($self->username);
   } else {
     die "ssh auth_type not known!\n"
