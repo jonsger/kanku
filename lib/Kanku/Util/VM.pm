@@ -222,7 +222,7 @@ sub _generate_disk_xml {
 sub create_empty_disks  {
   my ($self) = @_;
   my $unit   = 1;
-  my $xml;
+  my $xml    = "";
 
   for my $disk (@{$self->empty_disks}) {
     my $img = Kanku::Util::VM::Image->new(
