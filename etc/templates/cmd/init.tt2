@@ -17,11 +17,13 @@ jobs:
     use_module: Kanku::Handler::SetJobContext
     options:
       host_interface: eth0
-
   -
     use_module: Kanku::Handler::OBSCheck
     options:
       api_url: https://api.opensuse.org
+      # Please have a look at
+      # https://build.opensuse.org/project/show/home:M0ses:kanku:Images
+      # to find more official Images
       project: home:M0ses:kanku:Images
       repository: images_leap_42_2
       package: openSUSE-Leap-42.2-JeOS
