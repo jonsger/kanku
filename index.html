@@ -41,13 +41,16 @@ a.faq {
     <section class="main-content">
 <ul id=navbar>
   <li>
-    <a href='#getting_started' id='getting_started-btn'      class="btn_highlighted nav_btn" onclick=switch_to('getting_started')>Getting Started</a>
+    <a href='#about'                id='about-btn'                class="btn_highlighted nav_btn" onclick=switch_to('about')>About</a>
   </li>
   <li>
-    <a href='#overview_and_concept' id='overview_and_concept-btn' class="btn_dark nav_btn" onclick=switch_to('overview_and_concept')>Overview and Concept</a>
+    <a href='#getting_started'      id='getting_started-btn'      class="btn_dark nav_btn"        onclick=switch_to('getting_started')>Getting Started</a>
   </li>
   <li>
-    <a href='#faq' id='faq-btn'                  class="btn_dark nav_btn" onclick=switch_to('faq')>FAQ / Known Issues</a>
+    <a href='#overview_and_concept' id='overview_and_concept-btn' class="btn_dark nav_btn"        onclick=switch_to('overview_and_concept')>Overview and Concept</a>
+  </li>
+  <li>
+    <a href='#faq'                  id='faq-btn'                  class="btn_dark nav_btn"        onclick=switch_to('faq')>FAQ / Known Issues</a>
   </li>
   <li>
     <select id="os_version" onchange=change_os_version()>
@@ -58,8 +61,33 @@ a.faq {
     </select>
   </li>
 </ul>
+<!-- About --> 
+<div id=about-div class="page_container show_content">
+    <h1>
+    <a id="disclaimer" class="anchor" href="#disclaimer" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>What is kanku?</h1>
+    <p>kanku is designed to give you a better integration of your kiwi images built by <a href="http://openbuildservice.org" target=_blank>the Open Build Service (OBS)</a> in your development and testing workflow.</p>
+    <p>It can be run in two modes
+       <ul>
+           <li>The developer mode (e.g. on your laptop/workstation) while developing</li>
+           <li>The server mode (e.g. a dedicated Server for QA) to run tasks/tests periodically</li>
+       </ul>
+      <h2>The developer mode</h2>
+        <p>In a simple configuration file in YAML format you can specify the location of your kiwi image and actions to be executed after downloading the image and starting a Virtual Machine using the downloaded image. You can configure one or multiple jobs per project. These jobs consists of one or more tasks which use a handler module and the given options.<br>
+          With the kanku command line tool you can easily
+          <ul>
+             <li>create a new VM based on the configured image</li>
+             <li>run commands on the VM via SSH or serial console</li>
+             <li>use salt-ssh to configure your VM</li>
+             <li>access the created VM via ssh</li>
+             <li>share your project/source directory with the VM</li>
+          </ul>
+        </p>
+      <h2>The server mode</h2>
+        <p>In server mode, a daemon process, the "kanku-scheduler", can run configured jobs peridocally or you can trigger a job manually. As the job configuration is very similar to the developer mode, you can easily adopt the configurations used in developer mode. The results can be shown via WebUI or with the kanku command line tool in a terminal</p>
+    	<div style="text-align:center"><img src="/images/kanku_workflow.png" alt="Workflow Diagram"></div>
+</div>
 <!-- Getting started --> 
-<div id=getting_started-div class=page_container class=show_content>
+<div id=getting_started-div class="page_container hidden_content">
     <h1>
     <a id="disclaimer" class="anchor" href="#disclaimer" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>DISCLAIMER</h1>
 
@@ -147,14 +175,14 @@ kanku ssh -u root
 
 
 <!-- Overview and Concept -->
-<div id=overview_and_concept-div class=hidden_content class=page_container>
+<div id=overview_and_concept-div class="hidden_content page_container">
     <h1>
     <a id="overview-and-concept" class="anchor" href="#overview-and-concept" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Overview and Concept</h1>
 
     <p><img src="https://raw.githubusercontent.com/M0ses/kanku/master/docs/kanku_overview.png" alt="Concept Diagram"></p>
 </div>
 <!-- FAQ --> 
-<div id=faq-div  class=hidden_content class=page_container>
+<div id=faq-div  class="hidden_content page_container">
     <h1>
     <a id="faq-href" class="anchor" href="#faq-href" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>FAQ</h1>
 
