@@ -81,6 +81,11 @@ has gui_config => (
           type  => 'text',
           label => 'Package'
         },
+        {
+          param => 'repository',
+          type  => 'text',
+          label => 'Repository'
+        },
       ];
   }
 );
@@ -177,7 +182,7 @@ sub execute {
 
   $ctx->{vm_image_url}   = $binary->{url};
   $ctx->{obs_direct_url} = $binary->{bin_url};
-  $self->logger->debug("obs_direct_url = $ctx->{obs_direct_url}");
+  $self->logger->debug("obs_direct_url = '".( $ctx->{obs_direct_url} || '')."'");
   $ctx->{obs_username}   = $binary->{obs_username};
   $ctx->{obs_password}   = $binary->{obs_password};
   $ctx->{obs_project}    = $self->project;
