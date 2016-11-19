@@ -163,22 +163,7 @@ sub get_from_history {
 
   $rs->vm_image_file;
 
-  $ctx->{vm_image_file} |= $ctx->{images_dir} . "/" . $ctx->{domain_name} . ".qcow2";
-
-  $self->logger->info("Copying ".$rs->vm_image_file." to ".$ctx->{vm_image_file});
-
-  if ( -f $ctx->{vm_image_file} ) {
-    my $user = Kanku::Config->instance->config()->{qemu}->{user} || 'qemu';
-
-    my ($login,$pass,$uid,$gid) = getpwnam($user)
-        or die "$user not in passwd file";
-
-    $self->logger->debug("Changing ownership of $ctx->{vm_image_file} to uid $uid and gid $gid");
-
-    chown $uid, $gid, $ctx->{vm_image_file};
-  }
-
-  copy($rs->vm_image_file, $ctx->{vm_image_file}) or die "Copy failed: $!";
+  $ctx->{vm_image_file} |= $ctx->{cache_dir} . "/" . $rs->vm_image_file;
 
   return {
     state => 'succeed',
