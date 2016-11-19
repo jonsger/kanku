@@ -93,6 +93,7 @@ has dsn => (
     isa           => 'Str',
     is            => 'rw',
     #cmd_aliases   => 'X',
+    lazy          => 1,
     documentation => 'dsn for global database',
     default       => sub {
       # dbi:SQLite:dbname=/home/frank/Projects/kanku/share/kanku-schema.db
