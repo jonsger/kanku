@@ -17,8 +17,9 @@
 
 
 Name:           kanku
-Version:        0.1.5
-Release:        1.0
+# Version gets set by obs-service-tar_scm
+Version:        0.0.0
+Release:        0.0
 License:        GPL-3.0
 Summary:        Development and continuous integration made easy
 Url:            https://github.com/M0ses/kanku
