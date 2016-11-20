@@ -35,6 +35,7 @@ a {
   border-color: rgba(255, 255, 255, 0.3); }
 
 .btn_dark {
+  text-decoration: none;
   display: inline-block;
   margin-bottom: 1rem;
   color: rgba(0, 0, 0, 0.7);
@@ -47,6 +48,10 @@ a {
   .btn + .btn {
     margin-left: 1rem; }
 
+.btn_dark:hover {
+  color: #159957;
+  text-decoration: none;
+}
 .btn_highlighted {
   display: inline-block;
   margin-bottom: 1rem;
@@ -59,6 +64,11 @@ a {
   transition: color 0.2s, background-color 0.2s, border-color 0.2s; }
   .btn + .btn {
     margin-left: 1rem; }
+
+.btn_highlighted:hover {
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+}
 
 @media screen and (min-width: 64em) {
   .btn, .btn_dark, .btn_highlighted  {
