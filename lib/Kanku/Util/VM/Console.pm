@@ -18,7 +18,9 @@ package Kanku::Util::VM::Console;
 
 use Moose;
 use Expect;
+use Data::Dumper;
 use Kanku::Config;
+use Path::Class qw/file/;
 
 with 'Kanku::Roles::Logger';
 
@@ -31,19 +33,27 @@ has 'connect_uri' => (is=>'rw', isa=>'Str',default=>'qemu:///system');
 
 sub init {
   my $self = shift;
-  my $cfg = Kanku::Config->instance->config();
-  my $pkg = __PACKAGE__;
+  my $cfg_ = Kanku::Config->instance();
+  my $cfg  = $cfg_->config();
+  my $pkg  = __PACKAGE__;
+  my $logger    = $self->logger();
 
 
   $ENV{"LANG"} = "C";
   my $command = "virsh";
   my @parameters = ("-c",$self->connect_uri,"console",$self->domain_name);
+ 
   my $exp = Expect->new;
   $exp->debug($cfg->{$pkg}->{debug} || 0);
 
-#  if ($self->log_file) {
-#    $exp->log_file($self->log_file,'w');
-#  }
+  if ($cfg->{$pkg}->{log_file}) {
+    my $lf = file($cfg_->log_dir,$cfg->{$pkg}->{log_file});
+    if (! -d $lf->parent() ) {
+      $lf->parent->mkpath();
+    }
+    $logger->debug("Setting logfile '".$lf->stringify()."'");
+    $exp->log_file($lf->stringify(),'w');
+  }
 
   $self->_expect_object($exp);
   $exp->spawn($command, @parameters)

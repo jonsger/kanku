@@ -18,11 +18,14 @@ package Kanku::Roles::Config::KankuFile;
 
 use Moose::Role;
 use Path::Class::File;
+use Path::Class::Dir;
 use Data::Dumper;
 use Cwd;
 use YAML;
 
 with 'Kanku::Roles::Config::Base';
+
+has 'log_dir' => (is=>'rw',isa=>'Object',default=>sub {Path::Class::Dir->new(getcwd(),'.kanku','log')});
 
 sub file {
     return Path::Class::File->new(getcwd(),'KankuFile');

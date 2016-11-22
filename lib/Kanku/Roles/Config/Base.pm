@@ -50,6 +50,15 @@ has app_base_path => (
   }
 );
 
+has log_dir => (
+  is      => 'rw',
+  isa     => 'Object',
+  lazy    => 1,
+  default => sub {
+    return Path::Class::Dir->new($_[0]->app_base_path,"var","log");
+  }
+);
+
 
 sub _build_config {
     my $self    = shift;

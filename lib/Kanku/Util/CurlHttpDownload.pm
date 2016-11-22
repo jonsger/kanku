@@ -117,7 +117,7 @@ sub download {
   if ( $self->offline ) {
     $self->logger->warn("Skipping download from $url in offline mode");
   } else {
-      $self->logger->debug("Downloading $url");
+      $self->logger->info("Downloading $url");
       $self->logger->debug("  to file ".$file->stringify);
 
       my $ua    = Kanku::Util::HTTPMirror->new();
