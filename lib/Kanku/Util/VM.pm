@@ -101,9 +101,9 @@ has console => (
   lazy => 1,
   default => sub {
       my $self = shift;
+
       my $con = Kanku::Util::VM::Console->new(
         domain_name => $self->domain_name,
-        # log_file    => $self->app_base_path->stringify . '/var/log/vm_console/console.log',
         login_user  => $self->login_user,
         login_pass  => $self->login_pass,
       );
