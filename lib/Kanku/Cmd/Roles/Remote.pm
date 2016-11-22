@@ -70,6 +70,11 @@ has settings => (
       } 
       return $ct;
     }
+    return {
+	apiurl	 => $self->apiurl,
+	password => $self->password,
+        user     => $self->user
+    }
   }
 );
 
