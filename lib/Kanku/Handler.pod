@@ -1,0 +1,70 @@
+=head1 NAME 
+
+Kanku::Handler - Documentation about Kanku::Handler::* modules
+
+=head1 DESCRIPTION
+
+Kanku handler modules are used to run a specific task. 
+They have to provide the following three methods:
+
+=over
+
+=item prepare
+
+=item execute
+
+=item finalize
+
+=back
+
+which are executed in this order. 
+
+=head1 MODULES
+
+=over
+
+=item Kanku::Handler::Reboot			- WIP
+
+=item Kanku::Handler::CreateDomain
+
+=item Kanku::Handler::ExecuteCommandViaSSH
+
+=item Kanku::Handler::FileCopy               - DEPRECATED
+
+=item Kanku::Handler::FileMove               - DEPRECATED
+
+=item Kanku::Handler::GIT
+
+=item Kanku::Handler::HTTPDownload
+
+=item Kanku::Handler::OBSCheck
+
+=item Kanku::Handler::OBSDownload	     - DEPRECATED
+
+=item Kanku::Handler::OpenStack::CreateInstance
+
+=item Kanku::Handler::OpenStack::Image
+
+=item Kanku::Handler::OpenStack::RemoveInstance
+
+=item Kanku::Handler::PortForward
+
+=item Kanku::Handler::PrepareSSH
+
+=item Kanku::Handler::RemoveDomain
+
+=item Kanku::Handler::RevertQcow2Snapshot
+
+=item Kanku::Handler::SaltSSH
+
+=item Kanku::Handler::SetJobContext
+
+=item Kanku::Handler::Wait
+
+=item Kanku::Handler::ImageDownload
+
+=back
+
+=cut
+
+
