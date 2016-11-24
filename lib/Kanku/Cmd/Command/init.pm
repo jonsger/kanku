@@ -54,9 +54,18 @@ has memory => (
     traits        => [qw(Getopt)],
     isa           => 'Int',
     is            => 'rw',
-    documentation => 'user to run qemu',
-    lazy => 1,
+    documentation => 'RAM size of virtual machines (in MB)',
+    lazy          => 1,
     default       => 2048
+);
+
+has vcpu => (
+    traits        => [qw(Getopt)],
+    isa           => 'Int',
+    is            => 'rw',
+    documentation => 'Number of virtual CPU\'s in VM',
+    lazy          => 1,
+    default       => 2
 );
 
 sub abstract { "create KankuFile in your current working directory" }
@@ -90,9 +99,10 @@ sub execute {
   # define template variables for replacement
   my $vars = {
 	domain_name   => $self->domain_name,
-    domain_memory => $memory,
+        domain_memory => $memory,
+	domain_cpus   => $self->vcpu,
 	default_job   => $self->default_job,
-	qemu_user	  => $self->qemu_user,
+	qemu_use      => $self->qemu_user,
   };
 
   my $output = '';

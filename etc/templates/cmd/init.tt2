@@ -36,9 +36,8 @@ jobs:
     use_module: Kanku::Handler::CreateDomain
     options:
       memory: [% domain_memory %]
-      vcpu: 2
+      vcpu: [% domain_cpus %]
       use_9p: 1
-      images_dir: /var/lib/libvirt/images
       #forward_port_list: tcp:22,tcp:443
   -
     use_module: Kanku::Handler::PrepareSSH
