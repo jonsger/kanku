@@ -164,24 +164,51 @@ sub _copy_volume {
   my $total_read  = 0;
   my $total_sent = 0;
 
-    $vol->upload($st, 0, 0);
-    my $nbytes = 1024;
-    if ( $f =~ /\.(gz|bz2|xz)$/ ) {
+  $vol->upload($st, 0, 0);
+  my $nbytes = 1024;
+  if ( $f =~ /\.(gz|bz2|xz)$/ ) {
 
-      $self->logger->info("-- _copy_volume -- Uncompressing and uploading file");
+    $self->logger->info("-- _copy_volume -- Uncompressing and uploading file");
 
-      my $z = new IO::Uncompress::AnyUncompress $f
-        or die "IO::Uncompress::AnyUncompress failed: $AnyUncompressError\n";
+    my $z = new IO::Uncompress::AnyUncompress $f
+      or die "IO::Uncompress::AnyUncompress failed: $AnyUncompressError\n";
 
 
+    while (1) {
+	my $data;
+	my $rv = $z->read(\$data);
+	if ($rv < 0) {
+	    die "cannot read $f: $!";
+	}
+	last if $rv == 0;
+	$total_read += $rv;
+	while ($rv > 0) {
+	    my $done = $st->send($data, $rv);
+	    if ($done) {
+		$data = substr $data, $done;
+		$rv -= $done;
+	    }
+	    $total_sent += $done;
+	}
+    }
+
+    $z->close;
+
+
+  } else {
+
+    $self->logger->info("-- _copy_volume -- Uploading file");
+
+    eval {
+      open FILE, "<$f" or die "cannot open $f: $!";
       while (1) {
 	  my $data;
-	  my $rv = $z->read(\$data);
+	  my $rv = sysread FILE, $data, $nbytes;
 	  if ($rv < 0) {
 	      die "cannot read $f: $!";
 	  }
 	  last if $rv == 0;
-          $total_read += $rv;
+	  $total_read += $rv;
 	  while ($rv > 0) {
 	      my $done = $st->send($data, $rv);
 	      if ($done) {
@@ -191,77 +218,50 @@ sub _copy_volume {
 	      $total_sent += $done;
 	  }
       }
+    };
+    if ($@) {
+	close FILE;
+	die $@;
+    }
 
-      $z->close;
+    close FILE or die "cannot save $f: $!";
 
+  }
 
-    } else {
+  $self->logger->info("-- total_read: $total_read -- total_sent: $total_sent");
+  $self->logger->debug("-- final_size:".$self->final_size);
 
-      $self->logger->info("-- _copy_volume -- Uploading file");
-
-      eval {
-	open FILE, "<$f" or die "cannot open $f: $!";
-	while (1) {
-	    my $data;
-	    my $rv = sysread FILE, $data, $nbytes;
-	    if ($rv < 0) {
-		die "cannot read $f: $!";
-	    }
-	    last if $rv == 0;
-            $total_read += $rv;
-	    while ($rv > 0) {
-		my $done = $st->send($data, $rv);
-		if ($done) {
-		    $data = substr $data, $done;
-		    $rv -= $done;
-		}
-	        $total_sent += $done;
-	    }
-	}
-      };
-      if ($@) {
-	  close FILE;
-	  die $@;
+  if ( $self->format eq 'raw' && $self->final_size > $total_sent ) {
+    eval {
+      my $to_read = $self->final_size - $total_sent;
+      $self->logger->info("-- Sending another $to_read bytes");
+      $f = "/dev/zero";
+      open FILE, "<$f" or die "cannot open $f: $!";
+      while (1) {
+	  my $data;
+	  my $length = ( $to_read > $nbytes ) ? $nbytes : $to_read;
+	  my $rv = sysread FILE, $data, $length;
+	  if ($rv < 0) {
+	      die "cannot read $f: $!";
+	  }
+	  last if $rv == 0;
+	  $total_read += $rv;
+	  while ($rv > 0) {
+	      my $done = $st->send($data, $rv);
+	      if ($done) {
+		  $data = substr $data, $done;
+		  $rv -= $done;
+		  $to_read -= $done;
+	      }
+	      $total_sent += $done;
+	  }
       }
+    };
 
-      close FILE or die "cannot save $f: $!";
+  }
 
-    }
+  $self->logger->info("-- finally total bytes read/sent: $total_read/$total_sent");
 
-    $self->logger->info("-- total_read: $total_read -- total_sent: $total_sent");
-    $self->logger->debug("-- final_size:".$self->final_size);
-
-    if ( $self->format eq 'raw' && $self->final_size > $total_sent ) {
-      eval {
-        my $to_read = $self->final_size - $total_sent;
-        $self->logger->info("-- Sending another $to_read bytes");
-	$f = "/dev/zero";
-	open FILE, "<$f" or die "cannot open $f: $!";
-	while (1) {
-	    my $data;
-            my $length = ( $to_read > $nbytes ) ? $nbytes : $to_read;
-	    my $rv = sysread FILE, $data, $length;
-	    if ($rv < 0) {
-		die "cannot read $f: $!";
-	    }
-	    last if $rv == 0;
-            $total_read += $rv;
-	    while ($rv > 0) {
-		my $done = $st->send($data, $rv);
-		if ($done) {
-		    $data = substr $data, $done;
-		    $rv -= $done;
-                    $to_read -= $done;
-		}
-	        $total_sent += $done;
-	    }
-	}
-      };
-
-    }
-
-    $self->logger->info("-- finally total bytes read/sent: $total_read/$total_sent");
-
-    $st->finish();
+  $st->finish();
 }
 1;
