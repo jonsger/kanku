@@ -57,7 +57,9 @@ has ['mnt_dir_9p']    => (is => 'rw', isa => 'Str', default => '/tmp/kanku');
 
 has ['noauto_9p']     => (is => 'rw', isa => 'Bool');
 
-has ['root_disk']     => (is => 'rw', isa => 'Object');
+has ['_root_disk']    => (is => 'rw', isa => 'Object');
+
+has 'root_disk_size'  => (is => 'rw', isa => 'Int');
 
 has empty_disks => (
   is => 'rw',
@@ -127,7 +129,7 @@ sub execute {
     $vm->template_file($ctx->{vm_template_file});
   }
 
-  $vm->root_disk($self->root_disk);
+  $vm->root_disk($self->_root_disk);
 
   $vm->create_domain();
 
@@ -221,17 +223,18 @@ sub _create_image_file_from_cache {
   if ( $ctx->{vm_image_file} =~ /\.(qcow2|raw|img)(\.(gz|bz2|xz))?$/ ) {
     my $vol_name = $self->domain_name .".$1";
 
-    $self->root_disk( 
+    $self->_root_disk(
       Kanku::Util::VM::Image->new(
-		format		=> $suffix2format->{$1},
-                vol_name 	=> $vol_name,
-                source_file 	=> $in->stringify
+	format		=> $suffix2format->{$1},
+	vol_name 	=> $vol_name,
+	source_file 	=> $in->stringify,
+	final_size	=> $self->root_disk_size || 0
       )
     );
 
     $self->logger->info("Uploading $in via libvirt to $vol_name");
 
-    $final_file = $self->root_disk->create_volume()->get_path();
+    $final_file = $self->_root_disk->create_volume()->get_path();
 
     $self->logger->info(" -- final file $final_file");
 
@@ -300,6 +303,8 @@ If configured a port_forward_list, it tries to find the next free port and confi
     mnt_dir_9p		  : set diretory to mount current working directory in vm. Only used if use_9p is set to true. (default: '/tmp/kanku')
 
     noauto_9p		  : set noauto option for 9p directory in fstab.
+
+    root_disk_size        : define size of root disk - ONLY FOR RAW IMAGES
 
 
 =head1 CONTEXT

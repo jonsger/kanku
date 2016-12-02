@@ -32,7 +32,7 @@ use Try::Tiny;
 use File::LibMagic;
 use IO::Uncompress::AnyUncompress qw/$AnyUncompressError/;
 has [qw/uri pool_name vol_name source_file size format/ ]  => ( is=>'rw', isa => 'Str');
-
+has 'final_size'=> => ( is=>'rw', isa => 'Str',default=>0);
 
 has '+uri'       => ( default => 'qemu:///system');
 has '+pool_name' => ( default => 'default');
@@ -161,6 +161,8 @@ sub _copy_volume {
   my $st   = $self->vmm()->new_stream();
   my $f    = $self->source_file();
 
+  my $total_read  = 0;
+  my $total_sent = 0;
 
     $vol->upload($st, 0, 0);
     my $nbytes = 1024;
@@ -171,8 +173,6 @@ sub _copy_volume {
       my $z = new IO::Uncompress::AnyUncompress $f
         or die "IO::Uncompress::AnyUncompress failed: $AnyUncompressError\n";
 
-      my $total_read  = 0;
-      my $total_sent = 0;
 
       while (1) {
 	  my $data;
@@ -194,7 +194,6 @@ sub _copy_volume {
 
       $z->close;
 
-      $self->logger->info("-- total_read: $total_read -- total_sent: $total_sent");
 
     } else {
 
@@ -209,12 +208,14 @@ sub _copy_volume {
 		die "cannot read $f: $!";
 	    }
 	    last if $rv == 0;
+            $total_read += $rv;
 	    while ($rv > 0) {
 		my $done = $st->send($data, $rv);
 		if ($done) {
 		    $data = substr $data, $done;
 		    $rv -= $done;
 		}
+	        $total_sent += $done;
 	    }
 	}
       };
@@ -226,6 +227,40 @@ sub _copy_volume {
       close FILE or die "cannot save $f: $!";
 
     }
+
+    $self->logger->info("-- total_read: $total_read -- total_sent: $total_sent");
+    $self->logger->debug("-- final_size:".$self->final_size);
+
+    if ( $self->format eq 'raw' && $self->final_size > $total_sent ) {
+      eval {
+        my $to_read = $self->final_size - $total_sent;
+        $self->logger->info("-- Sending another $to_read bytes");
+	$f = "/dev/zero";
+	open FILE, "<$f" or die "cannot open $f: $!";
+	while (1) {
+	    my $data;
+            my $length = ( $to_read > $nbytes ) ? $nbytes : $to_read;
+	    my $rv = sysread FILE, $data, $length;
+	    if ($rv < 0) {
+		die "cannot read $f: $!";
+	    }
+	    last if $rv == 0;
+            $total_read += $rv;
+	    while ($rv > 0) {
+		my $done = $st->send($data, $rv);
+		if ($done) {
+		    $data = substr $data, $done;
+		    $rv -= $done;
+                    $to_read -= $done;
+		}
+	        $total_sent += $done;
+	    }
+	}
+      };
+
+    }
+
+    $self->logger->info("-- finally total bytes read/sent: $total_read/$total_sent");
 
     $st->finish();
 }
