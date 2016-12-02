@@ -30,7 +30,7 @@ use Data::Dumper;
 use XML::XPath;
 use Try::Tiny;
 use File::LibMagic;
-
+use IO::Uncompress::AnyUncompress qw/$AnyUncompressError/;
 has [qw/uri pool_name vol_name source_file size format/ ]  => ( is=>'rw', isa => 'Str');
 
 
@@ -75,7 +75,7 @@ sub create_volume {
 
   $self->delete_volume();
 
-  $self->logger->info("Creating volume '" . ($self->vol_name || '')."'");
+  $self->logger->info("Creating volume '" . ($self->vol_name || '')."' with format ".$self->format."");
 
   my $xml  = "
 <volume type='file'>
@@ -161,35 +161,72 @@ sub _copy_volume {
   my $st   = $self->vmm()->new_stream();
   my $f    = $self->source_file();
 
-  open FILE, "<$f" or die "cannot open $f: $!";
 
-  eval {
-      $vol->upload($st, 0, 0);
-      my $nbytes = 1024;
+    $vol->upload($st, 0, 0);
+    my $nbytes = 1024;
+    if ( $f =~ /\.(gz|bz2|xz)$/ ) {
+
+      $self->logger->info("-- _copy_volume -- Uncompressing and uploading file");
+
+      my $z = new IO::Uncompress::AnyUncompress $f
+        or die "IO::Uncompress::AnyUncompress failed: $AnyUncompressError\n";
+
+      my $total_read  = 0;
+      my $total_sent = 0;
+
       while (1) {
 	  my $data;
-	  my $rv = sysread FILE, $data, $nbytes;
+	  my $rv = $z->read(\$data);
 	  if ($rv < 0) {
 	      die "cannot read $f: $!";
 	  }
 	  last if $rv == 0;
+          $total_read += $rv;
 	  while ($rv > 0) {
 	      my $done = $st->send($data, $rv);
 	      if ($done) {
 		  $data = substr $data, $done;
 		  $rv -= $done;
 	      }
+	      $total_sent += $done;
 	  }
       }
 
-      $st->finish();
-  };
+      $z->close;
 
-  if ($@) {
-      close FILE;
-      die $@;
-  }
+      $self->logger->info("-- total_read: $total_read -- total_sent: $total_sent");
 
-  close FILE or die "cannot save $f: $!";
+    } else {
+
+      $self->logger->info("-- _copy_volume -- Uploading file");
+
+      eval {
+	open FILE, "<$f" or die "cannot open $f: $!";
+	while (1) {
+	    my $data;
+	    my $rv = sysread FILE, $data, $nbytes;
+	    if ($rv < 0) {
+		die "cannot read $f: $!";
+	    }
+	    last if $rv == 0;
+	    while ($rv > 0) {
+		my $done = $st->send($data, $rv);
+		if ($done) {
+		    $data = substr $data, $done;
+		    $rv -= $done;
+		}
+	    }
+	}
+      };
+      if ($@) {
+	  close FILE;
+	  die $@;
+      }
+
+      close FILE or die "cannot save $f: $!";
+
+    }
+
+    $st->finish();
 }
 1;

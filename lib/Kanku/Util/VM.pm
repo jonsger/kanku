@@ -40,6 +40,7 @@ has [qw/
     / ]  => ( is=>'rw', isa => 'Str');
 
 has _console      => ( is => 'rw', isa => 'Object' );
+has root_disk     => ( is => 'rw', isa => 'Object' );
 has use_9p        => ( is => 'rw', isa => 'Bool' );
 has empty_disks   => ( is => 'rw', isa => 'ArrayRef', default => sub {[]});
 has '+uri'        => ( default => 'qemu:///system');
@@ -203,14 +204,15 @@ sub process_template {
 }
 
 sub _generate_disk_xml {
-    my ($self,$unit,$file) = @_;
+    my ($self,$unit,$file,$format) = @_;
 
+    # ASCII 97 = a + 0
     my $drive = "hd" . chr(97+$unit);
     my $source = '';
 
     return "
     <disk type='file' device='disk'>
-      <driver name='qemu' type='qcow2'/>
+      <driver name='qemu' type='".$format."'/>
       <source file='$file'/>
       <target dev='$drive' bus='ide'/>
       <address type='drive' controller='0' bus='0' target='0' unit='$unit'/>
@@ -234,7 +236,7 @@ sub create_empty_disks  {
               );
     my $vol = $img->create_volume();
 
-    $xml .= $self->_generate_disk_xml($unit,$vol->get_path);
+    $xml .= $self->_generate_disk_xml($unit,$vol->get_path,$img->format);
     $unit++;
   }
 
@@ -244,7 +246,7 @@ sub create_empty_disks  {
 sub create_domain {
   my $self  = shift;
 
-  my $disk_xml = $self->_generate_disk_xml(0,$self->image_file);
+  my $disk_xml = $self->_generate_disk_xml(0,$self->image_file,$self->root_disk->format);
 
   $disk_xml .= $self->create_empty_disks();
 

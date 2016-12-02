@@ -57,6 +57,8 @@ has ['mnt_dir_9p']    => (is => 'rw', isa => 'Str', default => '/tmp/kanku');
 
 has ['noauto_9p']     => (is => 'rw', isa => 'Bool');
 
+has ['root_disk']     => (is => 'rw', isa => 'Object');
+
 has empty_disks => (
   is => 'rw',
   isa => 'ArrayRef',
@@ -125,6 +127,8 @@ sub execute {
     $vm->template_file($ctx->{vm_template_file});
   }
 
+  $vm->root_disk($self->root_disk);
+
   $vm->create_domain();
 
   my $con = $vm->console();
@@ -150,7 +154,8 @@ sub execute {
       "echo 'force_drivers+=\"9p 9pnet 9pnet_virtio\"' >> /etc/dracut.conf.d/98-kanku.conf",
       "dracut --force",
       # Be aware of the two spaces after delimiter
-      'grub2-install `cut -f2 -d\  /boot/grub2/device.map |head`'
+      'grub2-install `cut -f2 -d\  /boot/grub2/device.map |head`',
+      'id kanku || { useradd -m -s /bin/bash kanku && { echo kanku:kankusho | chpasswd ; } ; echo "Added user"; }'
     );
   }
 
@@ -205,31 +210,30 @@ sub _create_image_file_from_cache {
   my $self = shift;
   my $ctx  = $self->job()->context();
 
+  my $suffix2format = {
+     qcow2 => 'qcow2',
+     raw   => 'raw',
+     img   => 'img'
+  };
+
   my $final_file;
   my $in = Path::Class::File->new($self->cache_dir,$ctx->{vm_image_file});
-  if ( $ctx->{vm_image_file} =~ /\.(qcow2|raw|img)\.(gz|bz2|xz)$/ ) {
-    $final_file = $self->images_dir . "/" . $self->domain_name .".$1";
-
-    $self->logger->info("Uncompressing $in");
-    $self->logger->info("  to $final_file");
-
-    unlink $final_file;
-
-    anyuncompress $in => $final_file
-      or die "anyuncompress failed: $AnyUncompressError\n";;
-
-
-  } elsif( $ctx->{vm_image_file} =~ /\.(qcow2|raw|img)$/ ) {
+  if ( $ctx->{vm_image_file} =~ /\.(qcow2|raw|img)(\.(gz|bz2|xz))?$/ ) {
     my $vol_name = $self->domain_name .".$1";
-    my $img = Kanku::Util::VM::Image->new(
+
+    $self->root_disk( 
+      Kanku::Util::VM::Image->new(
+		format		=> $suffix2format->{$1},
                 vol_name 	=> $vol_name,
                 source_file 	=> $in->stringify
-	      );
-
-    $final_file = $img->create_volume()->get_path();
-
+      )
+    );
 
     $self->logger->info("Uploading $in via libvirt to $vol_name");
+
+    $final_file = $self->root_disk->create_volume()->get_path();
+
+    $self->logger->info(" -- final file $final_file");
 
   } else {
 

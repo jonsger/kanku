@@ -96,6 +96,7 @@ sub execute {
 
     $self->logger->debug("obs_direct_url = $ctx->{obs_direct_url}");
     $curl->url($ctx->{obs_direct_url});
+    $ctx->{vm_image_url} = $ctx->{obs_direct_url};
     $self->logger->info("Trying alternate url ".$curl->url);
 
     $curl->username($ctx->{obs_username}) if $ctx->{obs_username};
@@ -162,6 +163,7 @@ sub get_from_history {
   die "Could not find result for vm_image_url: $ctx->{vm_image_url}\n" unless $rs;
 
 
+  $ctx->{use_cache} = 1;
   $ctx->{vm_image_file} |= $rs->vm_image_file;
 
   return {

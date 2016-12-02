@@ -27,8 +27,6 @@ use Kanku::Util::CurlHttpDownload;
 
 with 'Kanku::Roles::Logger';
 
-use feature 'say';
-
 # http://download.opensuse.org/repositories/OBS:/Server:/Unstable/images/
 #
 
@@ -118,7 +116,6 @@ has get_image_file_from_url => (
       $record->{obs_username} = $build_results->user;
       $record->{obs_password} = $build_results->pass;
     }
-    #say $record->{filename};
     return $record || {};
   }
 );
@@ -189,7 +186,7 @@ sub _sub_get_image_file_from_url_cb {
     my $self = shift;
     my $arg = shift;
     foreach my $bin (@$arg) {
-      return $bin if $bin->{filename} =~ /\.qcow2$/
+      return $bin if $bin->{filename} =~ /\.(qcow2|raw|raw\.xz)$/
     }
 }
 
