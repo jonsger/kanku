@@ -39,7 +39,7 @@ has [qw/
       management_interface        management_network
     / ]  => ( is=>'rw', isa => 'Str');
 
-has _console      => ( is => 'rw', isa => 'Object' );
+#has console       => ( is => 'rw', isa => 'Object' );
 has root_disk     => ( is => 'rw', isa => 'Object' );
 has use_9p        => ( is => 'rw', isa => 'Bool' );
 has empty_disks   => ( is => 'rw', isa => 'ArrayRef', default => sub {[]});
@@ -305,8 +305,11 @@ sub get_ipaddress {
     return $self->_get_ip_from_console();
 
   } else {
-
-    return $self->_get_ip_from_dhcp();
+    try {
+      return $self->_get_ip_from_dhcp();
+    } catch {
+      return $self->_get_ip_from_console();
+    }
 
   }
 
@@ -389,7 +392,7 @@ sub get_disk_list {
 
 sub _get_ip_from_console {
   my $self        = shift;
-  my $interface   = $self->management_interface();
+  my $interface   = $self->management_interface() || 'eth0';
 
 
   my $con  = $self->console;
@@ -418,6 +421,8 @@ sub _get_ip_from_console {
       sleep 1;
     }
   }
+
+  $con->logout;
 
   if (! $self->ipaddress) {
     die "Could not get ip address for interface $interface within "

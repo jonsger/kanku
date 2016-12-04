@@ -18,6 +18,7 @@ package Kanku::Handler::SetupNetwork;
 
 use Moose;
 #use Data::Dumper;
+use Kanku::Util::VM;
 use Kanku::Util::VM::Console;
 use Kanku::Config;
 #use Path::Class qw/file/;
@@ -68,9 +69,13 @@ sub execute {
 
   $con->logout();
 
+  my $vm = Kanku::Util::VM->new(domain_name => $self->domain_name);
+
+  $ctx->{ipaddress} = $vm->get_ipaddress();
+
   return {
     code    => 0,
-    message => "Successfully prepared " . $self->domain_name . " for ssh connections\n"
+    message => "Successfully setup network for domain " . $self->domain_name
   }
 }
 
@@ -117,7 +122,7 @@ sub _configure_interfaces {
     $self->logger->debug("Create config command:\n$create_config");
     $con->cmd($create_config);
 
-    my $if_command        = "ifup $interface";   
+    my $if_command        = "ifup $interface";
     $self->logger->debug("ifup command:\n$if_command");
     $con->cmd($if_command);
 
@@ -154,7 +159,7 @@ Here is an example how to configure the module in your jobs file or KankuFile
           - 192.168.122.1
         search: opensuse.org local.site
         domain: local.site
-          
+
 
 =head1 DESCRIPTION
 

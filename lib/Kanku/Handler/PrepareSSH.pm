@@ -67,6 +67,7 @@ sub prepare {
 sub execute {
   my $self = shift;
   my $cfg   = Kanku::Config->instance()->config();
+  $self->logger->debug("username/password: ".$self->login_user.'/'.$self->login_pass);
   my $con = Kanku::Util::VM::Console->new(
         domain_name => $self->domain_name,
         login_user => $self->login_user(),
@@ -89,8 +90,8 @@ sub execute {
     "EOF\n"
   );
 
-  $con->cmd('useradd -m kanku');
-  $con->cmd('mkdir /home/kanku/.ssh');
+  $con->cmd('id kanku || useradd -m kanku');
+  $con->cmd('[ -d /home/kanku/.ssh ] || mkdir /home/kanku/.ssh');
   $con->cmd(
     "cat <<EOF >> /home/kanku/.ssh/authorized_keys\n" .
     "$str\n" .
@@ -101,7 +102,6 @@ sub execute {
   $con->cmd("service sshd status || service sshd start");
 
   $con->cmd("chkconfig sshd on");
-
 
   $con->logout();
 

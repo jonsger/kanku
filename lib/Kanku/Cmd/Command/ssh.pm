@@ -32,6 +32,30 @@ has user => (
   default => 'kanku'
 );
 
+has login_user => (
+    traits        => [qw(Getopt)],
+    isa           => 'Str',
+    is            => 'rw',
+    cmd_aliases   => 'l',
+    documentation => 'user to login',
+        lazy              => 1,
+        default           => sub {
+          return Kanku::Config->instance()->config()->{login_user} || '';
+        }
+);
+
+has login_pass => (
+    traits        => [qw(Getopt)],
+    isa           => 'Str',
+    is            => 'rw',
+    cmd_aliases   => 'p',
+    documentation => 'password to login',
+        lazy              => 1,
+        default           => sub {
+          return Kanku::Config->instance()->config()->{login_pass} || '';
+        }
+);
+
 sub abstract { "open ssh connection to vm" }
 
 sub description { "open ssh connection to vm" }
@@ -42,6 +66,8 @@ sub execute {
   my $cfg   = Kanku::Config->instance();
   my $vm    = Kanku::Util::VM->new(
                 domain_name         => $cfg->config->{domain_name},
+		login_user  => $self->login_user,
+                login_pass  => $self->login_pass,
                 management_network  => $cfg->config->{management_network} || ''
               );
   my $ip    = $vm->get_ipaddress;

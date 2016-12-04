@@ -47,7 +47,10 @@ has '+memory'         => ( default => 1024*1024 );
 
 has '+vcpu'           => ( default => 1 );
 
-has [qw/use_9p/]      => (is => 'rw',isa=>'Bool',default=>0);
+has [qw/
+        use_9p
+        skip_network
+/]                    => (is => 'rw',isa=>'Bool',default=>0);
 
 has "+images_dir"     => (default=>"/var/lib/libvirt/images");
 
@@ -140,27 +143,74 @@ sub execute {
   my $ip;
   my %opts = ();
 
-  %opts = (mode => 'console') if $self->management_interface;
+  $self->_setup_9p($con);
 
-  $ip = $vm->get_ipaddress(%opts);
-  die "Could not get ipaddress from VM" unless $ip;
-  $ctx->{ipaddress} = $ip;
+  $self->_setup_hostname($con);
+
+  # make sure that dhcp server gets updated
+  if ( $self->management_interface ) {
+    $con->cmd(
+      "ifdown " . $self->management_interface,
+      "ifup " . $self->management_interface,
+    );
+  } else {
+    $self->logger->warn("No management_interface set. Your dhcp-server will not get updated hostname");
+  };
+
+
+  if ( ! $self->skip_network ) {
+    %opts = (mode => 'console') if $self->management_interface;
+
+    $ip = $vm->get_ipaddress(%opts);
+    die "Could not get ipaddress from VM" unless $ip;
+    $ctx->{ipaddress} = $ip;
+
+    if ( $self->forward_port_list ) {
+	my $ipt = Kanku::Util::IPTables->new(
+	  domain_name     => $self->domain_name,
+	  host_interface  => $ctx->{host_interface},
+	  guest_ipaddress => $ip
+	);
+
+	$ipt->add_forward_rules_for_domain(
+	  start_port => $cfg->{'Kanku::Util::IPTables'}->{start_port},
+	  forward_rules => [ split(/,/,$self->forward_port_list) ]
+	);
+    }
+
+  }
+
+  $con->logout();
+
+  $ctx->{vm} = $vm;
+
+  return {
+    code    => 0,
+    message => "Create domain " . $self->domain_name ." (".( $ip || 'no ip found' ).") successfully"
+  };
+}
+
+sub _setup_9p {
+  my ($self,$con) = @_;
+
+  return if (! $self->use_9p);
 
   my $mp = $self->mnt_dir_9p;
 
-  if ($self->use_9p) {
-    $con->cmd(
-      "mkdir -p $mp",
-      "echo \"kankushare $mp 9p trans=virtio,version=9p2000.L".( $self->noauto_9p && ',noauto')." 1 1\" >> /etc/fstab",
-      "mount -a",
-      "echo 'force_drivers+=\"9p 9pnet 9pnet_virtio\"' >> /etc/dracut.conf.d/98-kanku.conf",
-      "dracut --force",
-      # Be aware of the two spaces after delimiter
-      'grub2-install `cut -f2 -d\  /boot/grub2/device.map |head`',
-      'id kanku || { useradd -m -s /bin/bash kanku && { echo kanku:kankusho | chpasswd ; } ; echo "Added user"; }'
-    );
-  }
+  $con->cmd(
+    "mkdir -p $mp",
+    "echo \"kankushare $mp 9p trans=virtio,version=9p2000.L".( $self->noauto_9p && ',noauto')." 1 1\" >> /etc/fstab",
+    "mount -a",
+    "echo 'force_drivers+=\"9p 9pnet 9pnet_virtio\"' >> /etc/dracut.conf.d/98-kanku.conf",
+    "dracut --force",
+    # Be aware of the two spaces after delimiter
+    'grub2-install `cut -f2 -d\  /boot/grub2/device.map |head`',
+    'id kanku || { useradd -m -s /bin/bash kanku && { echo kanku:kankusho | chpasswd ; } ; echo "Added user"; }'
+  );
+}
 
+sub _setup_hostname {
+  my ($self,$con) = @_;
   my $hostname;
 
   if ($self->short_hostname) {
@@ -176,36 +226,6 @@ sub execute {
     "hostname $hostname",
   );
 
-  # make sure that dhcp server gets updated
-  if ( $self->management_interface ) {
-    $con->cmd(
-      "ifdown " . $self->management_interface,
-      "ifup " . $self->management_interface,
-    );
-  } else {
-    $self->logger->warn("No management_interface set. Your dhcp-server will not get updated hostname");
-  };
-
-  $con->logout();
-
-  if ( $self->forward_port_list ) {
-      my $ipt = Kanku::Util::IPTables->new(
-        domain_name     => $self->domain_name,
-        host_interface  => $ctx->{host_interface},
-        guest_ipaddress => $ip
-      );
-
-      $ipt->add_forward_rules_for_domain(
-        start_port => $cfg->{'Kanku::Util::IPTables'}->{start_port},
-        forward_rules => [ split(/,/,$self->forward_port_list) ]
-      );
-  }
-
-
-  return {
-    code    => 0,
-    message => "Create domain " . $self->domain_name ." ($ip) successfully"
-  };
 }
 
 sub _create_image_file_from_cache {

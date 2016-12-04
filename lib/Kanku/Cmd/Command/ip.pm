@@ -29,12 +29,37 @@ has domain_name => (
     isa           => 'Str',
     is            => 'rw',
     cmd_aliases   => 'd',
-    documentation => 'name of domain to create',
+    documentation => 'name of domain',
 	lazy		  => 1,
 	default		  => sub {
-          return Kanku::Config->instance()->config()->{domain_name};
+          return Kanku::Config->instance()->config()->{domain_name} || '';
 	}
 );
+
+has login_user => (
+    traits        => [qw(Getopt)],
+    isa           => 'Str',
+    is            => 'rw',
+    cmd_aliases   => 'u',
+    documentation => 'user to login',
+	lazy		  => 1,
+	default		  => sub {
+          return Kanku::Config->instance()->config()->{login_user} || '';
+	}
+);
+
+has login_pass => (
+    traits        => [qw(Getopt)],
+    isa           => 'Str',
+    is            => 'rw',
+    cmd_aliases   => 'p',
+    documentation => 'password to login',
+	lazy		  => 1,
+	default		  => sub {
+          return Kanku::Config->instance()->config()->{login_pass} || '';
+	}
+);
+
 
 sub abstract { "Show ip address of kanku vm" }
 
@@ -46,7 +71,11 @@ sub execute {
   my $cfg     = Kanku::Config->instance();
 
 
-  my $vm = Kanku::Util::VM->new(domain_name=>$self->domain_name);
+  my $vm = Kanku::Util::VM->new(
+    domain_name =>$self->domain_name,
+    login_user  => $self->login_user,
+    login_pass  => $self->login_pass,
+  );
 
   my $ip = $vm->get_ipaddress();
 
@@ -55,9 +84,7 @@ sub execute {
     $logger->info("IP Address: ".$ip);
 
   } else {
-
     $logger->error("Could not find IP Address");
-  
   }
 
 }
