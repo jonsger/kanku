@@ -5,7 +5,7 @@ BASEDIR=`dirname $PWD/$0`"/.."
 
 echo $BASEDIR
 
-ALL_MODULES=( `find $BASEDIR -name *.pm` )
+ALL_MODULES=( `find $BASEDIR/lib -name *.pm` )
 
 ALL_BINS=(kanku kanku-apache2.psig kanku-app.psgi kanku-scheduler)
 TEST_COUNTER=0

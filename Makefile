@@ -52,4 +52,7 @@ dist: dist_config_files
 clean:
 	rm -rf kanku-*.tar.xz
 
+test:
+	prove -Ilib -It/lib t/*.t
+
 .PHONY: dist install
