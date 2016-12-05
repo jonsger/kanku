@@ -67,13 +67,20 @@ sub prepare {
 sub execute {
   my $self = shift;
   my $cfg   = Kanku::Config->instance()->config();
+  my $ctx  = $self->job()->context();
+  my $con;
   $self->logger->debug("username/password: ".$self->login_user.'/'.$self->login_pass);
-  my $con = Kanku::Util::VM::Console->new(
+
+  if ( $ctx->{vm} ) {
+    $con = $ctx->{vm}->console
+  } else {
+    $con = Kanku::Util::VM::Console->new(
         domain_name => $self->domain_name,
         login_user => $self->login_user(),
         login_pass => $self->login_pass(),
         debug => $cfg->{'Kanku::Util::VM::Console'}->{debug} || 0
-  );
+    );
+  }
 
   $con->init();
   $con->login();

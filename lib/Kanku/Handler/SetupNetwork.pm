@@ -52,13 +52,18 @@ sub execute {
   my $cfg    = Kanku::Config->instance()->config();
   my $ctx    = $self->job()->context();
   my $logger = $self->logger;
+  my $con;
 
-  my $con = Kanku::Util::VM::Console->new(
-        domain_name => $ctx->{domain_name},
+  if ( $ctx->{vm} ) {
+    $con = $ctx->{vm}->console
+  } else {
+    $con = Kanku::Util::VM::Console->new(
+        domain_name => $self->domain_name,
         login_user => $self->login_user(),
         login_pass => $self->login_pass(),
         debug => $cfg->{'Kanku::Util::VM::Console'}->{debug} || 0
-  );
+    );
+  }
 
   $con->init();
   $con->login();

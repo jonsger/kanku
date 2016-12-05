@@ -464,6 +464,8 @@ sub _get_ip_from_dhcp {
 
       $wait--;
 
+      sleep 1;
+
       $self->logger->debug("Could not get ip address form interface.");
       $self->logger->debug("Waiting another $wait seconds for network to come up");
 
