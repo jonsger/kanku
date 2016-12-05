@@ -199,7 +199,7 @@ sub _setup_9p {
 
   $con->cmd(
     "mkdir -p $mp",
-    "echo \"kankushare $mp 9p trans=virtio,version=9p2000.L".( $self->noauto_9p && ',noauto')." 1 1\" >> /etc/fstab",
+    "echo \"kankushare $mp 9p trans=virtio,version=9p2000.L".( $self->noauto_9p && ',noauto')." 1 0\" >> /etc/fstab",
     "mount -a",
     "echo 'force_drivers+=\"9p 9pnet 9pnet_virtio\"' >> /etc/dracut.conf.d/98-kanku.conf",
     "dracut --force",
