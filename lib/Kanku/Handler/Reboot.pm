@@ -24,6 +24,11 @@ use Path::Class::File;
 use Data::Dumper;
 with 'Kanku::Roles::Handler';
 
+has [qw/
+      domain_name
+      login_user
+      login_pass
+/] => (is => 'rw',isa=>'Str');
 has [qw/wait_for_network wait_for_console/] => (is => 'rw',isa=>'Bool',lazy=>1,default=>1);
 has [qw/timeout/] => (is => 'rw',isa=>'Int',lazy=>1,default=>600);
 
