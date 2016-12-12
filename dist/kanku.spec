@@ -31,6 +31,7 @@ BuildRequires:  fdupes
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
 Recommends: osc 
+Recommends: perl(IO::Uncompress::UnXz)
 Requires: libvirt-daemon-qemu qemu-kvm libvirt-daemon-config-network libvirt-daemon-config-nwfilter
 Requires: perl(DBIx::Class::Fixtures)
 Requires: perl(Test::Simple)
@@ -67,6 +68,8 @@ Requires: perl(IO::Uncompress::UnXz)
 Requires: perl-Plack
 Requires: perl(Dancer2)
 Requires: perl(Dancer2::Plugin::REST)
+
+
 %description
 TODO: add some meaningful description
  to be more verbose
