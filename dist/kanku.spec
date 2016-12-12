@@ -38,6 +38,8 @@ Requires: perl(YAML)
 Requires: perl(Config::Tiny)
 Requires: perl(Path::Class)
 Requires: perl(Sys::Virt)
+Requires: perl(Moose)
+Requires: perl(Log::Log4perl)
 Requires: perl(MooseX::App::Cmd)
 Requires: perl(Dancer2::Plugin::REST)
 Requires: perl(MooseX::Singleton)
@@ -62,7 +64,9 @@ Requires: perl(DBIx::Class::Migration)
 Requires: perl(Template::Plugin::Filter::ANSIColor)
 Requires: perl(File::LibMagic)
 Requires: perl(IO::Uncompress::UnXz)
-
+Requires: perl-Plack
+Requires: perl(Dancer2)
+Requires: perl(Dancer2::Plugin::REST)
 %description
 TODO: add some meaningful description
  to be more verbose
