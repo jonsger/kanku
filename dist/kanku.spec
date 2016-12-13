@@ -32,6 +32,7 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
 Recommends: osc 
 Recommends: perl(IO::Uncompress::UnXz)
+Recommends: apache2
 Requires: libvirt-daemon-qemu qemu-kvm libvirt-daemon-config-network libvirt-daemon-config-nwfilter
 Requires: perl(DBIx::Class::Fixtures)
 Requires: perl(Test::Simple)
@@ -68,7 +69,14 @@ Requires: perl(IO::Uncompress::UnXz)
 Requires: perl-Plack
 Requires: perl(Dancer2)
 Requires: perl(Dancer2::Plugin::REST)
-
+Requires: perl(XML::XPath)
+Requires: perl(Term::ReadKey)
+Requires: perl(IPC::Run)
+# DBD::SQLite is also provided by perl-DBD-SQLite-Amalgamation
+# but perl-DBD-SQLite-Amalgamation is breaks with SQL syntax errors
+# at job_histroy_sub table
+Requires: perl-DBD-SQLite
+Requires: perl(LWP::Protocol::https)
 
 %description
 TODO: add some meaningful description
