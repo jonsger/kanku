@@ -117,7 +117,7 @@ has homedir => (
     lazy          => 1,
     default       => sub {
       # dbi:SQLite:dbname=/home/frank/Projects/kanku/share/kanku-schema.db
-      return File::HomeDir->users_home($ENV{SUDO_USER});
+      return File::HomeDir->users_home($_[0]->user);
     }
 );
 
@@ -126,6 +126,13 @@ has logger => (
   is    => 'rw',
   lazy  => 1,
   default => sub { Log::Log4perl->get_logger }
+);
+
+has app_root => (
+  isa   => 'Object',
+  is    => 'rw',
+  lazy  => 1,
+  default => sub { dir($FindBin::Bin)->parent; }
 );
 
 sub abstract { "Setup local environment to work as server or developer mode." }
@@ -153,13 +160,6 @@ sub execute {
   # ask for mode
   $self->_ask_for_install_mode() if ( ! $self->devel and ! $self->server );
 
-  # ask for user
-  $self->_ask_for_user if ( ! $self->user );
-
-  #
-  ###
-
-
   ### Running selected mode
   #
 
@@ -177,6 +177,31 @@ sub _execute_server_setup {
 
   $logger->debug("Running server setup");
 
+
+  $self->_dbfile(
+    file(
+      $self->app_root,
+      "share",
+      "kanku-schema.db"
+    )->stringify
+  );
+
+  $self->user("root");
+
+  my @temp = <DATA>;
+  my $template = "@temp";
+
+  my $config = sprintf($template,$self->_dbfile);
+
+  my $cfg = file($self->app_root,'config.yml');
+
+  $cfg->spew($config);
+
+  $self->_setup_database();
+
+  $logger->info("Server mode setup successfully finished!");
+  $logger->info("Please reboot to make sure, libvirtd is coming up properly");  
+
 }
 
 sub _execute_devel_setup {
@@ -184,6 +209,9 @@ sub _execute_devel_setup {
   my $logger  = $self->logger;
 
   $logger->debug("Running developer setup");
+
+  # ask for user
+  $self->_ask_for_user if ( ! $self->user );
 
   $self->_create_local_settings_dir();
 
@@ -209,7 +237,7 @@ sub _execute_devel_setup {
 
   die if $?;
 
-  $logger->info("Setup successfully finished!");
+  $logger->info("Developer mode setup successfully finished!");
   $logger->info("Please reboot to make sure, libvirtd is coming up properly");  
 
 }
@@ -401,7 +429,7 @@ sub _ask_for_user {
 
   while ( ! $self->user ) {
 
-    print "Please enter the username of the user who will run kanku [".($ENV{SUDO_USER} || '')."]\n";
+    print "Please enter the username of the user who will run kanku [".($ENV{SUDO_USER} || $ENV{USER})."]\n";
 
     my $answer = <STDIN>;
     chomp($answer);
@@ -483,3 +511,56 @@ sub _chown {
 __PACKAGE__->meta->make_immutable();
 
 1;
+
+__DATA__
+# This is the main configuration file of your Dancer2 app
+# env-related settings should go to environments/$env.yml
+# all the settings in this file will be loaded at Dancer's startup.
+
+# Your application's name
+appname: "Kanku"
+
+# The default layout to use for your application (located in
+# views/layouts/main.tt)
+layout: "main"
+
+# when the charset is set to UTF-8 Dancer2 will handle for you
+# all the magic of encoding and decoding. You should not care
+# about unicode within your app when this setting is set (recommended).
+charset: "UTF-8"
+
+# template engine
+# simple: default and very basic template engine
+# template_toolkit: TT
+
+behind_proxy : 1
+
+#template: "simple"
+
+template: "template_toolkit"
+engines:
+  template:
+    template_toolkit:
+      start_tag: '[%%'
+      end_tag:   '%%]'
+
+plugins:
+  DBIC:
+    default:
+      dsn: dbi:SQLite:dbname=%s
+      schema_class: Kanku::Schema
+  Auth::Extensible:
+    realms:
+        users:
+            provider: 'DBIC'
+            encryption_algorithm: SHA-512
+
+    no_default_pages: 1
+    no_login_handler: 1
+    mailer:
+      module: Mail::Message # Module to send email with
+      # Module options
+      options:
+        via: sendmail
+    mail_from: Kanku QA <kanku@example.com>
+
