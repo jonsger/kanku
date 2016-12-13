@@ -27,6 +27,7 @@ use Template;
 use Kanku::Schema;
 use Cwd;
 use DBIx::Class::Migration;
+use IPC::Run qw/run timeout/;
 
 extends qw(MooseX::App::Cmd::Command);
 with "Kanku::Cmd::Roles::Schema";
@@ -99,6 +100,16 @@ has dsn => (
       # dbi:SQLite:dbname=/home/frank/Projects/kanku/share/kanku-schema.db
       return "dbi:SQLite:dbname=".$_[0]->_dbfile;
     }
+);
+
+has ssl => (
+    traits        => [qw(Getopt)],
+    isa           => 'Bool',
+    is            => 'rw',
+    #cmd_aliases   => 'X',
+    lazy          => 1,
+    documentation => 'Configure apache with ssl',
+    default       => 0
 );
 
 has _dbfile => (
@@ -239,6 +250,49 @@ sub _execute_devel_setup {
 
   $logger->info("Developer mode setup successfully finished!");
   $logger->info("Please reboot to make sure, libvirtd is coming up properly");  
+
+}
+
+sub _run_system_cmd {
+  my $self     = shift;
+  my $logger   = $self->logger;
+  my @commands = @_;
+
+  for my $cmd (@commands) {
+    $logger->debug("Running command '$cmd'");
+    my ($in,$out,$err);
+    run $cmd , \$in, \$out , $err;
+
+    if ($?) {
+      $logger->error("Execution of command failed: $err");
+    }
+  }
+
+}
+
+
+sub _configure_apache {
+  my $self    = shift;
+  my $logger  = $self->logger;
+
+  $logger->debug("Enabling apache modules proxy, rewrite, headers");
+
+  for my $mod (qw/proxy rewrite headers/) {
+    $self->_run_system_cmd("a2enmod $mod");
+  }
+
+  $self->_configure_apache_ssl();
+
+}
+
+sub _configure_apache_ssl {
+  my $self    = shift;
+  my $logger  = $self->logger;
+
+  if (! $self->ssl ) {
+    $logger->debug("No SSL confguration requested");
+    return 0;
+  }
 
 }
 
