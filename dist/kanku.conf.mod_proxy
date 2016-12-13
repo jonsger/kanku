@@ -1,3 +1,8 @@
+# a2enmod proxy
+# a2enmod rewrite
+# a2enmod headers
+
+
 ProxyPass "/kanku" "http://localhost:5000/kanku"
 ProxyPassReverse "/kanku" "http://localhost:5000/kanku"
 
