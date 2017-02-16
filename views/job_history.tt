@@ -41,7 +41,7 @@
 </div>
 <div id=top_pager class=row>
   <div class="btn-group col-md-4">
-    <input type="text" name="job_name" class="form-control" placeholder="Enter job name" id="job_name">
+    <input type="text" name="job_name" class="form-control" placeholder="Enter job name - Use '%' as wildcard" id="job_name">
     <span id="searchclear" class="glyphicon glyphicon-remove-circle"></span>
   </div>
   <div class="col col-md-5">

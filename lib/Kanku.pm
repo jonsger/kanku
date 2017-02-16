@@ -187,7 +187,7 @@ any '/rest/jobs/list.:format' => sub {
   }
 
   if ( param("job_name") ) {
-	$search->{name}= { like => '%'.param("job_name").'%' }
+	$search->{name}= { like => param("job_name") }
   }
 
   debug("search: ".Dumper($search));
