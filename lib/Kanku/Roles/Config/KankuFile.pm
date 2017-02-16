@@ -42,6 +42,11 @@ sub job_config {
 
 }
 
+sub notifiers_config {
+	# no notifiers in KankuFile
+	return []
+}
+
 sub job_list {
   my $self = shift;
 

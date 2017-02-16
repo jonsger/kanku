@@ -271,7 +271,12 @@ get '/rest/gui_config/job.:format' => sub {
   foreach my $job_name (sort(@jobs)) {
     my $job_config = { job_name => $job_name, sub_tasks => []};
     push @config , $job_config;
-    foreach my $sub_tasks ( @{ $cfg->job_config($job_name) }) {
+    my $job_cfg = $cfg->job_config($job_name);
+	debug(Dumper($job_cfg));
+    if (ref($job_cfg) ne 'ARRAY') {
+	next;
+    }
+    foreach my $sub_tasks ( @{$job_cfg}) {
         my $mod = $sub_tasks->{use_module};
         my $defaults = {};
         my $mod2require = $mod;

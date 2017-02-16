@@ -74,6 +74,7 @@ sub run_job {
   my $schema  = $self->schema();
 
   my $job_definition = Kanku::Config->instance()->job_config($job->name());
+  my $notifiers = Kanku::Config->instance()->notifiers_config($job->name());
 
   if (! $job_definition ) {
     # log error
@@ -129,6 +130,8 @@ sub run_job {
 
   my $task_counter = 0;
 
+  my $last_task;
+
   foreach my $sub_task (@{$job_definition}) {
 
     my $task = Kanku::Task->new(
@@ -139,7 +142,7 @@ sub run_job {
       scheduler => $self,
       args      => $args->[$task_counter] || {},
     );
-
+    $last_task = $task;
     $state = $task->run();
 
     last if ($state eq 'failed');
@@ -154,7 +157,54 @@ sub run_job {
   $job->end_time(time());
   $job->update_db();
 
+  foreach my $notifier (@{$notifiers}) {
+    try {
+	$self->execute_notifier($notifier,$job,$last_task);
+    }
+    catch {
+      my $e = $_;
+      $logger->error("Error while sending notification");
+      $logger->error($e);
+    };
+  }
+
+
   return $job->state;
+}
+
+sub execute_notifier {
+  my $self    = shift;
+  my $options = shift;
+  my $job     = shift;
+  my $task    = shift;
+  my $state   = $job->state;
+  my $in_states = 0;
+
+  foreach my $st (split(/\s*,\s*/,$options->{states})) {
+    $in_states = 1 if ($state eq $st);
+  }
+
+  return if (! $in_states);
+
+  my $mod = $options->{use_module};
+  die "Now use_module definition in config (job: $job)" if ( ! $mod );
+
+  my $args = $options->{options} || {};
+  die "args for $mod not a HashRef" if ( ref($args) ne 'HASH' );
+
+  my $mod2require = $mod;
+  $mod2require =~ s|::|/|g;
+  $mod2require = $mod2require . ".pm";
+  $self->logger->debug("Trying to load $mod2require");
+  require "$mod2require";
+
+  my $notifier = $mod->new( options=> $args );
+
+  $notifier->short_message("Job ".$job->name." has exited with state '$state'");
+  $notifier->full_message($task->result);
+
+  $notifier->notify();
+
 }
 
 sub create_scheduled_jobs {

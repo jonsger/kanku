@@ -69,8 +69,27 @@ around 'config' => sub {
 };
 
 sub job_config {
-  my $self      = shift;
-  return YAML::Load($self->job_config_plain(@_));
+  my $self = shift;
+  my $cfg  = YAML::Load($self->job_config_plain(@_));
+
+  if (ref($cfg) eq 'ARRAY') {
+    return $cfg;
+  } elsif (ref($cfg) eq 'HASH') {
+    return $cfg->{tasks} if (ref($cfg->{tasks}) eq 'ARRAY');
+  }
+
+  die "No valid job configuration found\n";
+}
+
+sub notifiers_config {
+  my $self = shift;
+  my $cfg  = YAML::Load($self->job_config_plain(@_));
+
+  if (ref($cfg) eq 'HASH') {
+    return $cfg->{notifiers} if (ref($cfg->{notifiers}) eq 'ARRAY');
+  }
+  # give back empty array ref if no config found
+  return [];
 }
 
 sub job_config_plain {

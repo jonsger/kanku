@@ -71,6 +71,12 @@ optional arguments which could be used to overwrite options from the config file
 
 has 'args'       => (is=>'rw',isa=>'HashRef',default=>sub {{}} );
 
+=head2 result      - Result of task in text form json encoded
+
+=cut
+
+has 'result'       => (is=>'rw',isa=>'Str',default=> '' );
+
 =head1 METHODS
 
 =head2 run - load and run the Handler given by $self->module
@@ -175,6 +181,8 @@ sub run {
   });
 
   $job->update_db();
+
+  $self->result($result);
 
   return $state;
 
