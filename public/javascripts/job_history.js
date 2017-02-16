@@ -202,13 +202,28 @@ function previous_page() {
     $("#previous_page").prop("disabled",true);
   }
 }
+
 $( document ).ready(function() {
   get_job_history();
 
   $(".cb_state").each( function (cb) {
-    console.log("state value:" +  this.value );
-    console.log("state name:" +  cb );
     $( this ).change(get_job_history);
+  });
+
+  $("#search_button").click(function () {
+	get_job_history();
+  });
+
+
+  $("#job_name").keydown(function(e) {
+    if( e.keyCode === 13) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      get_job_history();
+      return;
+    }
+
   });
 
   $("#next_page").click(function () {
@@ -223,6 +238,11 @@ $( document ).ready(function() {
   }
 
   $("#limit").change(function () {
+    get_job_history();
+  });
+
+  $("#searchclear").click(function(){
+    $("#job_name").val('');
     get_job_history();
   });
 

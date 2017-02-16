@@ -89,6 +89,8 @@ post '/login' => sub {
     if ($success) {
         session logged_in_user => params->{username};
         session logged_in_user_realm => $realm;
+        params->{username}="";
+        params->{password}="";
         redirect params->{return_url};
     } else {
 
@@ -176,10 +178,22 @@ any '/rest/jobs/list.:format' => sub {
     page => param('page') || 1,
   );
 
+  my $search = {};
+  if (param('state')) {
+    $search->{state} = param('state')
+
+  } else {
+    $search->{state} = [qw/succeed running failed/]
+  }
+
+  if ( param("job_name") ) {
+	$search->{name}= { like => '%'.param("job_name").'%' }
+  }
+
+  debug("search: ".Dumper($search));
+
   my $rs = schema('default')->resultset('JobHistory')->search(
-                  {
-                    state => param('state') || [qw/succeed running failed/],
-                  },
+		  $search,
                   {
                     order_by =>{
                       -desc  =>'id'

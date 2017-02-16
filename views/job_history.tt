@@ -39,12 +39,14 @@
         </h4>
   </div>
 </div>
-<input type=hidden name=page id=page value=[% page %]>
-
 <div id=top_pager class=row>
-  <div class="col col-md-10">
+  <div class="btn-group col-md-4">
+    <input type="text" name="job_name" class="form-control" placeholder="Enter job name" id="job_name">
+    <span id="searchclear" class="glyphicon glyphicon-remove-circle"></span>
   </div>
-  <div class="col col-md-2">
+  <div class="col col-md-5">
+  </div>
+  <div class="col col-md-3 text-right">
   Show rows:
   <select id=limit name=limit>
     <option>5</option>
@@ -55,6 +57,9 @@
   </select>
   </div>
 </div>
+
+<input type=hidden name=page id=page value=[% page %]>
+
 </form>
 </div>
 
