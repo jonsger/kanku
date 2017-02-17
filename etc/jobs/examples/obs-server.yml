@@ -1,64 +1,72 @@
--
-  use_module: Kanku::Handler::SetJobContext
-  options:
-    domain_name: obs-server
-    vm_template_file: obs-server.tt2 
-    host_interface: eth0
-    vm_image_dir: /var/lib/libvirt/images
--
-  use_module: Kanku::Handler::OBSCheck
-  options:
-    api_url: https://api.opensuse.org
-    project: home:M0ses:branches:OBS:Server:Unstable
-    package: OBS-Appliance-qcow2
--
-  use_module: Kanku::Handler::ImageDownload
--
-  use_module: Kanku::Handler::RemoveDomain
-  options:
-    uri: qemu:///system
--
-  use_module: Kanku::Handler::FileMove
--
-  use_module: Kanku::Handler::CreateDomain
-  options:
-    memory: 2097152
-    vcpu: 2
-    management_interface: eth0
-    login_user: root
-    login_pass: opensuse
-    images_dir: /var/lib/libvirt/images
-    forward_port_list: tcp:22,tcp:443
+tasks:
+  -
+    use_module: Kanku::Handler::SetJobContext
+    options:
+      domain_name: obs-server
+      vm_template_file: obs-server.tt2 
+      host_interface: eth0
+      vm_image_dir: /var/lib/libvirt/images
+  -
+    use_module: Kanku::Handler::OBSCheck
+    options:
+      api_url: https://api.opensuse.org
+      project: home:M0ses:branches:OBS:Server:Unstable
+      package: OBS-Appliance-qcow2
+  -
+    use_module: Kanku::Handler::ImageDownload
+  -
+    use_module: Kanku::Handler::RemoveDomain
+    options:
+      uri: qemu:///system
+  -
+    use_module: Kanku::Handler::FileMove
+  -
+    use_module: Kanku::Handler::CreateDomain
+    options:
+      memory: 2097152
+      vcpu: 2
+      management_interface: eth0
+      login_user: root
+      login_pass: opensuse
+      images_dir: /var/lib/libvirt/images
+      forward_port_list: tcp:22,tcp:443
 
--
-  use_module: Kanku::Handler::PrepareSSH
-  options:
-    login_user: root
-    login_pass: opensuse
-    public_key_files:
-      - /root/.ssh/id_rsa.pub
-      - /root/.ssh/authorized_keys
--
-  use_module: Kanku::Handler::GIT
-  options:
-    giturl: https://github.com/M0ses/open-build-service.git
-    destination: /tmp/open-build-service
-    revision: master
-    submodules : 1
--
-  use_module: Kanku::Handler::ExecuteCommandViaSSH
-  options:
-    commands:
-      - zypper -n in perl-Devel-Cover
--
-  use_module: Kanku::Handler::Wait
-  options:
-    delay: 100
-    reason: Give obsapisetup a change to finish!
--
-  use_module: Kanku::Handler::ExecuteCommandViaSSH
-  options:
-    commands:
-      - echo -en "[client]\nuser = root\npassword = opensuse\n" > /root/.my.cnf
-      - make -C  /tmp/open-build-service/dist test_system
-      - make -C /tmp/open-build-service/src/backend test_unit
+  -
+    use_module: Kanku::Handler::PrepareSSH
+    options:
+      login_user: root
+      login_pass: opensuse
+      public_key_files:
+        - /root/.ssh/id_rsa.pub
+        - /root/.ssh/authorized_keys
+  -
+    use_module: Kanku::Handler::GIT
+    options:
+      giturl: https://github.com/M0ses/open-build-service.git
+      destination: /tmp/open-build-service
+      revision: master
+      submodules : 1
+  -
+    use_module: Kanku::Handler::ExecuteCommandViaSSH
+    options:
+      commands:
+        - zypper -n in perl-Devel-Cover
+  -
+    use_module: Kanku::Handler::Wait
+    options:
+      delay: 100
+      reason: Give obsapisetup a change to finish!
+  -
+    use_module: Kanku::Handler::ExecuteCommandViaSSH
+    options:
+      commands:
+        - echo -en "[client]\nuser = root\npassword = opensuse\n" > /root/.my.cnf
+        - make -C  /tmp/open-build-service/dist test_system
+        - make -C /tmp/open-build-service/src/backend test_unit
+notifiers:
+  - 
+    use_module: Kanku::Notifier::Sendmail
+    options:
+      from: kanku@example.com
+      to: user@example.com
+    states: failed

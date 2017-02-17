@@ -1,34 +1,42 @@
--
-  use_module: Kanku::Handler::SetJobContext
-  options:
-    domain_name: sles11sp3
-    vm_template_file: sles11sp3.tt2
-    host_interface: eth0
-    vm_image_dir: /var/lib/libvirt/images
--
-  use_module: Kanku::Handler::ImageDownload
-  options:
-    url: <uri_to_download_from>
+tasks:
+  -
+    use_module: Kanku::Handler::SetJobContext
+    options:
+      domain_name: sles11sp3
+      vm_template_file: sles11sp3.tt2
+      host_interface: eth0
+      vm_image_dir: /var/lib/libvirt/images
+  -
+    use_module: Kanku::Handler::ImageDownload
+    options:
+      url: <uri_to_download_from>
 
--
-  use_module: Kanku::Handler::RemoveDomain
--
-  use_module: Kanku::Handler::FileMove
--
-  use_module: Kanku::Handler::CreateDomain
-  options:
-    memory: 2097152
-    vcpu: 2
-    management_interface: eth0
-    login_user: root
-    login_pass: vagrant
-    images_dir: /var/lib/libvirt/images
-    domain_name: sles11sp3
--
-  use_module: Kanku::Handler::PrepareSSH
-  options:
-    domain_name: sles11sp3
-    login_user: root
-    login_pass: vagrant
-    public_key_files:
-      - /root/.ssh/id_rsa.pub
+  -
+    use_module: Kanku::Handler::RemoveDomain
+  -
+    use_module: Kanku::Handler::FileMove
+  -
+    use_module: Kanku::Handler::CreateDomain
+    options:
+      memory: 2097152
+      vcpu: 2
+      management_interface: eth0
+      login_user: root
+      login_pass: vagrant
+      images_dir: /var/lib/libvirt/images
+      domain_name: sles11sp3
+  -
+    use_module: Kanku::Handler::PrepareSSH
+    options:
+      domain_name: sles11sp3
+      login_user: root
+      login_pass: vagrant
+      public_key_files:
+        - /root/.ssh/id_rsa.pub
+notifiers:
+  - 
+    use_module: Kanku::Notifier::Sendmail
+    options:
+      from: kanku@example.com
+      to: user@example.com
+    states: failed
