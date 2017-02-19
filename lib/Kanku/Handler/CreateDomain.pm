@@ -34,16 +34,16 @@ has [qw/
       images_dir            ipaddress
       management_interface  management_network
       forward_port_list     images_dir
-      short_hostname
+      short_hostname	    memory
 /] => (is => 'rw',isa=>'Str');
+
+has '+memory'         => ( default => 1024*1024 );
 
 has '+management_interface' => ( default => '');
 
 has '+management_network'   => ( default => '');
 
-has [qw/memory vcpu/] => (is => 'rw',isa=>'Int');
-
-has '+memory'         => ( default => 1024*1024 );
+has [qw/vcpu/] => (is => 'rw',isa=>'Int');
 
 has '+vcpu'           => ( default => 1 );
 
@@ -108,9 +108,23 @@ sub execute {
 
   my $cfg  = Kanku::Config->instance()->config();
 
+  my $mem;
+
+  if ( $self->memory =~ /^\d+$/ ) {
+    $mem = $self->memory;
+  } elsif ( $self->memory =~ /^(\d+)([kKmMgG])[bB]?$/ ) {
+    my $factor = lc($2);
+    my $ft = {k => 1, m => 1024, g => 1024*1024};
+    $mem = $1 * $ft->{$factor};
+  } else {
+    die "Option memory has wrong format! Allowed formats: INT[kKmMgG].\n";
+  }
+
+  $self->logger->debug("Using memory: '$mem'");
+
   my $vm = Kanku::Util::VM->new(
       vcpu                  => $self->vcpu,
-      memory                => $self->memory,
+      memory                => $mem,
       domain_name           => $self->domain_name,
       images_dir            => $self->images_dir,
       login_user            => $self->login_user,
