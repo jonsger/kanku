@@ -67,146 +67,6 @@ sub run {
   }
 }
 
-sub run_job {
-  my $self    = shift;
-  my $job     = shift;
-  my $logger  = $self->logger();
-  my $schema  = $self->schema();
-
-  my $job_definition = Kanku::Config->instance()->job_config($job->name());
-  my $notifiers = Kanku::Config->instance()->notifiers_config($job->name());
-
-  if (! $job_definition ) {
-    # log error
-    $logger->error($@);
-
-    # update database fields
-    $job->result(encode_json({error_message=>"job with this name not configured in config.yml"}));
-    $job->state('failed');
-    $job->start_time(time());
-    $job->end_time(time());
-
-    # write to database
-    $job->update_db();
-
-    return 1
-
-  }
-
-  $logger->debug("Starting job: ".$job->name);
-
-  $job->start_time(time());
-  $job->state("running");
-  $job->update_db();
-
-  my $state             = undef;
-  my $args              = [];
-  my $parse_args_failed = 0;
-
-  try {
-      my $args_string = $job->db_object->args();
-
-      if ($args_string) {
-        $args = decode_json($args_string);
-      }
-
-      die "args not containting a ArrayRef" if (ref($args) ne "ARRAY" );
-      
-  }
-  catch {
-    my $e = $_;
-    
-    $logger->error($e);
-    $job->result(encode_json({error_message=>$e}));
-    $job->state('failed');
-    $job->end_time(time());
-    $job->update_db();
-    $parse_args_failed=1;
-  };
-
-  return 1 if $parse_args_failed;
-
-  $logger->trace("  -- args:".Dumper($args));
-
-  my $task_counter = 0;
-
-  my $last_task;
-
-  foreach my $sub_task (@{$job_definition}) {
-
-    my $task = Kanku::Task->new(
-      job       => $job,
-      options   => $sub_task->{options} || {},
-      module    => $sub_task->{use_module},
-      schema    => $schema,
-      scheduler => $self,
-      args      => $args->[$task_counter] || {},
-    );
-    $last_task = $task;
-    $state = $task->run();
-
-    last if ($state eq 'failed');
-
-    $task_counter++;
-
-    last if ($job->skipped);
-
-  }
-
-  $job->state(($job->skipped) ? 'skipped' : $state);
-  $job->end_time(time());
-  $job->update_db();
-
-  foreach my $notifier (@{$notifiers}) {
-    try {
-	$self->execute_notifier($notifier,$job,$last_task);
-    }
-    catch {
-      my $e = $_;
-      $logger->error("Error while sending notification");
-      $logger->error($e);
-    };
-  }
-
-
-  return $job->state;
-}
-
-sub execute_notifier {
-  my $self    = shift;
-  my $options = shift;
-  my $job     = shift;
-  my $task    = shift;
-  my $state   = $job->state;
-  my $in_states = 0;
-
-  foreach my $st (split(/\s*,\s*/,$options->{states})) {
-    $in_states = 1 if ($state eq $st);
-  }
-
-  return if (! $in_states);
-
-  my $mod = $options->{use_module};
-  die "Now use_module definition in config (job: $job)" if ( ! $mod );
-
-  my $args = $options->{options} || {};
-  die "args for $mod not a HashRef" if ( ref($args) ne 'HASH' );
-
-  my $mod2require = $mod;
-  $mod2require =~ s|::|/|g;
-  $mod2require = $mod2require . ".pm";
-  $self->logger->debug("Trying to load $mod2require");
-  require "$mod2require";
-
-  my $notifier = $mod->new( options=> $args );
-
-  $notifier->short_message("Job ".$job->name." has exited with state '$state'");
-  $notifier->full_message($task->result);
-
-  $notifier->notify();
-
-}
-
 sub create_scheduled_jobs {
   my $self    = shift;
   my $logger  = $self->logger();
@@ -232,7 +92,8 @@ sub create_scheduled_jobs {
 
     # check last run
     # if was less than delay ago suspend rescheduling
-    my $lr = $self->get_last_job($job_name);
+    my $jl = Kanku::JobList->new(schema=>$schema)
+    my $lr = $jl->get_last_job($job_name);
 
     if ($lr) {
         my $next_run = $lr->last_modified + $job->{delay};
@@ -260,47 +121,6 @@ sub create_scheduled_jobs {
   }
 
 };
-
-sub get_last_run_result {
-  my $self = shift;
-  my $job_name = shift;
-  my $sub_task = shift;
-  my $schema = $self->schema();
-  my $lr = undef;
-
-  my $job = $self->get_last_job($job_name);
-
-  die "sub_task name must be given as second argument" unless $sub_task;
-
-  if ( $job ) {
-        my $subs = $job->job_history_subs();
-        return $subs->search({name => $sub_task},{order_by => { '-desc' =>'id'},limit=>1})->first();
-  }
-
-  return undef
-}
-
-sub get_last_job {
-  my $self = shift;
-  my $job_name = shift;
-  my $schema = $self->schema();
-  die "job_name must be given as first argument" unless $job_name;
-
-  my $jobs_list = $schema->resultset('JobHistory')
-                    ->search(
-                      {
-                        name=>$job_name,
-                        end_time=>{ '>'=>0},
-                      },{
-                        order_by=>{
-                          '-desc'=>'last_modified'
-                        },
-                        limit=>1
-                      }
-                    );
-
-  return $jobs_list->next();
-}
 
 sub get_todo_list {
   my $self    = shift;

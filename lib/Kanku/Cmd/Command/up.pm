@@ -18,11 +18,13 @@ package Kanku::Cmd::Command::up;
 
 use Moose;
 use Kanku::Config;
-use Kanku::Scheduler;
 use Kanku::Job;
+use Kanku::JobList;
+use Kanku::Dispatch::Local;
 use Kanku::Util::VM;
 
 extends qw(MooseX::App::Cmd::Command);
+
 with "Kanku::Cmd::Roles::Schema";
 
 has offline => (
@@ -108,8 +110,8 @@ sub execute {
         state     => $ds->state,
         name      => $ds->name,
         skipped   => 0,
-        scheduled => ( $ds->state eq 'scheduled' ) ? 1 : 0,
-        triggered => ( $ds->state eq 'triggered' ) ? 1 : 0,
+        scheduled => 0,
+        triggered => 0,
         context   => {
           domain_name     => $self->domain_name,
           login_user      => $cfg->config->{login_user},
@@ -120,9 +122,8 @@ sub execute {
         }
   );
 
-  my $scheduler   = Kanku::Scheduler->new(schema=>$schema);
-
-  my $result = $scheduler->run_job($job);
+  my $dispatch = Kanku::Dispatch::Local->new(schema=>$schema);
+  my $result   = $dispatch->run_job($job);
 
   if ( $result eq "succeed" ) {
       $logger->info("domain_name : " . ( $job->context->{domain_name} || ''));

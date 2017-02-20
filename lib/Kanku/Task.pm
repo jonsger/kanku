@@ -27,6 +27,7 @@ with 'Kanku::Roles::Logger';
 
 use Kanku::Config;
 use Kanku::Job;
+use Kanku::JobList;
 use JSON::XS;
 use Data::Dumper;
 use Try::Tiny;
@@ -106,7 +107,8 @@ sub run {
   $logger->debug("Starting task with handler: $handler");
 
   my %out = ();
-  my $last_result = $scheduler->get_last_run_result(
+  my $jl          = Kanku::JobList->new(schema=>$schema);
+  my $last_result = $jl->get_last_run_result(
                       $job->name,
                       $handler
                     );
