@@ -1,0 +1,47 @@
+#!/usr/bin/env perl
+
+
+use strict;
+use warnings;
+use FindBin;
+use lib "$FindBin::Bin/../lib";
+use Path::Class qw/dir file/;
+use Data::Dumper;
+
+use Kanku::Config;
+use Kanku::Scheduler;
+use Kanku::Schema;
+use YAML;
+use JSON::XS;
+use Log::Log4perl;
+
+chdir("$FindBin::Bin/..");
+
+Kanku::Config->initialize();
+
+my $cfg = Kanku::Config->instance();
+
+my $cfg_file    = file($FindBin::Bin,'..','config.yml');
+my $cfg_content = $cfg_file->slurp;
+my $cfg_yaml    = YAML::Load($cfg_content);
+my $schema      = Kanku::Schema->connect($cfg_yaml->{plugins}->{DBIC}->{default}->{dsn});
+
+Log::Log4perl->init("$FindBin::Bin/../etc/log4perl.conf");
+my $logger = Log::Log4perl->get_logger();
+
+my $kcfg_file    = file($FindBin::Bin,'..','etc','config.yml');
+my $kcfg_content = $cfg_file->slurp;
+my $kcfg_yaml    = YAML::Load($cfg_content);
+my $mod         = $kcfg_yaml->{dispatcher} || "Kanku::Dispatch::Local";
+
+my $mod2require = $mod;
+$mod2require =~ s|::|/|g;
+$mod2require = $mod2require . ".pm";
+require "$mod2require";
+
+
+my $dispatcher = $mod->new(schema=>$schema);
+
+$dispatcher->run();
+
+exit 0;

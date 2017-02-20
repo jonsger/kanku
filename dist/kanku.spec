@@ -77,6 +77,7 @@ Requires: perl(IPC::Run)
 # at job_histroy_sub table
 Requires: perl-DBD-SQLite
 Requires: perl(LWP::Protocol::https)
+Requires: perl(Mail::Sendmail)
 
 %description
 TODO: add some meaningful description
