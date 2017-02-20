@@ -30,6 +30,20 @@ use Try::Tiny;
 
 has 'schema' => (is=>'rw',isa=>'Object');
 
+
+sub run {
+  my $self    = shift;
+  while (1) {
+    my $job_list = $self->get_todo_list();
+
+    foreach my $job (@$job_list) {
+      $self->run_job($job);
+    }
+
+    sleep 1;
+  }
+}
+
 sub run_job {
   my $self    = shift;
   my $job     = shift;

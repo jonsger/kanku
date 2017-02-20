@@ -55,16 +55,8 @@ sub run {
   while (1) {
     $self->create_scheduled_jobs();
 
-    # TODO: JobList must be generate from database
-    #
-    my $job_list = $self->get_todo_list();
-
-    foreach my $job (@$job_list) {
-      $dispatcher->run_job($job);
-    }
-
     # TODO: we need a better delay algorithm here
-    sleep 5;
+    sleep 1;
   }
 }
 
@@ -122,30 +114,6 @@ sub create_scheduled_jobs {
   }
 
 };
-
-sub get_todo_list {
-  my $self    = shift;
-  my $schema  = $self->schema;
-  my $todo = [];
-  my $rs = $schema->resultset('JobHistory')->search({state=>['scheduled','triggered']} );
-
-  while ( my $ds = $rs->next )   {
-    push (
-      @$todo,
-      Kanku::Job->new(
-        db_object => $ds,
-        id        => $ds->id,
-        state     => $ds->state,
-        name      => $ds->name,
-        skipped   => 0,
-        scheduled => ( $ds->state eq 'scheduled' ) ? 1 : 0,
-        triggered => ( $ds->state eq 'triggered' ) ? 1 : 0,
-      )
-    );
-  }
-
-  return $todo;
-}
 
 __PACKAGE__->meta->make_immutable();
 
