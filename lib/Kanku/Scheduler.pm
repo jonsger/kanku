@@ -21,6 +21,7 @@ with 'Kanku::Roles::Logger';
 
 use Kanku::Config;
 use Kanku::Job;
+use Kanku::Dispatch::Local;
 use Kanku::Task;
 use JSON::XS;
 use Data::Dumper;
@@ -50,7 +51,7 @@ sub run {
     $job->update({ state=>'failed', end_time => time() });
   }
 
-
+  my $dispatcher = Kanku::Dispatch::Local->new(schema => $schema);
   while (1) {
     $self->create_scheduled_jobs();
 
@@ -59,7 +60,7 @@ sub run {
     my $job_list = $self->get_todo_list();
 
     foreach my $job (@$job_list) {
-      $self->run_job($job);
+      $dispatcher->run_job($job);
     }
 
     # TODO: we need a better delay algorithm here
@@ -92,7 +93,7 @@ sub create_scheduled_jobs {
 
     # check last run
     # if was less than delay ago suspend rescheduling
-    my $jl = Kanku::JobList->new(schema=>$schema)
+    my $jl = Kanku::JobList->new(schema=>$schema);
     my $lr = $jl->get_last_job($job_name);
 
     if ($lr) {
