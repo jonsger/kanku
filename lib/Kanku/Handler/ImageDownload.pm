@@ -130,6 +130,13 @@ sub _calc_output_file {
     # TODO: this is hardcoded and only quick and dirty
     # should be more flexible
     # needs introduction of a file suffix which is set by OBSCheck
+    for my $var (qw/images_dir domain_name/) {
+      if (! $ctx->{$var} ) {
+      	die "Variable $var not set in job context.".
+	  " Please check your job configuration.\n"
+      }
+    }
+
     $output_file =  $ctx->{images_dir}."/".$ctx->{domain_name}.".qcow2";
   }
 
