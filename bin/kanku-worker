@@ -1,0 +1,40 @@
+#!/usr/bin/env perl
+
+=head1 NAME 
+
+kanku-worker - handles the tasks
+
+=head1 SYNOPSIS
+
+kanku-worker 
+
+=head1 DESCRIPTION
+
+FIXME: add a useful description
+
+=head1 AUTHORS
+
+Frank Schreiner (M0ses), m0ses@samaxi.de
+
+=head1 COPYRIGHT
+
+This library is free software. You can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
+
+use strict;
+use warnings;
+
+our $VERSION = "0.0.1";
+use FindBin;
+use lib "$FindBin::Bin/../lib";
+use Log::Log4perl;
+use Kanku::Worker;
+
+Log::Log4perl->init("$FindBin::Bin/../etc/console-log.conf");
+
+my $worker = Kanku::Worker->new();
+$worker->run();
+
+exit 0;

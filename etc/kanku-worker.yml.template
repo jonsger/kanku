@@ -1,0 +1,4 @@
+rabbitmq:
+  host: g4.suse.de
+  user: kanku
+  password: kankudai
