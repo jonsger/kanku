@@ -98,7 +98,11 @@ sub create_scheduled_jobs {
             $reschedule = 0;
         }
     } else {
-      $logger->debug("  - No last run result found!");
+      $logger->trace("  - No last run result found!");
+    }
+
+    if ($jl->get_scheduled_or_triggered_job($job_name) ) {
+      $reschedule = 0;
     }
 
     if ( $reschedule ) {

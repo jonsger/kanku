@@ -82,6 +82,30 @@ sub get_last_job {
   return $jobs_list->next();
 }
 
+sub get_scheduled_or_triggered_job {
+  my $self     = shift;
+  my $job_name = shift;
+  my $schema   = $self->schema();
+
+  die "job_name must be given" unless $job_name;
+
+  my $jobs_list = $schema->resultset('JobHistory')
+                    ->search(
+                      {
+                        name=>$job_name,
+			state => ["scheduled","triggered"]
+                      },{
+                        order_by=>{
+                          '-desc'=>'creation_time'
+                        },
+                        limit=>1
+                      }
+                    );
+
+  return $jobs_list->next();
+}
+
+
 
 __PACKAGE__->meta->make_immutable;
 
