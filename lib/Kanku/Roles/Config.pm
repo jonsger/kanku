@@ -55,6 +55,10 @@ around 'config' => sub {
   my $orig = shift;
   my $self = shift;
 
+  if ( ! -f $self->file->stringify ) {
+     die "Configuration file ".$self->file." doesn`t exists\n";
+  }
+
   if ( $self->file->stat->mtime > $self->last_modified ) {
     if ( $self->last_modified ) {
       $self->logger->debug("Modification of config file detected. Re-reading");
