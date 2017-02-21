@@ -8,6 +8,7 @@ var/log/*log
 var/sqlite/*db
 share/kanku-schema.db
 etc/config.yml
+etc/kanku-worker.yml
 etc/jobs/*yml
 .kanku
 KankuFile
@@ -20,3 +21,4 @@ lib/x86_64-linux-thread-multi/auto/Kanku/.packlist
 kanku-*tar.xz
 t/tmp
 home:M0ses:kanku
+tmp/
