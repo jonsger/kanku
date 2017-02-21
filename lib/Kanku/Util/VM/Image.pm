@@ -136,6 +136,7 @@ sub get_image_size {
     my $info = $file->info_from_filename($self->source_file);
 
     if ( $info->{description} =~ /^QEMU QCOW Image .* (\d+) bytes/ ) {
+      $self->logger->debug("QCOW Image size: $1");
       return $1;
     } else {
       my @stat = stat($self->source_file);
