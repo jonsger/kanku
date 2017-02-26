@@ -52,31 +52,41 @@ sub run_job {
 
   $logger->trace("  -- args:".Dumper($args));
 
-  my $last_task;
+  my $task;
 
   foreach my $sub_task (@{$job_definition}) {
     my $task_args = shift(@$args) || {};
-    my $task = Kanku::Task->new(
-      job       => $job,
-      options   => $sub_task->{options} || {},
-      module    => $sub_task->{use_module},
-      schema    => $schema,
-      scheduler => $self,
-      args      => $task_args
+    my %defaults = (
+      job         => $job,
+      module      => $sub_task->{use_module},
+      final_args  => {%{$sub_task->{options} || {}},%{$task_args}},
     );
-    $last_task = $task;
-    $state = $task->run();
 
-    last if ( $state eq 'failed' or $job->skipped);
+    $task = Kanku::Task->new(
+      %defaults,
+      options   => $sub_task->{options} || {},
+      schema    => $self->schema,
+      scheduler => $self,
+      args      => $task_args,
+    );
+
+    my $tr = Kanku::Task::Local->new(
+      %defaults,
+      schema          => $self->schema
+    );
+
+    $task->run($tr);
+
+    last if ( $task->state eq 'failed' or $job->skipped);
   }
 
-  $job->state($state);
+  $job->state($task->state);
 
-  $self->end_job($job,$state);
+  $self->end_job($job,$task);
 
-  $self->run_notifiers($job,$last_task);
+  $self->run_notifiers($job,$task);
 
-  return $job->state;
+  return $job;
 }
 
 __PACKAGE__->meta->make_immutable();

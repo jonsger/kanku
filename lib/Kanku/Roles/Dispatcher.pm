@@ -216,9 +216,9 @@ sub start_job {
 }
 
 sub end_job {
-  my ($self,$job,$state) = @_;
+  my ($self,$job,$task) = @_;
 
-  $job->state(($job->skipped) ? 'skipped' : $state);
+  $job->state(($job->skipped) ? 'skipped' : $task->state);
   $job->end_time(time());
   $job->update_db();
 

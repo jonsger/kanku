@@ -28,13 +28,13 @@ use Moose;
 
 our $VERSION = "0.0.1";
 
-use FindBin;
-use lib "$FindBin::Bin/lib";
 use Data::Dumper;
-use POSIX;
 use JSON::XS;
 use Kanku::MQ;
+use Kanku::Task;
+use Kanku::Task::Local;
 use Kanku::Task::Remote;
+use Kanku::Task::RemoteAll;
 use Try::Tiny;
 
 with 'Kanku::Roles::Dispatcher';
@@ -108,7 +108,6 @@ sub run_job {
     return "failed";
   }
 
-  my $state             = '';
   my $args              = $self->prepare_job_args($job);
 
   return 1 if (! $args);
@@ -117,25 +116,31 @@ sub run_job {
 
   my $last_task;
 
-  foreach my $sub_task (@{$job_definition}) {
-    my $task_args = shift(@$args) || {};
-    my $task = $self->run_task(
-      job       => $job,
-      options   => $sub_task->{options} || {},
-      module    => $sub_task->{use_module},
-      scheduler => $self,
-      args      => $task_args,
-      kmq       => $kmq,
-      queue     => $aq
-    );
-    $last_task = $task;
+  try {
+      foreach my $sub_task (@{$job_definition}) {
+        my $task_args = shift(@$args) || {};
+        $last_task = $self->run_task(
+          job       => $job,
+          options   => $sub_task->{options} || {},
+          module    => $sub_task->{use_module},
+          scheduler => $self,
+          args      => $task_args,
+          kmq       => $kmq,
+          queue     => $aq
+        );
 
-    last if ( $task eq 'failed' or $job->skipped);
-  }
-
-  $self->end_job($job,$state);
+        last if ( $last_task->state eq 'failed' or $job->skipped);
+      }
+  } catch {
+    $job->state('failed');
+    $job->result(encode_json({error_msg=>$_}));
+  };
 
   $self->send_finished_job($aq,$job->id);
+
+  $self->end_job($job,$last_task);
+
+  $job->state($last_task->state);
 
   $self->run_notifiers($job,$last_task);
 
@@ -153,179 +158,50 @@ sub run_task {
   $self->logger->debug("Starting with new task");
   $self->logger->trace(Dumper(\%opts));
 
+  my %defaults = (
+    job         => $opts{job},
+    module      => $opts{module},
+    final_args  => {%{$opts{options} || {}},%{$opts{args} || {}}},
+  );
+
+  my $task = Kanku::Task->new(
+    %defaults,
+    options   => $opts{options} || {},
+    schema    => $self->schema,
+    scheduler => $opts{scheduler},
+    args      => $opts{args},
+  );
+
+  my $tr;
+
   if ( $distributable == 0 ) {
-    return $self->run_task_locally(\%opts);
-  } elsif ( $distributable == 1 ) {
-    my $rtask = Kanku::Task::Remote->new(
-      kmq => $self->kmq,
-      job => $self->job,
-      job_queue => $self->job_queue
+    $tr = Kanku::Task::Local->new(
+      %defaults,
+      schema          => $self->schema
     );
 
-    return $rtask->run(\%opts);
+
+  } elsif ( $distributable == 1 ) {
+    $tr = Kanku::Task::Remote->new(
+      %defaults,
+      kmq => $self->kmq,
+      job_queue => $self->job_queue,
+      queue           => $opts{queue},
+    );
 
   } elsif ( $distributable == 2 ) {
 
-    my $rtask = Kanku::Task::Remote->new(
-      kmq => $self->kmq,
-      job => $self->job,
-      job_queue => $self->job_queue
+    $tr = Kanku::Task::RemoteAll->new(
+      %defaults,
+      kmq             => $self->kmq,
+      job_queue       => $self->job_queue,
     );
 
-    return $rtask->run(\%opts);
   } else {
     die "Unknown distributable value '$distributable' for module $mod\n"
   }
-}
 
-sub run_task_locally {
-  my ($self,$opts) = @_;
-
-  $self->logger->debug("Starting new local task");
-
-  my $task = Kanku::Task->new(
-    job       => $opts->{job},
-    options   => $opts->{options} || {},
-    module    => $opts->{module},
-    schema    => $self->schema,
-    scheduler => $opts->{scheduler},
-    args      => $opts->{args},
-  );
-
-  return $task->run();
-}
-
-sub run_task_remote {
-  my ($self,$opts) = @_;
-  my $kmq = $self->kmq;
-  my $all_workers = {};
-  my $logger      = $self->logger;
-
-  $self->logger->debug("Starting new remote task");
-
-
-  my $data = encode_json(
-    {
-      action => 'task',
-      answer_queue => $self->job_queue->queue_name,
-      job_id => $opts->{job}->id,
-      task_args => {
-        job       => {
-          context    => $opts->{job}->context,
-          name       => $opts->{job}->name,
-          id         => $opts->{job}->id,
-        },
-        module    => $opts->{module},
-        final_args      => {%{$opts->{options}},%{$opts->{args}}}
-      }
-    }
-  );
-
-  $logger->debug("Sending remote job: ".$opts->{module});
-  $logger->debug(" - channel: ".$kmq->channel);
-  $logger->debug(" - routing_key ".$kmq->routing_key);
-  $logger->debug(" - opts queue_name ".$opts->{queue});
-  $logger->trace(Dumper($data));
-
-  $kmq->mq->publish(
-	$kmq->channel, 
-	$opts->{queue},
-	$data, 
-  );
-
-  $self->logger->debug("Waiting for result on queue: ".$self->job_queue->queue_name());
-  # Wait for task results from worker
-  while ( my $msg = $self->job_queue->recv() ) {
-        my $data;
-        $self->logger->debug("Incomming task result");
-        $self->logger->trace(Dumper($msg));
-        my $body = $msg->{body};
-
-        try { 
-          $data = decode_json($body);
-        } catch {
-          $self->logger->debug("Error in JSON:\n$_\n$body\n");
-        };
-    if ( $data->{action} eq 'finished_task' ) { 
-        $logger->trace(Dumper($data));
-        my $job = decode_json($data->{job});
-        $self->job->context(${job}->{context});
-        last;
-    }
-  }
-}
-
-sub run_task_on_all_workers {
-  my ($self,$opts) = @_;
-  my $kmq = $self->kmq;
-  my $all_workers = {};
-  my $logger      = $self->logger;
-
-  $self->logger->debug("Starting new remote-all task");
-
-  my $data = encode_json(
-    {
-      action => 'send_task_to_all_workers',
-      answer_queue => $self->job_queue->queue_name,
-      task_args => {
-        job       => {
-          context    => $opts->{job}->context,
-          name       => $opts->{job}->name,
-          id         => $opts->{job}->id,
-        },
-        module    => $opts->{module},
-        final_args      => {%{$opts->{options}},%{$opts->{args}}}
-      }
-    }
-  );
-
-  $kmq->mq->publish(
-	$kmq->channel, 
-	'', 
-	$data, 
-	{ exchange => 'kanku_to_all_workers' }
-  );
-
-  sleep($self->wait_for_workers);
-
-  # Getting response from workers
-  while ( my $msg = $self->job_queue->mq->recv(100) ) {
-	if ($msg ) {
-		my $data;
-		$self->logger->debug("Incomming task confirmation\n". Dumper($msg));
-		my $body = $msg->{body};
-		try { 
-		  $data = decode_json($body);
-		  $all_workers->{task_confirmation}->{$data->{answer_queue}} = $data;
-		} catch {
-		  $self->logger->debug("Error in JSON:\n$_\n$body\n");
-		};
-	}
-  }
-
-  # Wait for task results from workers
-  my $timeout = 60*60*2; # wait maximum 2 hours
-  my $seconds_running=0;
-  while ( keys(%{$all_workers->{task_confirmation}}) < keys(%{$all_workers->{task_result}})  ) {
-    my $msg = $self->job_queue->mq->recv(1000);
-    if ($msg) {
-        my $data;
-        $logger->debug("Incomming task_result");
-        $logger->trace(Dumper($msg));
-        my $body = $msg->{body};
-        try { 
-          $data = decode_json($body);
-          $all_workers->{task_result}->{$data->{answer_queue}} = $data;
-        } catch {
-          $logger->debug("Error in JSON:\n$_\n$body\n");
-        };
-    }
-    if( $seconds_running > $timeout) {
-      $logger->warn("Reached timeout of $timeout seconds waiting for all workers to finish");
-    }
-    $seconds_running++;
-  }
-  
+  return $task->run($tr);
 }
 
 sub check_task {

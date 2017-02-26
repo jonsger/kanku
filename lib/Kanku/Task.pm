@@ -80,6 +80,8 @@ has 'args'       => (is=>'rw',isa=>'HashRef',default=>sub {{}} );
 
 has 'result'       => (is=>'rw',isa=>'Str',default=> '' );
 
+has 'state'       => (is=>'rw',isa=>'Str',default=> '' );
+
 =head1 METHODS
 
 =head2 run - TODO: add documentation
@@ -87,7 +89,7 @@ has 'result'       => (is=>'rw',isa=>'Str',default=> '' );
 =cut
 
 sub run {
-  my ($self)  = @_;
+  my ($self,$tr)  = @_;
   my $logger                        = $self->logger;
   my $schema                        = $self->schema();
   my $job                           = $self->job;
@@ -134,17 +136,11 @@ sub run {
     if ( $last_result && $last_result->result() ) {
       my $str = $last_result->result();
       $last_run_result = decode_json($str);
+      $tr->last_run_result($last_run_result);
     }
 
-    my $tr = Kanku::Task::Local->new(
-      module          => $self->module,
-      job             => $self->job,
-      final_args      => \%final_args,
-      last_run_result => $last_run_result,
-      schema          => $schema
-    );
-
     my $res = $tr->run();
+    $logger->trace("Got result from task:\n".Dumper($res));
     $result = $res->{result} ;
     $state  = $res->{state};
 
@@ -166,8 +162,9 @@ sub run {
   $job->update_db();
 
   $self->result($result);
+  $self->state($state);
 
-  return $state;
+  return $self;
 
 }
 

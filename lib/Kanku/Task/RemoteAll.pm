@@ -45,19 +45,28 @@ use JSON::XS;
 use Kanku::MQ;
 use Try::Tiny;
 
-has kmq => (is=>'rw',isa=>'Object');
+has kmq               => (is=>'rw',isa=>'Object');
 
-has job => (is=>'rw',isa=>'Object');
+has job               => (is=>'rw',isa=>'Object');
 
-has job_queue => (is=>'rw',isa=>'Object');
+has job_queue         => (is=>'rw',isa=>'Object');
 
-has wait_for_workers => (is=>'ro',isa=>'Int',default=>1);
+has module            => (is=>'rw',isa=>'Str');
+
+has final_args        => (is=>'rw',isa=>'HashRef');
+
+has wait_for_workers  => (is=>'ro',isa=>'Int',default=>1);
+
+has confirmations     => (is=>'rw',isa=>'HashRef',default=>sub {{}});
+
+has results           => (is=>'rw',isa=>'HashRef',default=>sub {{}});
+
 
 sub run {
-  my ($self,$opts) = @_;
+  my ($self) = @_;
   my $kmq = $self->kmq;
-  my $all_workers = {};
   my $logger      = $self->logger;
+  my $job         = $self->job;
 
   $logger->debug("Starting new remote-all task");
 
@@ -67,12 +76,12 @@ sub run {
       answer_queue => $self->job_queue->queue_name,
       task_args => {
         job       => {
-          context    => $opts->{job}->context,
-          name       => $opts->{job}->name,
-          id         => $opts->{job}->id,
+          context     => $job->context,
+          name        => $job->name,
+          id          => $job->id,
         },
-        module    => $opts->{module},
-        final_args      => {%{$opts->{options}},%{$opts->{args}}}
+        module      => $self->module,
+        final_args  => $self->final_args,
       }
     }
   );
@@ -89,42 +98,60 @@ sub run {
   # Getting response from workers
   while ( my $msg = $self->job_queue->mq->recv(100) ) {
 	if ($msg ) {
-		my $data;
-		$logger->debug("Incomming task confirmation");
-        $logger->trace(Dumper($msg));
-
-		my $body = $msg->{body};
-		try {
-		  $data = decode_json($body);
-		  $all_workers->{task_confirmation}->{$data->{answer_queue}} = $data;
-		} catch {
-		  $logger->debug("Error in JSON:\n$_\n$body\n");
-		};
+      $logger->debug("Incomming message while waiting for confirmations");
+      $self->_inspect_msg($msg);
 	}
   }
 
   # Wait for task results from workers
   my $timeout = 60*60*2; # wait maximum 2 hours
   my $seconds_running=0;
-  while ( keys(%{$all_workers->{task_confirmation}}) < keys(%{$all_workers->{task_result}})  ) {
+  my $confirms = keys(%{$self->confirmations});
+  my $results = keys(%{$self->results});
+
+  $logger->debug("Number of confirms/results: $confirms/$results");
+
+  while ( $confirms  > $results  ) {
     my $msg = $self->job_queue->mq->recv(1000);
     if ($msg) {
-        my $data;
-        $logger->debug("Incomming task_result");
-        $logger->trace(Dumper($msg));
-        my $body = $msg->{body};
-        try {
-          $data = decode_json($body);
-          $all_workers->{task_result}->{$data->{answer_queue}} = $data;
-        } catch {
-          $logger->debug("Error in JSON:\n$_\n$body\n");
-        };
+        $logger->debug("Got msg while waiting for task result:");
+        $self->_inspect_msg($msg);
     }
     if( $seconds_running > $timeout) {
       $logger->warn("Reached timeout of $timeout seconds waiting for all workers to finish");
+      last;
     }
+    $confirms = keys(%{$self->confirmations});
+    $results = keys(%{$self->results});
     $seconds_running++;
   }
+  
+  $self->logger->trace("all_workers task_results\n".Dumper($self->results));
+
+  return {
+    result => encode_json($self->results),
+    state  => 'succeed' 
+  }
+
+}
+
+sub _inspect_msg {
+  my ($self,$msg) = @_;
+  my $logger = $self->logger;
+  my $data;
+  $logger->trace(Dumper($msg));
+
+  my $body = $msg->{body};
+  try {
+    $data = decode_json($body);
+    if ( $data->{action} eq 'task_confirmation' ) {
+      $self->confirmations()->{$data->{answer_queue}} = $data;
+    } elsif ( $data->{action} eq 'finished_task' ) {
+      $self->results()->{$data->{answer_queue}} = $data;
+    }
+  } catch {
+    $logger->debug("Error in JSON:\n$_\n$body\n");
+  };
 
 }
 

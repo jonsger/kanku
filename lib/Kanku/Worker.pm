@@ -62,6 +62,20 @@ sub run {
     if ( $data->{action} eq 'advertise_job' ) {
       $self->handle_advertisement($data);
     } elsif ( $data->{action} eq 'send_task_to_all_workers' ) {
+
+      $self->job_queue_name($data->{answer_queue});
+
+      my $answer = {
+          action => 'task_confirmation',
+      };
+
+      $self->kmq->mq->publish(
+        $self->kmq->channel,
+        $self->job_queue_name,
+        encode_json($answer),
+        { exchange => 'kanku_to_dispatcher'}
+      );
+
       $self->handle_task($data);
     }
   }
@@ -181,16 +195,22 @@ sub handle_task {
   my $task   = Kanku::Task::Local->new(%{$data->{task_args}},schema => $self->schema);
 
   my $result = $task->run();
-
-  $self->kmq->mq->publish(
-    $self->kmq->channel,
-    $self->job_queue_name,
-	encode_json({
+  
+  my $answer = {
 	  action        => 'finished_task',
       result        => $result,
       answer_queue  => $self->kmq->queue_name,
       job           => $job->to_json
-	}),
+  };
+
+  my $aq = $data->{answer_queue} || $self->job_queue_name;
+
+  $self->logger->trace("Sending answer to queue '$aq':\n".Dumper($answer));
+
+  $self->kmq->mq->publish(
+    $self->kmq->channel,
+    $aq,
+	encode_json($answer),
     { exchange => 'kanku_to_dispatcher'}
   );
 }
