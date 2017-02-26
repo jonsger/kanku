@@ -1,0 +1,11 @@
+if [ $2 ];then
+  echo "delete from job_history;"|sqlite3 /opt/kanku/share/kanku-schema.db 
+  echo "delete from job_history_sub;"|sqlite3 /opt/kanku/share/kanku-schema.db 
+fi
+
+if [ ! $1 ];then
+  echo "Usage: "`basename $0`" <jobname> [cleanup_database_flag(0|1)]"
+fi
+
+echo 'insert into job_history VALUES (NULL,"'$1'","scheduled","","",'`date +%s`',0,0,'`date +%s`',"","");'|sqlite3 /opt/kanku/share/kanku-schema.db 
+

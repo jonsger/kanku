@@ -19,6 +19,7 @@ package Kanku::Job;
 use Moose;
 use Data::Dumper;
 
+with 'Kanku::Roles::Serialize';
 
 has "context" => (
     is  => 'rw',
@@ -27,16 +28,27 @@ has "context" => (
 );
 
 has id => ( is  => 'rw', isa => 'Int' );
-has [qw/name state result worker/] => ( is => 'rw', isa => 'Str' );
+has [qw/name state result workerinfo masterinfo/] => ( is => 'rw', isa => 'Str' );
 has [qw/skipped scheduled triggered/] => ( is => 'rw', isa => 'Bool' );
 has [qw/creation_time start_time end_time last_modified/] => ( is  => 'rw', isa => 'Int' );
 has db_object => ( is => 'rw', isa => 'Object' );
-has '+worker' => (default =>"localhost");
+has '+workerinfo' => (default =>"localhost");
+
+sub json_keys; # prototype to not break the requires in Kanku::Roles::Serialize
+has 'json_keys' => (
+  is      => 'rw',
+  isa     => 'ArrayRef',
+  default => sub {[qw/
+    name state result workerinfo skipped scheduled triggered creation_time
+    start_time end_time last_modified id context masterinfo
+  /
+  ]});
+
 sub update_db {
   my $self = shift;
   my $ds = { last_modified => time() };
 
-  foreach my $key ( qw/id name state start_time end_time result worker/ ) {
+  foreach my $key ( qw/id name state start_time end_time result workerinfo masterinfo/ ) {
     my $value = $self->$key();
     $ds->{$key} = $value if ( $value );
   }

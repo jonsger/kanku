@@ -94,7 +94,9 @@ __PACKAGE__->add_columns(
   { data_type => "integer", default_value => 0, is_nullable => 1 },
   "last_modified",
   { data_type => "integer", default_value => 0, is_nullable => 1 },
-  "worker",
+  "workerinfo",
+  { data_type => "text", is_nullable => 1 },
+  "masterinfo",
   { data_type => "text", is_nullable => 1 },
 );
 

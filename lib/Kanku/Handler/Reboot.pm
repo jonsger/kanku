@@ -46,7 +46,7 @@ has gui_config => (
       ];
   }
 );
-has "+distributable" => ( default => 1 );
+sub distributable { 1 };
 
 sub prepare {
   my $self = shift;

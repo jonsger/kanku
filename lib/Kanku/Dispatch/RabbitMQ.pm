@@ -36,124 +36,357 @@ use JSON::XS;
 use Kanku::MQ;
 use Try::Tiny;
 
+with 'Kanku::Roles::Dispatcher';
+with 'Kanku::Roles::ModLoader';
+
 has 'max_processes' => (is=>'rw',isa=>'Int',default=>5);
 
-sub run {
-  my $self = shift;
-    my $jobcount = 0;
+has kmq => (is=>'rw',isa=>'Object');
 
-    my @child_pids = ();
+has job => (is=>'rw',isa=>'Object');
 
+has job_queue => (is=>'rw',isa=>'Object');
 
-    while (1) {
+has wait_for_workers => (is=>'ro',isa=>'Int',default=>1);
 
-      debug("Please Type Your message and hit ENTER:\n");
+sub run_job {
+  my ($self, $job) = @_;
 
-      $jobcount++;
-      my $msg = <>;
-      chomp $msg;
+  $self->job($job);
 
-      last if ( $msg eq "quit");
+  $self->start_job($job);
+  $job->masterinfo($$);
 
-      my $pid = fork();
-      $SIG{CHLD} = 'IGNORE';
+  my $logger       = $self->logger();
+  my $queue        = "scheduler-task-".$job->id;
 
-      if ( $pid ) {
-        push (@child_pids,$pid);
-      } else {
+  my $kmq          = Kanku::MQ->new(dispatcher  => 1);
 
+  die "Could not get kmq" if (! $kmq);
 
-        my $queue = "scheduler-task-$jobcount";
-        my $kmq = Kanku::MQ->new(
-          scheduler => 1,
-          queue_name => $queue
-        );
+  $logger->info("Starting new job '".$job->name."' with id ".$job->id." (Running as pid $$)");
 
-        my $applications = advertise_task( 
-          $kmq,
-          {
-              answer_queue	  => $queue,
-              message		  => $msg, 
-              id			  => $jobcount , 
-              pid			  => $pid
-          }
-        );
-        debug("### ALL APPLICATIONS:\n". Dumper($applications));
+  $self->kmq($kmq);
 
-        my ($prefered_application,$declined_applications) = score_applications($applications);
-
-        decline_applications($kmq,$declined_applications);
-
-        my $result = offer_task($kmq,$prefered_application);
-
-        debug("### RESULT:\n".Dumper($result));
-
-        debug("Child exiting\n");
-
-        $kmq->mq->disconnect;
-
-        exit 0;
-
-      }
-
-      while ( @child_pids > $self->max_processes ) {
-        @child_pids = grep { $_ == waitpid($_,WNOHANG) } @child_pids;
-        sleep(1);
-        debug("ChildPids: @child_pids\n");
-      }
-
+  my $applications = $self->advertise_job( 
+    $kmq,
+    {
+       answer_queue	  => $queue,
+       job_id	  	  => $job->id,
     }
+  );
+
+ 
+
+  $logger->trace("List of all applications:\n" . Dumper($applications));
+
+  # pa = prefered_application
+  my ($pa,$declined_applications) = $self->score_applications($applications);
+
+  $self->decline_applications($declined_applications);
+
+  my $result = $self->send_job_offer($pa);
+
+  my $aq = $pa->{answer_queue};
+
+  $self->kmq(
+    Kanku::MQ->new(
+      dispatcher  => 1,
+      queue_name  => $aq,
+      routing_key => $aq
+    )
+  );
+
+  $job->workerinfo($pa->{worker_fqhn}.":".$pa->{worker_pid}.":".$aq);
+  $logger->trace("Result of job offer:\n".Dumper($result));
+
+  my $job_definition = $self->load_job_definition($job);
+
+  if ( ! $job_definition) {
+    $logger->error("No job definition found!");
+    return "failed";
+  }
+
+  my $state             = '';
+  my $args              = $self->prepare_job_args($job);
+
+  return 1 if (! $args);
+
+  $logger->trace("  -- args:\n".Dumper($args));
+
+  my $last_task;
+
+  foreach my $sub_task (@{$job_definition}) {
+    my $task_args = shift(@$args) || {};
+    my $task = $self->run_task(
+      job       => $job,
+      options   => $sub_task->{options} || {},
+      module    => $sub_task->{use_module},
+      scheduler => $self,
+      args      => $task_args,
+      kmq       => $kmq,
+      queue     => $aq
+    );
+    $last_task = $task;
+
+    last if ( $task eq 'failed' or $job->skipped);
+  }
+
+  $self->end_job($job,$state);
+
+  $self->send_finished_job($aq,$job->id);
+
+  $self->run_notifiers($job,$last_task);
+
+  $kmq->mq->disconnect;
+
+  return $job->state;
+}
+
+sub run_task {
+  my $self = shift;
+  my %opts = @_;
+  my $mod  = $opts{module};
+  my $distributable = $self->check_task($mod);
+
+  $self->logger->debug("Starting with new task");
+  $self->logger->trace(Dumper(\%opts));
+
+  if ( $distributable == 0 ) {
+    return $self->run_task_locally(\%opts);
+  } elsif ( $distributable == 1 ) {
+    return $self->run_task_remote(\%opts);
+  } elsif ( $distributable == 2 ) {
+    return $self->run_task_on_all_workers(\%opts);
+  } else {
+    die "Unknown distributable value '$distributable' for module $mod\n"
+  }
+}
+
+sub run_task_locally {
+  my ($self,$opts) = @_;
+
+  $self->logger->debug("Starting new local task");
+
+  my $task = Kanku::Task->new(
+    job       => $opts->{job},
+    options   => $opts->{options} || {},
+    module    => $opts->{module},
+    schema    => $self->schema,
+    scheduler => $opts->{scheduler},
+    args      => $opts->{args},
+  );
+
+  return $task->run();
+}
+
+sub run_task_remote {
+  my ($self,$opts) = @_;
+  my $kmq = $self->kmq;
+  my $all_workers = {};
+  my $logger      = $self->logger;
+
+  $self->logger->debug("Starting new remote task");
+
+
+  my $data = encode_json(
+    {
+      action => 'task',
+      answer_queue => $self->job_queue->queue_name,
+      job_id => $opts->{job}->id,
+      task_args => {
+        job       => {
+          context    => $opts->{job}->context,
+          name       => $opts->{job}->name,
+          id         => $opts->{job}->id,
+        },
+        module    => $opts->{module},
+        final_args      => {%{$opts->{options}},%{$opts->{args}}}
+      }
+    }
+  );
+
+  $logger->debug("Sending remote job: ".$opts->{module});
+  $logger->debug(" - channel: ".$kmq->channel);
+  $logger->debug(" - routing_key ".$kmq->routing_key);
+  $logger->debug(" - opts queue_name ".$opts->{queue});
+  $logger->trace(Dumper($data));
+
+  $kmq->mq->publish(
+	$kmq->channel, 
+	$opts->{queue},
+	$data, 
+  );
+
+  $self->logger->debug("Waiting for result on queue: ".$self->job_queue->queue_name());
+  # Wait for task results from worker
+  while ( my $msg = $self->job_queue->recv() ) {
+        my $data;
+        $self->logger->debug("Incomming task result");
+        $self->logger->trace(Dumper($msg));
+        my $body = $msg->{body};
+
+        try { 
+          $data = decode_json($body);
+        } catch {
+          $self->logger->debug("Error in JSON:\n$_\n$body\n");
+        };
+    if ( $data->{action} eq 'finished_task' ) { 
+        $logger->trace(Dumper($data));
+        my $job = decode_json($data->{job});
+        $self->job->context(${job}->{context});
+        last;
+    }
+  }
+}
+
+sub run_task_on_all_workers {
+  my ($self,$opts) = @_;
+  my $kmq = $self->kmq;
+  my $all_workers = {};
+  my $logger      = $self->logger;
+
+  $self->logger->debug("Starting new remote-all task");
+
+  my $data = encode_json(
+    {
+      action => 'send_task_to_all_workers',
+      answer_queue => $self->job_queue->queue_name,
+      task_args => {
+        job       => {
+          context    => $opts->{job}->context,
+          name       => $opts->{job}->name,
+          id         => $opts->{job}->id,
+        },
+        module    => $opts->{module},
+        final_args      => {%{$opts->{options}},%{$opts->{args}}}
+      }
+    }
+  );
+
+  $kmq->mq->publish(
+	$kmq->channel, 
+	'', 
+	$data, 
+	{ exchange => 'kanku_to_all_workers' }
+  );
+
+  sleep($self->wait_for_workers);
+
+  # Getting response from workers
+  while ( my $msg = $self->job_queue->mq->recv(100) ) {
+	if ($msg ) {
+		my $data;
+		$self->logger->debug("Incomming task confirmation\n". Dumper($msg));
+		my $body = $msg->{body};
+		try { 
+		  $data = decode_json($body);
+		  $all_workers->{task_confirmation}->{$data->{answer_queue}} = $data;
+		} catch {
+		  $self->logger->debug("Error in JSON:\n$_\n$body\n");
+		};
+	}
+  }
+
+  # Wait for task results from workers
+  my $timeout = 60*60*2; # wait maximum 2 hours
+  my $seconds_running=0;
+  while ( keys(%{$all_workers->{task_confirmation}}) < keys(%{$all_workers->{task_result}})  ) {
+    my $msg = $self->job_queue->mq->recv(1000);
+    if ($msg) {
+        my $data;
+        $logger->debug("Incomming task_result");
+        $logger->trace(Dumper($msg));
+        my $body = $msg->{body};
+        try { 
+          $data = decode_json($body);
+          $all_workers->{task_result}->{$data->{answer_queue}} = $data;
+        } catch {
+          $logger->debug("Error in JSON:\n$_\n$body\n");
+        };
+    }
+    if( $seconds_running > $timeout) {
+      $logger->warn("Reached timeout of $timeout seconds waiting for all workers to finish");
+    }
+    $seconds_running++;
+  }
+  
+}
+
+sub check_task {
+  my ($self,$mod) = @_;
+
+  $self->load_module($mod);
+
+  return $mod->distributable();
 }
 
 sub decline_applications {
-  my ($kmq,$declined_applications) = @_;
-
+  my ($self, $declined_applications) = @_;
+  
   foreach my $queue( keys(%$declined_applications) ) {
-	$kmq->mq->publish($kmq->channel,$queue,encode_json({action => 'decline_application'}),{});
+	$self->kmq->mq->publish(
+      $self->kmq->channel,
+      $queue,
+      encode_json({action => 'decline_application'}),
+      {}
+    );
   }
 
 }
 
+sub send_job_offer {
+  my ($self,$prefered_application)=@_;
+  my $kmq    = $self->kmq;
+  my $logger = $self->logger;
 
-sub offer_task {
+  die "Could not get kmq" if (! $kmq);
 
-  my ($kmq,$prefered_application)=@_;
+  $logger->debug("Offering job for prefered_application");
+  $logger->trace(Dumper($prefered_application));
 
   $kmq->mq->publish(
 	$kmq->channel,
 	$prefered_application->{answer_queue},
 	encode_json(
 		{
-		  action			=> 'offer_task',
-		  answer_queue		=> $kmq->queue_name
+		  action			=> 'offer_job',
+		  answer_queue		=> $self->job_queue->queue_name
 		}
 	)
   );
+}
 
-  my $timeout_in_min = 120;
+sub send_finished_job {
+  my ($self, $aq, $job_id)=@_;
+  my $kmq    = $self->kmq;
+  my $logger = $self->logger;
 
-  # recv timeout is calculated in milliseconds
-  my $msg = $kmq->mq->recv($timeout_in_min * 60 * 1000);
-  if ($msg ) {
-	my $data;
-	debug("### INCOMMING RESULT:\n". Dumper($msg));
-	my $body = $msg->{body};
-	try { 
-	  return decode_json($body);
-	} catch {
-		debug("Error in JSON:\n$_\n$body\n");
-	};
-  } else {
-	return { error => "timeout" }
-  }
+  die "Could not get kmq" if (! $kmq);
+
+  $logger->debug("Offering job for prefered_application");
+  $logger->trace($aq);
+
+  $kmq->mq->publish(
+	$kmq->channel,
+    $aq,
+	encode_json(
+		{
+		  action  => 'finished_job',
+          job_id  => $job_id
+		}
+	)
+  );
 }
 
 sub score_applications {
-  my ($applications) = @_;
+  my ($self,$applications) = @_;
 
   my $pref;
 
   my @keys = keys(%$applications);
+
+  $self->logger->debug("Keys of applications: '@keys'");
 
   my $key = shift(@keys);
   
@@ -162,44 +395,54 @@ sub score_applications {
 
   return ($ret,$applications);
 
-};
+}
 
+sub advertise_job {
+  my $self                  = shift;
+  my ($kmq,$opts)           = @_;
+  my $all_applications      = {};
 
-sub advertise_task {
-  my ($kmq,$opts)=@_;
-  my $all_applications = {};
-  my $wait_for_applications = 1;
+  my $data = encode_json({action => 'advertise_job', %$opts});
 
-  my $data = encode_json({action => 'advertise_task', %$opts});
+  $self->logger->debug("creating new queue: ".$opts->{answer_queue});
+  $self->job_queue(Kanku::MQ->new());
+  $self->job_queue->queue_name($opts->{answer_queue});
+  $self->job_queue->connect();
+  $self->job_queue->create_queue(exchange_name=>'kanku_to_dispatcher'); 
+  my $mq = $self->job_queue->mq; 
+  while(! %$all_applications ) {
 
-  $kmq->mq->publish(
-	$kmq->channel, 
-	$kmq->routing_key, 
-	$data, 
-	{ exchange => $kmq->exchange_name }
-  );
+    $kmq->mq->publish(
+      $kmq->channel, 
+      '',
+      $data, 
+      { exchange => 'kanku_to_all_workers' }
+    );
 
-  sleep($wait_for_applications);
+    sleep($self->wait_for_workers);
 
-  while ( my $msg = $kmq->mq->recv(100) ) {
-	if ($msg ) {
-		my $data;
-		debug("### INCOMMING APPLICATION:\n". Dumper($msg));
-		my $body = $msg->{body};
-		try { 
-		  $data = decode_json($body);
-		  $all_applications->{$data->{answer_queue}} = $data;
-		} catch {
-			debug("Error in JSON:\n$_\n$body\n");
-		};
-	}
+    #$kmq = Kanku::MQ->new(queue_name=>'applications');
+    while ( my $msg = $mq->recv(100) ) {
+      if ($msg ) {
+          my $data;
+          $self->logger->debug("Incomming application");
+          $self->logger->trace(Dumper($msg));
+          my $body = $msg->{body};
+          try { 
+            $data = decode_json($body);
+            $all_applications->{$data->{answer_queue}} = $data;
+          } catch {
+            $self->logger->debug("Error in JSON:\n$_\n$body\n");
+          };
+      }
+    }
+
+    #if ( ! %$all_applications ){
+      #$self->logger->warn("Got no appliacations - waiting for another $wait_for_applications second(s)");
+    #}
   }
 
   return $all_applications;
-}
-
-sub debug {
-  print "[$$] - @_\n";
 }
 
 1;

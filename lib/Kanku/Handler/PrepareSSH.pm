@@ -27,6 +27,8 @@ with 'Kanku::Roles::Handler';
 has ['public_keys', 'public_key_files' ] => (is=>'rw',isa=>'ArrayRef',lazy=>1,default=>sub { [] });
 has [qw/domain_name login_user login_pass/] => (is=>'rw',isa=>'Str');
 
+sub distributable { 1 }
+
 sub prepare {
   my $self = shift;
 
@@ -71,16 +73,12 @@ sub execute {
   my $con;
   $self->logger->debug("username/password: ".$self->login_user.'/'.$self->login_pass);
 
-  if ( $ctx->{vm} ) {
-    $con = $ctx->{vm}->console
-  } else {
-    $con = Kanku::Util::VM::Console->new(
-        domain_name => $self->domain_name,
-        login_user => $self->login_user(),
-        login_pass => $self->login_pass(),
-        debug => $cfg->{'Kanku::Util::VM::Console'}->{debug} || 0
-    );
-  }
+  $con = Kanku::Util::VM::Console->new(
+    domain_name => $self->domain_name,
+    login_user => $self->login_user(),
+    login_pass => $self->login_pass(),
+    debug => $cfg->{'Kanku::Util::VM::Console'}->{debug} || 0
+  );
 
   $con->init();
   $con->login();
@@ -118,6 +116,7 @@ sub execute {
   }
 }
 
+__PACKAGE__->meta->make_immutable();
 1;
 
 __END__

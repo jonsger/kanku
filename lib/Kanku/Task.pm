@@ -24,10 +24,12 @@ Kanku::Task - single task which executes a Handler
 
 use Moose;
 with 'Kanku::Roles::Logger';
+with 'Kanku::Roles::ModLoader';
 
 use Kanku::Config;
 use Kanku::Job;
 use Kanku::JobList;
+use Kanku::Task::Local;
 use JSON::XS;
 use Data::Dumper;
 use Try::Tiny;
@@ -102,7 +104,6 @@ sub run {
   my $job                           = $self->job;
   my $handler                       = $self->module;
   my $scheduler                     = $self->scheduler;
-  my $args                          = $self->args;
 
   $logger->debug("Starting task with handler: $handler");
 
@@ -119,59 +120,50 @@ sub run {
     state   => 'running'
   });
 
-  # execute subtask
-  my $state = undef;
+  
+  my $state  = undef;
   my $result = undef;
+
+  # execute subtask
   try {
 
     my $mod = $handler;
     die "Now use_module definition in config (job: $job)" if ( ! $mod );
-    my $mod_args = $args || {};
+    my $mod_args = $self->args();
 
     die "args for $mod not a HashRef" if ( ref($mod_args) ne 'HASH' );
 
-    my $mod2require = $mod;
-    $mod2require =~ s|::|/|g;
-    $mod2require = $mod2require . ".pm";
-    $logger->debug("Trying to load $mod2require");
-    require "$mod2require";
+    $self->load_module($mod);
 
     my %final_args = (%{$self->{options}},%{$mod_args});
 
     $logger->trace("final args for $mod:\n".Dumper(\%final_args));
 
-    my $obj = $mod->new(%final_args,job=>$job,schema=>$schema);
+
+    my $last_run_result={};
 
     if ( $last_result && $last_result->result() ) {
       my $str = $last_result->result();
-      $obj->last_run_result(decode_json($str));
+      $last_run_result = decode_json($str);
     }
 
-    $obj->logger($logger);
+    my $tr = Kanku::Task::Local->new(
+      module          => $self->module,
+      job             => $self->job,
+      final_args      => \%final_args,
+      last_run_result => $last_run_result,
+      schema          => $schema
+    );
 
-    $out{prepare} = $obj->prepare();
-
-    $out{execute} = $obj->execute();
-
-    $out{finalize} = $obj->finalize();
-
-    $result = encode_json(\%out);
-    $state  = 'succeed';
-    foreach my  $step ( "prepare","execute","finalize") {
-
-      if (ref($out{$step}) eq "HASH" && $out{$step}->{message} ) {
-
-        $self->logger->debug("-- ".$self->{module}."\->$step: $out{$step}->{message}");
-
-      }
-
-    }
+    my $res = $tr->execute_all();
+    $result = $res->{result} ;
+    $state  = $res->{state};
 
   }
   catch {
     my $e = $_;
 
-    $logger->error($e);
+    $logger->error(Dumper($e));
     $result = encode_json({error_message=>$e});
     $state  = 'failed';
     $job->state($state);

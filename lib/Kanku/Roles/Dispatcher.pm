@@ -19,12 +19,14 @@ package Kanku::Roles::Dispatcher;
 use Moose::Role;
 with 'Kanku::Roles::Logger';
 
-use Kanku::Config;
-use Kanku::Job;
-use Kanku::Task;
+use POSIX;
 use JSON::XS;
 use Data::Dumper;
 use Try::Tiny;
+
+use Kanku::Config;
+use Kanku::Job;
+use Kanku::Task;
 
 has 'schema' => (is=>'rw',isa=>'Object');
 
@@ -34,12 +36,11 @@ Kanku::Roles::Dispatcher - A role for dispatch modules
 
 =head1 REQUIRED METHODS
 
-=head2 run - Run a job
+=head2 run_job - Run a job
 
 =cut
 
 requires "run_job";
-
 
 =head1 METHODS
 
@@ -47,19 +48,73 @@ requires "run_job";
 
 =cut
 
-sub execute_notifier {
-  my $self    = shift;
-  my $options = shift;
-  my $job     = shift;
-  my $task    = shift;
-  my $state   = $job->state;
-  my $in_states = 0;
+sub run {
+  my ($self) = @_;
+  my $logger = $self->logger;
+  my @child_pids;
 
-  foreach my $st (split(/\s*,\s*/,$options->{states})) {
-    $in_states = 1 if ($state eq $st);
+  while (1) {
+    my $job_list = $self->get_todo_list();
+
+    while (my $job = shift(@$job_list)) {
+      my $pid = fork();
+      $SIG{CHLD} = 'IGNORE';
+
+      if (! $pid ) {
+        $logger->debug("Child starting with pid $$ -- $self");
+        try {
+          my $res = $self->run_job($job);
+          $logger->debug("Got result from run_job");
+          $logger->trace(Dumper($res));
+        }
+        catch {
+          $logger->error("raised exception");
+          my $e = shift;
+          $logger->error($e);
+        };
+        $logger->debug("Before exit: $$");
+        exit 0;
+      } else {
+        push (@child_pids,$pid);
+       
+      
+        # wait for childs to exit
+        while ( @child_pids >= $self->max_processes ) {
+          #$self->logger->debug("ChildPids: (@child_pids) ".$self->max_processes."\n");
+          @child_pids = grep { waitpid($_,WNOHANG) == 0 } @child_pids;
+          sleep(1);
+          #$self->logger->debug("ChildPids: (@child_pids) ".$self->max_processes."\n");
+        }
+      }
+    }
+    sleep 1;
   }
+}
 
-  return if (! $in_states);
+sub run_notifiers {
+  my ($self, $job, $last_task) = @_;
+  my $logger    = $self->logger();
+  my $notifiers = Kanku::Config->instance()->notifiers_config($job->name());
+  
+  foreach my $notifier (@{$notifiers}) {
+    try {
+    $self->execute_notifier($notifier,$job,$last_task);
+    }
+    catch { 
+      my $e = $_;
+      $logger->error("Error while sending notification");
+      $logger->error($e);
+    };
+  }
+}
+
+sub execute_notifier {
+  my ($self, $options, $job, $task) = @_;
+
+  my $state     = $job->state;
+  my @in        = grep ($state,(split(/\s*,\s*/,$options->{states})));
+
+  return if (! @in);
 
   my $mod = $options->{use_module};
   die "Now use_module definition in config (job: $job)" if ( ! $mod );
@@ -80,6 +135,50 @@ sub execute_notifier {
 
   $notifier->notify();
 
+}
+
+sub load_job_definition {
+  my ($self, $job)   = @_;
+  my $job_definition = undef;
+
+  $self->logger->debug("Loading definition for job: ".$job->name);
+
+  $job_definition = Kanku::Config->instance()->job_config($job->name);
+
+  return $job_definition;
+} 
+
+sub prepare_job_args  {
+  my ($self, $job)      = @_;
+  my $args              = [];
+  my $parse_args_failed = 0;
+  
+  try {
+      my $args_string = $job->db_object->args();
+      
+      if ($args_string) {
+        $args = decode_json($args_string);
+      }
+      
+      die "args not containting a ArrayRef" if (ref($args) ne "ARRAY" );
+  
+  }
+  catch { 
+    my $e = $_;
+    
+    $self->logger->error($e);
+    $job->result(encode_json({error_message=>$e}));
+    $job->state('failed');
+    $job->end_time(time());
+    $job->update_db();
+    $parse_args_failed=1;
+  };
+
+  return undef if $parse_args_failed;
+
+  $self->logger->trace("  -- args:".Dumper($args));
+
+  return $args;
 }
 
 sub get_todo_list {
@@ -106,8 +205,24 @@ sub get_todo_list {
   return $todo;
 }
 
+sub start_job {
+  my ($self,$job) = @_;
 
-#__PACKAGE__->meta->make_immutable();
+  $self->logger->debug("Starting job: ".$job->name." (".$job->id.")");
+  
+  $job->start_time(time());
+  $job->state("running");
+  $job->update_db();
+}
+
+sub end_job {
+  my ($self,$job,$state) = @_;
+
+  $job->state(($job->skipped) ? 'skipped' : $state);
+  $job->end_time(time());
+  $job->update_db();
+
+  $self->logger->debug("Finished job: ".$job->name." (".$job->id.") with state '".$job->state."'");
+}
 
 1;
-

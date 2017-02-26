@@ -29,8 +29,6 @@ has [qw/ipaddress publickey_path privatekey_path passphrase username/] => (is=>'
 has states   => (is=>'rw',isa=>'ArrayRef',default=>sub { [] });
 has loglevel => (is=>'rw',isa=>'Str', default=> 'debug');
 
-has "+distributable" => ( default => 0 );
-
 sub execute {
   my $self    = shift;
   my $results = [];

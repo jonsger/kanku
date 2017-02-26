@@ -14,66 +14,33 @@
 # Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 #
-package Kanku::Roles::Handler;
-
+package Kanku::Roles::Serialize;
 
 use Moose::Role;
+use Data::Dumper;
+use JSON::XS;
+requires 'json_keys';
 
-requires 'execute';
+sub to_json {
+  my $self = shift;
 
+  my $data = {};
+  
+  for my $attr (@{$self->json_keys}){
+    $data->{$attr} = $self->$attr();
+  }
 
-has 'last_run_result' => (
-  is => 'rw',
-  isa => 'HashRef'
-);
+  return encode_json($data);
+}
 
-has 'job_definition' => (
-  is => 'rw',
-  isa => 'HashRef'
-);
-
-has 'logger' => (
-  is => 'rw',
-  isa => 'Object'
-);
-
-has 'job' => (
-  is => 'rw',
-  isa => 'Object'
-);
-
-has 'schema' => (
-  is  => 'rw',
-  isa => 'Object'
-);
-
-has gui_config => (
-  is => 'ro',
-  isa => 'ArrayRef',
-  lazy => 1,
-  default => sub { [] }
-);
-
-sub distributable { 0 }
-
-sub prepare {
-
-  return {
-    code    => 0,
-    message => "Nothing to do!"
+sub from_json {
+  my ($self,$string) = shift;
+  my $data = decode_json($string);
+  
+  for my $attr (@{$self->json_keys}){
+    $self->$attr($data->{$attr});
   }
 
 }
 
-sub finalize {
-
-  return {
-    code    => 0,
-    message => "Nothing to do!"
-  }
-
-}
-
-
-1; 
-
+1;

@@ -46,7 +46,6 @@ sub prepare {
   };
 }
 
-
 sub execute {
   my $self   = shift;
   my $cfg    = Kanku::Config->instance()->config();
@@ -54,16 +53,12 @@ sub execute {
   my $logger = $self->logger;
   my $con;
 
-  if ( $ctx->{vm} ) {
-    $con = $ctx->{vm}->console
-  } else {
-    $con = Kanku::Util::VM::Console->new(
+  $con = Kanku::Util::VM::Console->new(
         domain_name => $self->domain_name,
         login_user => $self->login_user(),
         login_pass => $self->login_pass(),
         debug => $cfg->{'Kanku::Util::VM::Console'}->{debug} || 0
-    );
-  }
+  );
 
   $con->init();
   $con->login();
@@ -138,6 +133,8 @@ sub _configure_interfaces {
     $self->_mac_table->{$ether} = $interface;
   }
 }
+
+__PACKAGE__->meta->make_immutable;
 1;
 
 __END__

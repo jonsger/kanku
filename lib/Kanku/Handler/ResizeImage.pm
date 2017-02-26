@@ -55,7 +55,6 @@ has gui_config => (
       ];
   }
 );
-has "+distributable" => ( default => 0 );
 
 sub execute {
   my $self = shift;

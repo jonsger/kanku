@@ -41,6 +41,8 @@ has gui_config => (
   }
 );
 
+# send to all hosts
+sub distributable { 2 };
 
 sub execute {
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2016 SUSE LLC
+# Copyright (c) 2017 SUSE LLC
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 2 as
@@ -14,66 +14,23 @@
 # Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 #
-package Kanku::Roles::Handler;
-
+package Kanku::Roles::ModLoader;
 
 use Moose::Role;
+use Carp;
+with 'Kanku::Roles::Logger';
 
-requires 'execute';
+sub load_module {
+  my ($self,$mod) = @_;  
 
+  confess "No mod given!" if (! $mod);
 
-has 'last_run_result' => (
-  is => 'rw',
-  isa => 'HashRef'
-);
+  $self->logger->debug("Trying to load module $mod");
 
-has 'job_definition' => (
-  is => 'rw',
-  isa => 'HashRef'
-);
-
-has 'logger' => (
-  is => 'rw',
-  isa => 'Object'
-);
-
-has 'job' => (
-  is => 'rw',
-  isa => 'Object'
-);
-
-has 'schema' => (
-  is  => 'rw',
-  isa => 'Object'
-);
-
-has gui_config => (
-  is => 'ro',
-  isa => 'ArrayRef',
-  lazy => 1,
-  default => sub { [] }
-);
-
-sub distributable { 0 }
-
-sub prepare {
-
-  return {
-    code    => 0,
-    message => "Nothing to do!"
-  }
-
+  my $mod2require = $mod;
+  $mod2require =~ s|::|/|g;
+  $mod2require = $mod2require . ".pm";
+  require "$mod2require";
 }
-
-sub finalize {
-
-  return {
-    code    => 0,
-    message => "Nothing to do!"
-  }
-
-}
-
 
 1; 
-

@@ -29,7 +29,7 @@ with 'Kanku::Roles::SSH';
 has [qw/ipaddress publickey_path privatekey_path passphrase username/] => (is=>'rw',isa=>'Str');
 has commands => (is=>'rw',isa=>'ArrayRef',default=>sub { [] });
 
-has "+distributable" => ( default => 1 );
+sub distributable { 1 }
 
 sub prepare {
   my $self = shift;
