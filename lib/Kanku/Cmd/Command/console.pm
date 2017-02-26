@@ -38,7 +38,7 @@ has domain_name => (
 
 sub abstract { "Open a serial console to vm" }
 
-sub descrconsoletion { "Open a serial console to vm" }
+sub description { "Open a serial console to vm" }
 
 sub execute {
   my $self    = shift;
