@@ -22,6 +22,7 @@ use Kanku::Job;
 use Kanku::JobList;
 use Kanku::Dispatch::Local;
 use Kanku::Util::VM;
+use Data::Dumper;
 
 extends qw(MooseX::App::Cmd::Command);
 
@@ -125,10 +126,10 @@ sub execute {
   my $dispatch = Kanku::Dispatch::Local->new(schema=>$schema);
   my $result   = $dispatch->run_job($job);
 
-  if ( $result eq "succeed" ) {
+  if ( $result->state eq "succeed" ) {
       $logger->info("domain_name : " . ( $job->context->{domain_name} || ''));
       $logger->info("ipaddress   : " . ( $job->context->{ipaddress}   || ''));
-  } elsif ( $result eq "skipped" ) {
+  } elsif ( $result->state eq "skipped" ) {
     $logger->warn("Job was skipped");
     $logger->warn("Please see log to find out why");
   } else {
