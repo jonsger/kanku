@@ -133,7 +133,9 @@ sub execute {
     $logger->warn("Please see log to find out why");
   } else {
       $logger->error("Failed to create domain: " . ( $job->context->{domain_name} || ''));
-      $logger->error("ipaddress   : " . ( $job->context->{ipaddress}   || ''));
+      if ( $job->context->{ipaddress} ) {
+        $logger->error("ipaddress   : " . $job->context->{ipaddress});
+      }
   };
 
 }
