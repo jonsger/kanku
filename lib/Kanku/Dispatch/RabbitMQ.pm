@@ -34,6 +34,7 @@ use Data::Dumper;
 use POSIX;
 use JSON::XS;
 use Kanku::MQ;
+use Kanku::Task::Remote;
 use Try::Tiny;
 
 with 'Kanku::Roles::Dispatcher';
@@ -155,7 +156,12 @@ sub run_task {
   if ( $distributable == 0 ) {
     return $self->run_task_locally(\%opts);
   } elsif ( $distributable == 1 ) {
-    return $self->run_task_remote(\%opts);
+    my $rtask = Kanku::Task::Remote->new(
+      kmq => $self->kmq,
+      job => $self->job,
+      job_queue => $self->job_queue
+    );
+    return $rtask->run(\%opts);
   } elsif ( $distributable == 2 ) {
     return $self->run_task_on_all_workers(\%opts);
   } else {
