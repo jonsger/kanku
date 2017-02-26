@@ -161,9 +161,18 @@ sub run_task {
       job => $self->job,
       job_queue => $self->job_queue
     );
+
     return $rtask->run(\%opts);
+
   } elsif ( $distributable == 2 ) {
-    return $self->run_task_on_all_workers(\%opts);
+
+    my $rtask = Kanku::Task::Remote->new(
+      kmq => $self->kmq,
+      job => $self->job,
+      job_queue => $self->job_queue
+    );
+
+    return $rtask->run(\%opts);
   } else {
     die "Unknown distributable value '$distributable' for module $mod\n"
   }
