@@ -1,0 +1,41 @@
+{
+   "belongs_to" : {
+      "fetch" : 0
+   },
+   "sets" : [
+      {
+         "class" : "ImageDownloadHistory",
+         "quantity" : "all"
+      },
+      {
+         "class" : "Role",
+         "quantity" : "all"
+      },
+      {
+         "quantity" : "all",
+         "class" : "ObsCheckHistory"
+      },
+      {
+         "class" : "UserRoles",
+         "quantity" : "all"
+      },
+      {
+         "quantity" : "all",
+         "class" : "User"
+      },
+      {
+         "class" : "JobHistory",
+         "quantity" : "all"
+      },
+      {
+         "quantity" : "all",
+         "class" : "JobHistorySub"
+      }
+   ],
+   "has_many" : {
+      "fetch" : 0
+   },
+   "might_have" : {
+      "fetch" : 0
+   }
+}
