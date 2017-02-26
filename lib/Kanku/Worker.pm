@@ -180,7 +180,7 @@ sub handle_task {
 
   my $task   = Kanku::Task::Local->new(%{$data->{task_args}},schema => $self->schema);
 
-  my $result = $task->execute_all();
+  my $result = $task->run();
 
   $self->kmq->mq->publish(
     $self->kmq->channel,

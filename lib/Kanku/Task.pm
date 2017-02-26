@@ -82,18 +82,7 @@ has 'result'       => (is=>'rw',isa=>'Str',default=> '' );
 
 =head1 METHODS
 
-=head2 run - load and run the Handler given by $self->module
-
-This method tries to load the Kanku::Handler::$module and calls the following
-methods in exactly the given order
-
-  my $handler = Kanku::Handler::Example->new(..);
-
-  $handler->prepare();
-
-  $handler->execute();
-
-  $handler->finalize();
+=head2 run - TODO: add documentation
 
 =cut
 
@@ -155,7 +144,7 @@ sub run {
       schema          => $schema
     );
 
-    my $res = $tr->execute_all();
+    my $res = $tr->run();
     $result = $res->{result} ;
     $state  = $res->{state};
 
@@ -183,6 +172,4 @@ sub run {
 }
 
 __PACKAGE__->meta->make_immutable();
-
 1;
-

@@ -59,11 +59,11 @@ has 'schema'             => (is=>'rw',isa=>'Object');
 
 =head1 METHODS
 
-=head2 execute_all - execute prepare/execute/finalize
+=head2 run - execute prepare/execute/finalize
 
 =cut
 
-sub execute_all {
+sub run {
   my ($self) = @_;
   my $state  = undef;
   my $result = undef;
