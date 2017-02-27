@@ -36,11 +36,11 @@ has [qw/
   consumer_id
 /] => (is=>'rw',isa=>'Str');
 
-has '+host'			  => ( default => 'localhost');
-has '+vhost'		  => ( default => '/');
-has '+user'			  => ( default => 'guest');
-has '+password'		  => ( default => 'guest');
-has '+queue_name'	  => ( default => 'dispatcher');
+has '+host'	      => ( default => 'localhost');
+has '+vhost'	      => ( default => '/kanku');
+has '+user'	      => ( default => 'kanku');
+has '+password'	      => ( default => 'guest');
+has '+queue_name'     => ( default => 'dispatcher');
 has '+exchange_name'  => ( default => 'task_adv_exchange');
 has '+routing_key'    => ( default => '');
 
@@ -59,30 +59,30 @@ sub {
 
   # don`t create worker queue for scheduler
   if ($self->dispatcher) {
-	my $queue = $mq->queue_declare(
+    my $queue = $mq->queue_declare(
       $self->channel,
       'applications'
     );
-	$mq->queue_bind(
-	  $self->channel,
-	  'applications',
-	  'kanku_to_dispatcher',
-	  '',
-	  {}
-	);
+    $mq->queue_bind(
+      $self->channel,
+      'applications',
+      'kanku_to_dispatcher',
+      '',
+      {}
+    );
   } else {
 
-	$self->queue_name(uuid());
+    $self->queue_name(uuid());
     $self->routing_key($self->queue_name());
-	my $queue = $mq->queue_declare($self->channel,$self->queue_name);
+    my $queue = $mq->queue_declare($self->channel,$self->queue_name);
 
-	$mq->queue_bind(
-	  $self->channel,
-	  $self->queue_name,
-	  'kanku_to_all_workers',
-	  '',
-	  {}
-	);
+    $mq->queue_bind(
+      $self->channel,
+      $self->queue_name,
+      'kanku_to_all_workers',
+      '',
+      {}
+    );
 
     $self->consumer_id( $mq->consume(1, $self->queue_name) );
   }
@@ -97,11 +97,11 @@ sub connect {
   my $mq = Net::AMQP::RabbitMQ->new();
 
   $mq->connect( $self->host,
-				{ 
-				  vhost		=> $self->vhost, 
-				  user		=> $self->user,
-				  password	=> $self->password
-				}
+		{ 
+		  vhost		=> $self->vhost, 
+		  user		=> $self->user,
+		  password	=> $self->password
+		}
   );
 
   $mq->channel_open($self->channel);

@@ -61,7 +61,11 @@ sub run_job {
   my $logger       = $self->logger();
   my $queue        = "scheduler-task-".$job->id;
 
-  my $kmq          = Kanku::MQ->new(dispatcher  => 1);
+  my $config = Kanku::Config->instance->config->{ref($self)};
+
+  $logger->debug("kanku dispatcher config:\n".Dumper($config));
+
+  my $kmq          = Kanku::MQ->new(%{ $config->{rabbitmq} || {}},dispatcher  => 1);
 
   die "Could not get kmq" if (! $kmq);
 

@@ -38,9 +38,10 @@ Kanku::Daemon::Scheduler:
 
 Kanku::Daemon::Worker:
   rabbitmq:
-    host: g4.suse.de
-    user: kanku
-    password: kankudai
+    vhost: /kanku
+    host: <YOUR_HOST>
+    user: <YOUR_USERNAME>
+    password: <YOUR_PASSWORD>
 
 Jobs:
     obs-server:
