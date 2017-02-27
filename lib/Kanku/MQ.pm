@@ -96,17 +96,34 @@ sub connect {
 
   my $mq = Net::AMQP::RabbitMQ->new();
 
-  $mq->connect( $self->host,
-		{ 
-		  vhost		=> $self->vhost, 
-		  user		=> $self->user,
-		  password	=> $self->password
-		}
+  my @opts = (
+    $self->host,
+    { 
+      vhost		=> $self->vhost, 
+      user		=> $self->user,
+      password	=> $self->password
+    }
   );
+
+  $self->logger->debug("Trying to connect to rabbitmq with the folloing options:\n".Dumper(\@opts));
+
+  $mq->connect(@opts);
 
   $mq->channel_open($self->channel);
 
   return $mq;
+}
+
+sub connect_info {
+  return {
+    { 
+      host      => $self->host,
+      vhost	=> $self->vhost, 
+      user      => $self->user,
+      password	=> $self->password
+    }
+
+  }
 }
 
 sub setup {
