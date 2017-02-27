@@ -78,6 +78,11 @@ Requires: perl(IPC::Run)
 Requires: perl-DBD-SQLite
 Requires: perl(LWP::Protocol::https)
 Requires: perl(Mail::Sendmail)
+Requires: perl(Net::AMQP::RabbitMQ)
+Requires: perl(UUID)
+Requires: perl(Sys::CPU);
+Requires: perl(Sys::LoadAvg);
+Requires: perl(Sys::MemInfo;
 
 %description
 TODO: add some meaningful description

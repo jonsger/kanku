@@ -1,4 +1,5 @@
 ---
+#dispatcher: Kanku::Dispatch::RabbitMQ
 
 plugins:
   DBIC:
