@@ -30,7 +30,7 @@ Kanku::Util::IPTables:
 Kanku::Util::VM::Console:
   debug: 0
 
-Kanku::Scheduler:
+Kanku::Daemon::Scheduler:
   -
     job_name: obs-server
     delay: 86400

@@ -18,7 +18,6 @@ package Kanku::Cmd::Command::ip;
 
 use Moose;
 use Kanku::Config;
-use Kanku::Scheduler;
 use Kanku::Job;
 use Kanku::Util::VM;
 

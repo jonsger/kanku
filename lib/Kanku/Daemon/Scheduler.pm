@@ -14,10 +14,11 @@
 # Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 #
-package Kanku::Scheduler;
+package Kanku::Daemon::Scheduler;
 
 use Moose;
 with 'Kanku::Roles::Logger';
+with 'Kanku::Roles::DB';
 
 use Kanku::Config;
 use Kanku::Job;
@@ -26,14 +27,13 @@ use Kanku::Task;
 use JSON::XS;
 use Data::Dumper;
 use Try::Tiny;
-has 'schema' => (is=>'rw',isa=>'Object');
 
 sub run {
   my $self    = shift;
   my $logger  = $self->logger();
   my $schema  = $self->schema();
 
-  $logger->warn("Running Kanku::Scheduler");
+  $logger->info("Running Kanku::Daemon::Scheduler");
 
   # Set all running jobs to failed on startup
   # TODO: In a more distributed setup we need some
@@ -51,7 +51,6 @@ sub run {
     $job->update({ state=>'failed', end_time => time() });
   }
 
-  my $dispatcher = Kanku::Dispatch::Local->new(schema => $schema);
   while (1) {
     $self->create_scheduled_jobs();
 
@@ -66,16 +65,20 @@ sub create_scheduled_jobs {
   my $cfg     = Kanku::Config->instance();
   my $schema  = $self->schema();
   my $counter = 0;
+
   # Create scheduler entries
   #
-  #$logger->debug("Starting rescheduling\n");
-
-  foreach my $job (@{$cfg->config->{'Kanku::Scheduler'}}){
+  #
+  if ( $cfg->config->{'Kanku::Scheduler'}) {
+    $logger->warn("Kanku::Scheduler in config file is deprecated. Please change to Kanku::Daemon::Scheduler")
+  }
+  # Kanku::Scheduler is in there because of backwards compability
+  foreach my $job (@{$cfg->config->{'Kanku::Scheduler'} || $cfg->config->{'Kanku::Daemon::Scheduler'}}){
     $counter++;
 
     my $job_name = $job->{job_name};
     if (! $job_name ) {
-      die "Missing job_name Kanku::Scheduler configuration (section $counter)\n".
+      die "Missing job_name Kanku::Daemon::Scheduler configuration (section $counter)\n".
             "Please fix your configuration!\n";
     }
 
@@ -120,6 +123,4 @@ sub create_scheduled_jobs {
 };
 
 __PACKAGE__->meta->make_immutable();
-
 1;
-

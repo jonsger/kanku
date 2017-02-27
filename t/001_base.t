@@ -27,7 +27,7 @@ use_ok 'Kanku::Handler::PrepareSSH';
 use_ok 'Kanku::Handler::Wait';
 use_ok 'Kanku::Handler::CreateDomain';
 use_ok 'Kanku::Handler::FileCopy';
-use_ok 'Kanku::Scheduler';
+use_ok 'Kanku::Daemon::Scheduler';
 use_ok 'Kanku::Cmd';
 use_ok 'Kanku::Cmd::Roles::Schema';
 use_ok 'Kanku::Cmd::Command::setup';

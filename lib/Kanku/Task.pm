@@ -48,7 +48,7 @@ has 'schema'     => (is=>'rw',isa=>'Object');
 
 has 'job'        => (is=>'rw',isa=>'Object');
 
-=head2 scheduler - a Kanku::Scheduler object
+=head2 scheduler - a Kanku::Daemon::Scheduler object
 
 =cut
 

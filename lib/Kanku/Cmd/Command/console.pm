@@ -18,9 +18,6 @@ package Kanku::Cmd::Command::console;
 
 use Moose;
 use Kanku::Config;
-use Kanku::Scheduler;
-use Kanku::Job;
-use Kanku::Util::VM;
 
 extends qw(MooseX::App::Cmd::Command);
 
@@ -49,10 +46,7 @@ sub execute {
   my $cmd = "virsh console ".$self->domain_name;
 
   system($cmd);
-
 }
 
 __PACKAGE__->meta->make_immutable;
-
 1;
-

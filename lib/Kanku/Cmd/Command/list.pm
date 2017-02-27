@@ -17,11 +17,7 @@
 package Kanku::Cmd::Command::list;
 
 use Moose;
-#use Kanku::Config;
-#use Kanku::Scheduler;
-#use Kanku::Job;
-#use Kanku::Util::VM;
-use Log::Log4perl;
+
 extends qw(MooseX::App::Cmd::Command);
 with "Kanku::Cmd::Roles::Schema";
 
@@ -37,11 +33,8 @@ sub abstract { "Not implemented yet" }
 
 sub execute {
   my $self    = shift;
-  my $logger  = Log::Log4perl->get_logger;
-  #my $cfg     = Kanku::Config->instance();
 
-  #my $schema  = $self->schema;
-
+  print "Not implemented yet\n";
 
 }
 
