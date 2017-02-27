@@ -12,8 +12,9 @@
     <apic/>
     <pae/>
   </features>
-  <cpu mode='host-model'>
-    <model fallback='allow'>qemu64</model>
+  <cpu match='exact'>
+    <model>Westmere</model>
+   <feature policy='require' name='vmx'/>
   </cpu>
   <clock offset='utc'/>
   <on_poweroff>destroy</on_poweroff>
