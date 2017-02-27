@@ -43,6 +43,13 @@ Kanku::Daemon::Worker:
     user: <YOUR_USERNAME>
     password: <YOUR_PASSWORD>
 
+Kanku::Dispatch::RabbitMQ:
+  rabbitmq:
+    vhost: /kanku
+    host: <YOUR_HOST>
+    user: <YOUR_USERNAME>
+    password: <YOUR_PASSWORD>
+
 Jobs:
     obs-server:
     obs-server-26:
