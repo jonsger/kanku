@@ -1,4 +1,4 @@
-package Kanku::Worker;
+package Kanku::Daemon::Worker;
 
 use Moose;
 
@@ -12,7 +12,6 @@ use JSON::XS;
 use Try::Tiny;
 use Kanku::MQ;
 use Kanku::Config;
-use Kanku::Config::Worker;
 use Kanku::Task::Local;
 use Kanku::Job;
 use Sys::CPU;
@@ -23,19 +22,17 @@ use Net::Domain qw/hostfqdn/;
 
 with 'Kanku::Roles::Logger';
 with 'Kanku::Roles::ModLoader';
+with 'Kanku::Roles::DB';
 
 has child_pids => (is=>'rw',isa=>'ArrayRef',default => sub {[]});
 has kmq => (is=>'rw',isa=>'Object');
-has schema => (is=>'rw',isa=>'Object');
 has job_queue_name => (is=>'rw',isa=>'Str');
 
 sub run {
   my $self   = shift;
 
-  Kanku::Config->initialize();
+  my $config = Kanku::Config->instance->config->{ref($self)};
 
-  my $cfg    = Kanku::Config::Worker->new();
-  my $config = $cfg->load_config();
 
   my $logger = $self->logger();
 
@@ -227,4 +224,5 @@ sub collect_resources {
 
 }
 
+__PACKAGE__->meta->make_immutable();
 1;

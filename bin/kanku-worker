@@ -30,20 +30,12 @@ our $VERSION = "0.0.1";
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 use Log::Log4perl;
-use Kanku::Worker;
-use Path::Class qw/file/;
-use YAML;
-use Kanku::Schema;
+use Kanku::Config;
+use Kanku::Daemon::Worker;
 
+Kanku::Config->initialize();
 Log::Log4perl->init("$FindBin::Bin/../etc/console-log.conf");
 
-my $cfg_file    = file($FindBin::Bin,'..','config.yml');
-my $cfg_content = $cfg_file->slurp;
-my $cfg_yaml    = YAML::Load($cfg_content);
-my $schema      = Kanku::Schema->connect($cfg_yaml->{plugins}->{DBIC}->{default}->{dsn});
-
-
-my $worker = Kanku::Worker->new(schema => $schema);
-$worker->run();
+Kanku::Daemon::Worker->new()->run();
 
 exit 0;

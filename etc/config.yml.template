@@ -36,6 +36,12 @@ Kanku::Daemon::Scheduler:
     delay: 86400
     #delay: 600
 
+Kanku::Daemon::Worker:
+  rabbitmq:
+    host: g4.suse.de
+    user: kanku
+    password: kankudai
+
 Jobs:
     obs-server:
     obs-server-26:
