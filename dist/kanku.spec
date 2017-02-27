@@ -230,9 +230,9 @@ Summary: Worker daemon for kanku
 Requires: kanku-common
 Requires: perl(Net::AMQP::RabbitMQ)
 Requires: perl(UUID)
-Requires: perl(Sys::CPU);
-Requires: perl(Sys::LoadAvg);
-Requires: perl(Sys::MemInfo);
+Requires: perl(Sys::CPU)
+Requires: perl(Sys::LoadAvg)
+Requires: perl(Sys::MemInfo)
 
 %description worker
 A simple remote worker for kanku based on RabbitMQ
