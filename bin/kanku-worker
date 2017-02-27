@@ -34,7 +34,7 @@ use Kanku::Config;
 use Kanku::Daemon::Worker;
 
 Kanku::Config->initialize();
-Log::Log4perl->init("$FindBin::Bin/../etc/console-log.conf");
+Log::Log4perl->init("$FindBin::Bin/../etc/log4perl.conf");
 
 Kanku::Daemon::Worker->new()->run();
 
