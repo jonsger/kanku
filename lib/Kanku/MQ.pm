@@ -115,15 +115,14 @@ sub connect {
 }
 
 sub connect_info {
-  return {
-    { 
-      host      => $self->host,
-      vhost	=> $self->vhost, 
-      user      => $self->user,
-      password	=> $self->password
-    }
+  my ($self) = @_;
+  return  {
+    host      => $self->host,
+    vhost     => $self->vhost, 
+    user      => $self->user,
+    password  => $self->password
+  };
 
-  }
 }
 
 sub setup {

@@ -81,8 +81,6 @@ sub run_job {
     }
   );
 
- 
-
   $logger->trace("List of all applications:\n" . Dumper($applications));
 
   # pa = prefered_application
@@ -96,6 +94,7 @@ sub run_job {
 
   $self->kmq(
     Kanku::MQ->new(
+      %{$self->kmq->connect_info},
       dispatcher  => 1,
       queue_name  => $aq,
       routing_key => $aq
@@ -299,8 +298,12 @@ sub advertise_job {
 
   my $data = encode_json({action => 'advertise_job', %$opts});
 
+  my $ci = $self->kmq->connect_info;
+
   $self->logger->debug("creating new queue: ".$opts->{answer_queue});
-  $self->job_queue(Kanku::MQ->new());
+  $self->logger->trace(Dumper($ci));
+
+  $self->job_queue(Kanku::MQ->new(%{$ci}));
   $self->job_queue->queue_name($opts->{answer_queue});
   $self->job_queue->connect();
   $self->job_queue->create_queue(exchange_name=>'kanku_to_dispatcher'); 
@@ -316,7 +319,6 @@ sub advertise_job {
 
     sleep($self->wait_for_workers);
 
-    #$kmq = Kanku::MQ->new(queue_name=>'applications');
     while ( my $msg = $mq->recv(100) ) {
       if ($msg ) {
           my $data;
