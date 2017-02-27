@@ -30,6 +30,32 @@ BuildRequires:  perl-macros
 BuildRequires:  fdupes
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
+Recommends: kanku-cli
+Recommends: kanku-web
+Recommends: kanku-worker
+Recommends: kanku-scheduler
+Recommends: kanku-dispatcher
+
+%description
+TODO: add some meaningful description
+ to be more verbose
+
+%prep
+%setup -q
+
+%build
+/bin/true
+
+%install
+make install DESTDIR=%{buildroot}
+%fdupes %{buildroot}/opt/kanku/share
+
+%files
+%exclude /etc
+
+%package common
+Summary: Common files for kanku
+
 Recommends: osc 
 Recommends: perl(IO::Uncompress::UnXz)
 Recommends: apache2
@@ -78,42 +104,27 @@ Requires: perl(IPC::Run)
 Requires: perl-DBD-SQLite
 Requires: perl(LWP::Protocol::https)
 Requires: perl(Mail::Sendmail)
-Requires: perl(Net::AMQP::RabbitMQ)
-Requires: perl(UUID)
-Requires: perl(Sys::CPU);
-Requires: perl(Sys::LoadAvg);
-Requires: perl(Sys::MemInfo;
 
-%description
-TODO: add some meaningful description
- to be more verbose
+%description common
+TODO:
+ add a useful description
 
-%prep
-%setup -q
 
-%build
-/bin/true
-
-%install
-make install DESTDIR=%{buildroot}
-%fdupes %{buildroot}/opt/kanku/share
-
-%files
+%files common
 %defattr(-,root,root)
 %doc README.md TODO
 
-%exclude /etc
 %dir /opt/kanku
-/opt/kanku/public/
-/opt/kanku/lib
+%dir /opt/kanku/lib
+%dir /opt/kanku/lib/Kanku
+%dir /opt/kanku/lib/Kanku/Daemon
+
+# share contains database related stuff
 %dir /opt/kanku/share/
 /opt/kanku/share/fixtures
 /opt/kanku/share/migrations
 
 %dir /opt/kanku/bin
-%attr(755,root,root) /opt/kanku/bin/kanku-scheduler
-%attr(755,root,root) /opt/kanku/bin/kanku-apache2.psig
-%attr(755,root,root) /opt/kanku/bin/kanku-app.psgi
 %attr(755,root,root) /opt/kanku/bin/kanku
 %attr(755,root,root) /opt/kanku/bin/kanku-network-setup.pl
 
@@ -142,13 +153,54 @@ make install DESTDIR=%{buildroot}
 %dir /etc/sudoers.d
 %config (noreplace)  /etc/sudoers.d/kanku
 
-%dir /etc/apache2
-%dir /etc/apache2/conf.d
-%config (noreplace) /etc/apache2/conf.d/kanku.conf
-
 %dir /etc/profile.d/
 %config /etc/profile.d/kanku.sh
 
+/opt/kanku/lib/Kanku/Handler/
+/opt/kanku/lib/Kanku/Roles/
+/opt/kanku/lib/Kanku/Schema/
+/opt/kanku/lib/Kanku/Setup/
+/opt/kanku/lib/Kanku/Util/
+/opt/kanku/lib/Kanku/Task/
+/opt/kanku/lib/OpenStack/
+/opt/kanku/lib/Kanku/Config.pm
+/opt/kanku/lib/Kanku/Handler.pod
+/opt/kanku/lib/Kanku/Notifier
+/opt/kanku/lib/Kanku/Job.pm
+/opt/kanku/lib/Kanku/MQ.pm
+/opt/kanku/lib/Kanku/Schema.pm
+/opt/kanku/lib/Kanku/JobList.pm
+/opt/kanku/lib/Kanku/Task.pm
+
+%package cli
+Summary: Command line client for kanku
+Requires: kanku-common
+
+%description cli
+TODO:
+ add a useful description
+
+%files cli
+%dir /opt/kanku/views/cli/
+/opt/kanku/views/cli/guests.tt
+/opt/kanku/views/cli/job.tt
+/opt/kanku/views/cli/jobs.tt
+%dir /opt/kanku/views/cli/rjob
+/opt/kanku/views/cli/rjob/*.tt
+/opt/kanku/lib/Kanku/Cmd/
+/opt/kanku/lib/Kanku/Cmd.pm
+
+%package web
+Summary: WebUI for kanku
+Requires: kanku-common
+
+%description web
+TODO:
+ add a useful description
+
+%files web
+%attr(755,root,root) /opt/kanku/bin/kanku-apache2.psig
+%attr(755,root,root) /opt/kanku/bin/kanku-app.psgi
 %dir /opt/kanku/views/
 /opt/kanku/views/admin.tt
 /opt/kanku/views/guest.tt
@@ -163,12 +215,56 @@ make install DESTDIR=%{buildroot}
 /opt/kanku/views/request_roles.tt
 /opt/kanku/views/settings.tt
 /opt/kanku/views/signup.tt
-%dir /opt/kanku/views/cli/
-/opt/kanku/views/cli/guests.tt
-/opt/kanku/views/cli/job.tt
-/opt/kanku/views/cli/jobs.tt
-/opt/kanku/views/cli/rjob/list.tt
-%dir /opt/kanku/views/cli/rjob
-/opt/kanku/views/cli/rjob/*.tt
+
+%dir /etc/apache2
+%dir /etc/apache2/conf.d
+%config (noreplace) /etc/apache2/conf.d/kanku.conf
+
+# public contains css/js/bootstrap/jquery etc
+/opt/kanku/public/
+/opt/kanku/lib/Kanku.pm
+
+%package worker
+Summary: Worker daemon for kanku
+
+Requires: kanku-common
+Requires: perl(Net::AMQP::RabbitMQ)
+Requires: perl(UUID)
+Requires: perl(Sys::CPU);
+Requires: perl(Sys::LoadAvg);
+Requires: perl(Sys::MemInfo);
+
+%description worker
+A simple remote worker for kanku based on RabbitMQ
+
+%files worker
+/opt/kanku/bin/kanku-worker
+/opt/kanku/lib/Kanku/Daemon/Worker.pm
+
+%package dispatcher
+Summary: Dispatcher daemon for kanku
+
+Requires: kanku-common
+Requires: perl(Net::AMQP::RabbitMQ)
+Recommends: rabbitmq-server
+
+%description dispatcher
+A simple dispatcher for kanku based on RabbitMQ
+
+%files dispatcher
+/opt/kanku/bin/kanku-dispatcher
+/opt/kanku/lib/Kanku/Daemon/Dispatcher.pm
+/opt/kanku/lib/Kanku/Dispatch
+
+%package scheduler
+Summary: Scheduler daemon for kanku
+Requires: kanku-common
+
+%description scheduler
+A simple scheduler for kanku based on RabbitMQ
+
+%files scheduler
+%attr(755,root,root) /opt/kanku/bin/kanku-scheduler
+/opt/kanku/lib/Kanku/Daemon/Scheduler.pm
 
 %changelog
