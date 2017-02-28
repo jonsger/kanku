@@ -11,7 +11,15 @@ use Kanku::Daemon::Dispatcher;
 
 chdir("$FindBin::Bin/..");
 
-Log::Log4perl->init("$FindBin::Bin/../etc/log4perl.conf");
+my $logger_conf = "$FindBin::Bin/../etc/log4perl.conf";
+
+if (@ARGV and $ARGV[0] eq '-c' ) {
+  $logger_conf = "$FindBin::Bin/../etc/console-log.conf"
+}
+
+print "Using $logger_conf\n";
+Kanku::Config->initialize();
+Log::Log4perl->init($logger_conf);
 
 Kanku::Config->initialize();
 
