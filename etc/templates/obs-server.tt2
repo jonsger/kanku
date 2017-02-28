@@ -12,10 +12,7 @@
     <apic/>
     <pae/>
   </features>
-  <cpu match='exact'>
-    <model>Westmere</model>
-   <feature policy='require' name='vmx'/>
-  </cpu>
+  <cpu mode='host-passthrough' />
   <clock offset='utc'/>
   <on_poweroff>destroy</on_poweroff>
   <on_reboot>restart</on_reboot>
