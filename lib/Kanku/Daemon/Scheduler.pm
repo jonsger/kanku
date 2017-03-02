@@ -35,22 +35,6 @@ sub run {
 
   $logger->info("Running Kanku::Daemon::Scheduler");
 
-  # Set all running jobs to failed on startup
-  # TODO: In a more distributed setup we need some
-  # other mechanism here
-  #
-  my @running_jobs = $schema->resultset('JobHistory')->search({ state => 'running' });
-
-  foreach my $job (@running_jobs) {
-    $job->update({ state=>'failed', end_time => time() });
-  }
-
-  my @no_end_time_jobs = $schema->resultset('JobHistory')->search({ end_time => 0 });
-
-  foreach my $job (@no_end_time_jobs) {
-    $job->update({ state=>'failed', end_time => time() });
-  }
-
   while (1) {
     $self->create_scheduled_jobs();
 
@@ -95,13 +79,11 @@ sub create_scheduled_jobs {
         my $next_run = $lr->last_modified + $job->{delay};
         my $now = time();
 
-#        $logger->debug("  - Checking if next_run($next_run) greater than now($now)");
+        $logger->debug("  - Checking if next_run($next_run) > now($now)");
 
-        if ($next_run > time() ) {
+        if ($next_run > $now ) {
             $reschedule = 0;
         }
-    } else {
-      $logger->trace("  - No last run result found!");
     }
 
     if ($jl->get_scheduled_or_triggered_job($job_name) ) {
@@ -109,17 +91,17 @@ sub create_scheduled_jobs {
     }
 
     if ( $reschedule ) {
-        $logger->debug(" - Rescheduling job '".$job_name."'");
-        $schema->resultset('JobHistory')->create({
-              name => $job_name,
-              creation_time => time(),
-              last_modified => time(),
-              state => 'scheduled'
-          }
-        );
+      $logger->debug(" - Rescheduling job '".$job_name."'");
+      $schema->resultset('JobHistory')->create(
+        {
+          name => $job_name,
+          creation_time => time(),
+          last_modified => time(),
+          state => 'scheduled'
+        }
+      );
     }
   }
-
 };
 
 __PACKAGE__->meta->make_immutable();
