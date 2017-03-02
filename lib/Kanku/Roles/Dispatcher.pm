@@ -17,8 +17,6 @@
 package Kanku::Roles::Dispatcher;
 
 use Moose::Role;
-with 'Kanku::Roles::Logger';
-
 use POSIX;
 use JSON::XS;
 use Data::Dumper;
@@ -27,6 +25,8 @@ use Try::Tiny;
 use Kanku::Config;
 use Kanku::Job;
 use Kanku::Task;
+
+with 'Kanku::Roles::ModLoader';
 
 has 'schema' => (is=>'rw',isa=>'Object');
 
@@ -53,12 +53,19 @@ sub run {
   my $logger = $self->logger;
   my @child_pids;
 
+  my $dead_jobs =   my $rs = $self->schema->resultset('JobHistory')->search(
+    { state => 'running' }
+  );
+  while ( my $job = $dead_jobs->next()) {
+    $job->state('failed');
+    $job->update();
+  };
+
   while (1) {
     my $job_list = $self->get_todo_list();
 
     while (my $job = shift(@$job_list)) {
       my $pid = fork();
-      $SIG{CHLD} = 'IGNORE';
 
       if (! $pid ) {
         $logger->debug("Child starting with pid $$ -- $self");
@@ -112,7 +119,12 @@ sub execute_notifier {
   my ($self, $options, $job, $task) = @_;
 
   my $state     = $job->state;
-  my @in        = grep ($state,(split(/\s*,\s*/,$options->{states})));
+
+  $self->logger->debug("Job state: $state // $options->{states}");
+
+  my @in        = grep { $state eq $_ } (split(/\s*,\s*/,$options->{states}));
+
+  $self->logger->trace("\@in: '@in'");
 
   return if (! @in);
 
@@ -122,11 +134,7 @@ sub execute_notifier {
   my $args = $options->{options} || {};
   die "args for $mod not a HashRef" if ( ref($args) ne 'HASH' );
 
-  my $mod2require = $mod;
-  $mod2require =~ s|::|/|g;
-  $mod2require = $mod2require . ".pm";
-  $self->logger->debug("Trying to load $mod2require");
-  require "$mod2require";
+  $self->load_module($mod);
 
   my $notifier = $mod->new( options=> $args );
 
