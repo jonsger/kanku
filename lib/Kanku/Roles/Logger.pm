@@ -19,6 +19,11 @@ package Kanku::Roles::Logger;
 use Moose::Role;
 
 use Log::Log4perl;
+use Data::Dumper;
+
+BEGIN {
+  $Data::Dumper::Sortkeys = sub { return [ grep { !/^(db_object|schema|logger)$/ } ( keys(%{$_[0]}) )  ] };
+}
 
 has logger => (
   is      => 'rw',

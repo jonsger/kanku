@@ -148,7 +148,7 @@ TODO:
 %config /opt/kanku/etc/jobs/examples/obs-server-26.yml
 %config /opt/kanku/etc/jobs/examples/sles11sp3.yml
 
-%config /opt/kanku/etc/log4perl.conf
+%config(noreplace) /opt/kanku/etc/log4perl.conf
 
 %dir /etc/sudoers.d
 %config (noreplace)  /etc/sudoers.d/kanku
