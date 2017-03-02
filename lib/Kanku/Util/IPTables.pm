@@ -134,7 +134,7 @@ sub cleanup_rules_for_domain {
         my $cmd = $sudo."iptables -t $table -D $chain $line_number";
         my @out = `$cmd 2>&1`;
         if ($?) {
-          die "Error while deleting rules by executing command:\n\t$cmd\n\n@out"
+          die "Error while deleting rules by executing command: $?\n\t$cmd\n\n@out"
         }
       }
     }
@@ -197,7 +197,7 @@ sub add_forward_rules_for_domain {
       print "Executing command '$cmd'\n";
       my @out = `$sudo$cmd 2>&1`;
       if ($?) {
-        die "Error while adding rule by executing command:\n\t$cmd\n\n@out\n";
+        die "Error while adding rule by executing command: $?\n\t$cmd\n\n@out\n";
       }
     }
   }
