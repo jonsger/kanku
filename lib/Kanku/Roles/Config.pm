@@ -20,6 +20,7 @@ use Moose::Role;
 use Path::Class::File;
 use Data::Dumper;
 use YAML;
+use Try::Tiny;
 
 with 'Kanku::Roles::Config::Base';
 
@@ -48,7 +49,11 @@ sub _build_config {
     my $self    = shift;
     my $file    = $self->file;
     my $content = $file->slurp();
-    return YAML::Load($content);
+    try {
+      return YAML::Load($content);
+    } catch {
+      die "Error while parsing YAML file '".$self->file->stringify."':\n$_";
+    }
 }
 
 around 'config' => sub {
@@ -73,8 +78,10 @@ around 'config' => sub {
 };
 
 sub job_config {
-  my $self = shift;
-  my $cfg  = YAML::Load($self->job_config_plain(@_));
+  my ($self,$job_name) = @_;
+  my ($cfg,$yml);
+    $yml = $self->job_config_plain($job_name);
+    $cfg = $self->load_job_config($yml,$job_name);
 
   if (ref($cfg) eq 'ARRAY') {
     return $cfg;
@@ -85,13 +92,26 @@ sub job_config {
   die "No valid job configuration found\n";
 }
 
+sub load_job_config {
+  my ($self,$yml,$job_name) = @_;
+  try {
+    return YAML::Load($yml);
+  } catch {
+      die "Error while parsing job config yaml file for job '$job_name':\n$_";
+  }
+}
+
 sub notifiers_config {
-  my $self = shift;
-  my $cfg  = YAML::Load($self->job_config_plain(@_));
+  my ($self,$job_name) = @_;
+  my ($cfg,$yml);
+  $yml = $self->job_config_plain($job_name);
+  $cfg = $self->load_job_config($yml,$job_name);
 
   if (ref($cfg) eq 'HASH') {
     return $cfg->{notifiers} if (ref($cfg->{notifiers}) eq 'ARRAY');
   }
+
+  # FALLBACK:
   # give back empty array ref if no config found
   return [];
 }
