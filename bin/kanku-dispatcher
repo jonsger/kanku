@@ -17,11 +17,9 @@ if (@ARGV and $ARGV[0] eq '-c' ) {
   $logger_conf = "$FindBin::Bin/../etc/console-log.conf"
 }
 
-print "Using $logger_conf\n";
 Kanku::Config->initialize();
-Log::Log4perl->init($logger_conf);
 
-Kanku::Config->initialize();
+Log::Log4perl->init($logger_conf);
 
 Kanku::Daemon::Dispatcher->new()->run();
 
