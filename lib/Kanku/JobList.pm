@@ -19,6 +19,7 @@ package Kanku::JobList;
 use Moose;
 use Data::Dumper;
 
+with 'Kanku::Roles::DB';
 
 has "context" => (
     is  => 'rw',
@@ -26,11 +27,7 @@ has "context" => (
     default => sub { {} }
 );
 
-#has id => ( is  => 'rw', isa => 'Int' );
-#has [qw/name state result/] => ( is => 'rw', isa => 'Str' );
-#has [qw/skipped scheduled triggered/] => ( is => 'rw', isa => 'Bool' );
-#has [qw/creation_time start_time end_time last_modified/] => ( is  => 'rw', isa => 'Int' );
-has [qw/db_object schema/ ] => ( is => 'rw', isa => 'Object' );
+has [qw/db_object/ ] => ( is => 'rw', isa => 'Object' );
 
 =head2 get_last_run_result - Get result from the latest previous run
 
@@ -82,7 +79,7 @@ sub get_last_job {
   return $jobs_list->next();
 }
 
-sub get_scheduled_or_triggered_job {
+sub get_job_activ {
   my $self     = shift;
   my $job_name = shift;
   my $schema   = $self->schema();
@@ -93,7 +90,7 @@ sub get_scheduled_or_triggered_job {
                     ->search(
                       {
                         name=>$job_name,
-			state => ["scheduled","triggered"]
+			state => ["scheduled","triggered","running"]
                       },{
                         order_by=>{
                           '-desc'=>'creation_time'

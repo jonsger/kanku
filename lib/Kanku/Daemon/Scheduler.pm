@@ -67,27 +67,26 @@ sub create_scheduled_jobs {
     }
 
     my $reschedule = 1;
-    my $rs = $schema->resultset('JobHistory')->search({name=>$job_name});
 
-
-    # check last run
-    # if was less than delay ago suspend rescheduling
     my $jl = Kanku::JobList->new(schema=>$schema);
-    my $lr = $jl->get_last_job($job_name);
 
-    if ($lr) {
-        my $next_run = $lr->last_modified + $job->{delay};
-        my $now = time();
-
-        $logger->debug("  - Checking if next_run($next_run) > now($now)");
-
-        if ($next_run > $now ) {
-            $reschedule = 0;
-        }
-    }
-
-    if ($jl->get_scheduled_or_triggered_job($job_name) ) {
+    if ($jl->get_job_activ($job_name) ) {
       $reschedule = 0;
+    } else {
+      # check last run
+      # if was less than delay ago suspend rescheduling
+      my $lr = $jl->get_last_job($job_name);
+
+      if ($lr) {
+	  my $next_run = $lr->last_modified + $job->{delay};
+	  my $now = time();
+
+	  #$logger->debug("  - Checking if next_run($next_run) > now($now)");
+
+	  if ($next_run > $now ) {
+	      $reschedule = 0;
+	  }
+      }
     }
 
     if ( $reschedule ) {
