@@ -20,6 +20,7 @@ use Moose;
 use Kanku::Util::VM;
 use Kanku::Util::IPTables;
 use Try::Tiny;
+use Carp;
 with 'Kanku::Roles::Handler';
 
 has [qw/uri domain_name/] => (is => 'rw',isa=>'Str');
@@ -48,15 +49,17 @@ sub execute {
 
   my $self = shift;
 
+  if ( $self->job()->context()->{domain_name} ) {
+    $self->domain_name($self->job()->context()->{domain_name});
+  }
+
+  confess "No domain_name given!\n" if (! $self->domain_name );
+
   if ( $self->disabled ) {
       return {
         code    => 0,
         message => "Skipped removing domain " . $self->domain_name ." because of disabled job"
       }
-  }
-
-  if ( $self->job()->context()->{domain_name} ) {
-    $self->domain_name($self->job()->context()->{domain_name});
   }
 
   my $vm    = Kanku::Util::VM->new( domain_name => $self->domain_name );
