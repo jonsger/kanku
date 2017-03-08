@@ -19,9 +19,11 @@ package Kanku::Roles::Daemon;
 use Moose::Role;
 use Getopt::Long;
 use Path::Class::File;
+use Path::Class::Dir;
 use Data::Dumper;
 use YAML;
 use Try::Tiny;
+use FindBin;
 
 requires 'run';
 
@@ -34,6 +36,7 @@ has daemon_options => (
     GetOptions(
       $opts,
       'stop',
+      'foreground|f'
     ) || die $self->print_usage();
     return $opts;
   }
@@ -41,12 +44,13 @@ has daemon_options => (
 
 has daemon_basename => (
   is => 'rw',
-  isa => 'Str'
+  isa => 'Str',
+  default => sub { Path::Class::File->new($0)->basename }
 );
 
 sub print_usage {
   my ($self) = @_;
-  my $basename = Path::Class::File->new($0)->basename;
+  my $basename = $self->daemon_basename;
 
   return "\nUsage: $basename [--stop]\n";
 }
@@ -55,10 +59,21 @@ sub prepare {
   my ($self) = @_;
 
   if ( $self->daemon_options()->{stop}) {
-
   };
 
 }
 
+sub initialize_shutdown {
+  my ($self) = @_;
+
+  my $run_dir       = "$FindBin::Bin/../var/run";
+
+  if ( ! -d $run_dir ) {
+    Path::Class::Dir->new($run_dir)->mkpath();
+  }
+
+  Path::Class::File->new($run_dir,$self->daemon_basename.".shutdown")->touch();
+
+}
 
 1;
