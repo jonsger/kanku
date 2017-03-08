@@ -30,11 +30,11 @@ BuildRequires:  perl-macros
 BuildRequires:  fdupes
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
-Recommends: kanku-cli
-Recommends: kanku-web
-Recommends: kanku-worker
-Recommends: kanku-scheduler
-Recommends: kanku-dispatcher
+Requires: kanku-cli
+Requires: kanku-web
+Requires: kanku-worker
+Requires: kanku-scheduler
+Requires: kanku-dispatcher
 
 %description
 TODO: add some meaningful description
