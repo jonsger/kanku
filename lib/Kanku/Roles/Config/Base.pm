@@ -71,6 +71,8 @@ around 'config' => sub {
   my $orig = shift;
   my $self = shift;
 
+  die "Config file '".$self->file->stringify."' not found!\n" if ( ! -f $self->file);
+
   if ( 
     $self->file->stat->mtime > $self->last_modified or 
     ! $self->$orig
