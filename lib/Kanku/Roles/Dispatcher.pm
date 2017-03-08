@@ -27,8 +27,9 @@ use Kanku::Job;
 use Kanku::Task;
 
 with 'Kanku::Roles::ModLoader';
+with 'Kanku::Roles::DB';
 
-has 'schema' => (is=>'rw',isa=>'Object');
+has '_shutdown_detected' => (is=>'rw',isa=>'Bool',default=>0);
 
 =head1 NAME
 
@@ -52,13 +53,21 @@ sub run {
   my ($self) = @_;
   my $logger = $self->logger;
   my @child_pids;
+  my $shutdown = 0;
 
-  my $dead_jobs =   my $rs = $self->schema->resultset('JobHistory')->search(
-    { state => 'running' }
-  );
-  while ( my $job = $dead_jobs->next()) {
-    $job->state('failed');
-    $job->update();
+  $self->initialize();
+
+  $self->cleanup_dead_jobs();
+
+  $SIG{'INT'} = sub {
+    open(F,'>',"$FindBin::Bin/../var/run/kanku-dispatcher.shutdown");
+    close F;
+  };
+
+  try {
+    $self->cleanup_on_startup();
+  } catch {
+    $logger->warn($_);
   };
 
   while (1) {
@@ -87,15 +96,64 @@ sub run {
       
         # wait for childs to exit
         while ( @child_pids >= $self->max_processes ) {
-          #$self->logger->debug("ChildPids: (@child_pids) ".$self->max_processes."\n");
           @child_pids = grep { waitpid($_,WNOHANG) == 0 } @child_pids;
+          last if ( $self->_detect_shutdown );
           sleep(1);
           #$self->logger->debug("ChildPids: (@child_pids) ".$self->max_processes."\n");
         }
       }
+      last if ( $self->_detect_shutdown );
     }
+    last if ( $self->_detect_shutdown );
     sleep 1;
   }
+
+  kill('TERM',@child_pids);
+ 
+  my $wcnt = 0; 
+
+  while ( @child_pids ) {
+    # log only every minute
+    $self->logger->debug("Waiting for childs to exit: (@child_pids)") if (! $wcnt % 60);
+    $wcnt++; 
+    @child_pids = grep { waitpid($_,WNOHANG) == 0 } @child_pids;
+    sleep(1);
+  }
+
+  $self->cleanup_on_exit();
+
+  $self->cleanup_dead_jobs();
+
+  unlink("$FindBin::Bin/../var/run/kanku-dispatcher.shutdown");
+
+  exit 0;
+}
+
+
+sub cleanup_dead_jobs {
+  my ($self) = @_;
+  my $logger = $self->logger;
+
+  my $dead_jobs = $self->schema->resultset('JobHistory')->search(
+    { state => ['running','dispatching'] }
+  );
+  $dead_jobs->update({ state => 'failed', end_time => time()});
+
+  my $dead_tasks = $self->schema->resultset('JobHistorySub')->search(
+    { state => ['running'] }
+  );
+
+  $dead_tasks->update({ state => 'failed'});
+}
+
+sub _detect_shutdown {
+  my ($self) = @_;
+  if ( -f "$FindBin::Bin/../var/run/kanku-dispatcher.shutdown" ) {
+    $self->logger->info("Found $FindBin::Bin/../var/run/kanku-dispatcher.shutdown. Shutting down.\n");
+    $self->_shutdown_detected(1);
+    return 1;
+  }
+  return 0;
 }
 
 sub run_notifiers {
@@ -193,7 +251,7 @@ sub get_todo_list {
   my $self    = shift;
   my $schema  = $self->schema;
   my $todo = [];
-  my $rs = $schema->resultset('JobHistory')->search({state=>['scheduled','triggered']} );
+  my $rs = $schema->resultset('JobHistory')->search({state=>['scheduled','triggered']},{ order_by => { -asc => 'creation_time' }} );
 
   while ( my $ds = $rs->next )   {
     push (

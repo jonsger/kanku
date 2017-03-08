@@ -31,6 +31,7 @@ our $VERSION = "0.0.1";
 use Data::Dumper;
 use JSON::XS;
 use Kanku::MQ;
+use Kanku::RabbitMQ;
 use Kanku::Task;
 use Kanku::Task::Local;
 use Kanku::Task::Remote;
@@ -40,7 +41,7 @@ use Try::Tiny;
 with 'Kanku::Roles::Dispatcher';
 with 'Kanku::Roles::ModLoader';
 
-has 'max_processes' => (is=>'rw',isa=>'Int',default=>5);
+has 'max_processes' => (is=>'rw',isa=>'Int',default=>2);
 
 has kmq => (is=>'rw',isa=>'Object');
 
@@ -50,31 +51,33 @@ has job_queue => (is=>'rw',isa=>'Object');
 
 has wait_for_workers => (is=>'ro',isa=>'Int',default=>1);
 
+has config => (
+  is=>'rw',
+  isa => 'HashRef', 
+  default => sub { Kanku::Config->instance->config->{ref($_[0])}; }
+);
+
 sub run_job {
   my ($self, $job) = @_;
 
   $self->job($job);
 
-  $self->start_job($job);
   $job->masterinfo($$);
+  $job->state('dispatching');
+  $job->update_db();
 
   my $logger       = $self->logger();
-  my $queue        = "scheduler-task-".$job->id;
+  my $queue        = "job-queue-".$job->id;
 
-  my $config = Kanku::Config->instance->config->{ref($self)};
-
-  $logger->debug("kanku dispatcher config:\n".Dumper($config));
-
-  my $kmq          = Kanku::MQ->new(%{ $config->{rabbitmq} || {}},dispatcher  => 1);
-
-  die "Could not get kmq" if (! $kmq);
-
-  $logger->info("Starting new job '".$job->name."' with id ".$job->id." (Running as pid $$)");
-
-  $self->kmq($kmq);
+  my $rmq = Kanku::RabbitMQ->new(%{ $self->config->{rabbitmq} || {}});
+  $rmq->connect();
+  $rmq->queue_name($queue);
+  $rmq->exchange_name('kanku.to_dispatcher');
+  $rmq->create_queue();
+  $self->job_queue($rmq);
 
   my $applications = $self->advertise_job( 
-    $kmq,
+    $rmq,
     {
        answer_queue	  => $queue,
        job_id	  	  => $job->id,
@@ -88,18 +91,11 @@ sub run_job {
 
   $self->decline_applications($declined_applications);
 
-  my $result = $self->send_job_offer($pa);
+  my $result = $self->send_job_offer($rmq,$pa);
 
   my $aq = $pa->{answer_queue};
 
-  $self->kmq(
-    Kanku::MQ->new(
-      %{$self->kmq->connect_info},
-      dispatcher  => 1,
-      queue_name  => $aq,
-      routing_key => $aq
-    )
-  );
+  $self->start_job($job);
 
   $job->workerinfo($pa->{worker_fqhn}.":".$pa->{worker_pid}.":".$aq);
   $logger->trace("Result of job offer:\n".Dumper($result));
@@ -128,7 +124,7 @@ sub run_job {
           module    => $sub_task->{use_module},
           scheduler => $self,
           args      => $task_args,
-          kmq       => $kmq,
+          kmq       => $rmq,
           queue     => $aq
         );
 
@@ -147,7 +143,7 @@ sub run_job {
 
   $self->run_notifiers($job,$last_task);
 
-  $kmq->mq->disconnect;
+  $rmq->queue->disconnect;
 
   return $job->state;
 }
@@ -187,7 +183,6 @@ sub run_task {
   } elsif ( $distributable == 1 ) {
     $tr = Kanku::Task::Remote->new(
       %defaults,
-      kmq => $self->kmq,
       job_queue => $self->job_queue,
       queue           => $opts{queue},
     );
@@ -196,8 +191,8 @@ sub run_task {
 
     $tr = Kanku::Task::RemoteAll->new(
       %defaults,
-      kmq             => $self->kmq,
-      job_queue       => $self->job_queue,
+      kmq => $opts{kmq},
+      local_job_queue_name => $opts{kmq}->queue_name,
     );
 
   } else {
@@ -217,59 +212,53 @@ sub check_task {
 
 sub decline_applications {
   my ($self, $declined_applications) = @_;
+  my $rmq = Kanku::RabbitMQ->new(%{ $self->config->{rabbitmq} || {}});
+  $rmq->connect();
   
   foreach my $queue( keys(%$declined_applications) ) {
-	$self->kmq->mq->publish(
-      $self->kmq->channel,
-      $queue,
+    $rmq->queue_name($queue);
+	$rmq->publish(
       encode_json({action => 'decline_application'}),
-      {}
     );
   }
 
 }
 
 sub send_job_offer {
-  my ($self,$prefered_application)=@_;
-  my $kmq    = $self->kmq;
+  my ($self,$rmq,$prefered_application)=@_;
   my $logger = $self->logger;
-
-  die "Could not get kmq" if (! $kmq);
 
   $logger->debug("Offering job for prefered_application");
   $logger->trace(Dumper($prefered_application));
 
-  $kmq->mq->publish(
-	$kmq->channel,
-	$prefered_application->{answer_queue},
+  $rmq->publish(
+    $prefered_application->{answer_queue},
 	encode_json(
 		{
 		  action			=> 'offer_job',
-		  answer_queue		=> $self->job_queue->queue_name
+		  answer_queue		=> $prefered_application->{answer_queue}
 		}
-	)
+	),
+    { exchange => 'amq.direct' }
   );
 }
 
 sub send_finished_job {
   my ($self, $aq, $job_id)=@_;
-  my $kmq    = $self->kmq;
   my $logger = $self->logger;
 
-  die "Could not get kmq" if (! $kmq);
 
-  $logger->debug("Offering job for prefered_application");
-  $logger->trace($aq);
+  $logger->debug("Sending finished_job for job_id $job_id to queue $aq");
 
-  $kmq->mq->publish(
-	$kmq->channel,
+  $self->job_queue->publish(
     $aq,
 	encode_json(
 		{
 		  action  => 'finished_job',
           job_id  => $job_id
 		}
-	)
+	),
+    { exchange => 'amq.direct' }
   );
 }
 
@@ -293,53 +282,94 @@ sub score_applications {
 
 sub advertise_job {
   my $self                  = shift;
-  my ($kmq,$opts)           = @_;
+  my ($rmq,$opts)           = @_;
   my $all_applications      = {};
+  my $logger                = $self->logger;
 
   my $data = encode_json({action => 'advertise_job', %$opts});
 
-  my $ci = $self->kmq->connect_info;
+  $logger->debug("creating new queue: ".$opts->{answer_queue});
 
-  $self->logger->debug("creating new queue: ".$opts->{answer_queue});
-  $self->logger->trace(Dumper($ci));
+#  my $rmq = Kanku::RabbitMQ->new(
+#    %{$self->config->{rabbitmq} || {}},
+#    queue_name  => $opts->{answer_queue},
+#    routing_key => $opts->{answer_queue},
+#    exchange_name => 'kanku.to_dispatcher'
+#  );
+#  $rmq->connect();
+#  $rmq->create_queue();
+  my $wcnt = 0;
 
-  $self->job_queue(Kanku::MQ->new(%{$ci}));
-  $self->job_queue->queue_name($opts->{answer_queue});
-  $self->job_queue->connect();
-  $self->job_queue->create_queue(exchange_name=>'kanku_to_dispatcher'); 
-  my $mq = $self->job_queue->mq; 
   while(! %$all_applications ) {
 
-    $kmq->mq->publish(
-      $kmq->channel, 
+    $rmq->publish(
       '',
       $data, 
-      { exchange => 'kanku_to_all_workers' }
+      { exchange => 'kanku.to_all_workers' }
     );
 
     sleep($self->wait_for_workers);
 
-    while ( my $msg = $mq->recv(100) ) {
+    while ( my $msg = $rmq->recv(100) ) {
       if ($msg ) {
           my $data;
-          $self->logger->debug("Incomming application");
-          $self->logger->trace(Dumper($msg));
+          $logger->debug("Incomming application");
+          $logger->trace(Dumper($msg));
           my $body = $msg->{body};
           try { 
             $data = decode_json($body);
             $all_applications->{$data->{answer_queue}} = $data;
           } catch {
-            $self->logger->debug("Error in JSON:\n$_\n$body\n");
+            $logger->debug("Error in JSON:\n$_\n$body\n");
           };
       }
     }
 
-    #if ( ! %$all_applications ){
-      #$self->logger->warn("Got no appliacations - waiting for another $wait_for_applications second(s)");
-    #}
+    # log only every 60 seconds
+    $logger->debug("No application so far (wcnt: $wcnt)") if (! $wcnt % 60);
+    $wcnt++;
   }
 
   return $all_applications;
+}
+
+sub cleanup_on_startup {
+  my ($self) = @_;
+}
+
+sub cleanup_on_exit {
+  my ($self) = @_;
+  my $rmq = Kanku::RabbitMQ->new(
+    %{$self->config->{rabbitmq} || {}},
+  );
+  $rmq->connect();
+
+  my $exchange='kanku.to_dispatcher';
+
+  $self->logger->info("Deleting exchange $exchange");
+
+  $rmq->queue->exchange_delete(
+    $rmq->channel,
+    $exchange
+  );
+}
+
+sub initialize {
+  my ($self) = @_;
+  my $rmq = Kanku::RabbitMQ->new(
+    %{$self->config->{rabbitmq} || {}},
+  );
+  $rmq->connect();
+
+  my $exchange='kanku.to_dispatcher';
+
+  $self->logger->info("Declaring exchange $exchange");
+
+  $rmq->queue->exchange_declare(
+    $rmq->channel,
+    $exchange
+  );
+
 }
 
 1;

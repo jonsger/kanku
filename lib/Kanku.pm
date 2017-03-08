@@ -183,7 +183,7 @@ any '/rest/jobs/list.:format' => sub {
     $search->{state} = param('state')
 
   } else {
-    $search->{state} = [qw/succeed running failed/]
+    $search->{state} = [qw/succeed running failed dispatching/]
   }
 
   if ( param("job_name") ) {

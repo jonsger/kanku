@@ -2,41 +2,51 @@
 <div id=history_settings>
 <form>
 <div class=row>
-  <div class="col col-md-2">
+  <div class="col col-md-3">
         <h4>
           <input type="checkbox" name="state" value="succeed" class="cb_state" checked >
           <span class="label label-success">succeed</span></h4>
         </h4>
   </div>
-  <div class="col col-md-2">
+  <div class="col col-md-3">
         <h4>
           <input type="checkbox" name="state" value="failed"  class="cb_state" checked >
           <span class="label label-danger">failed</span></h4>
         </h4>
   </div>
-  <div class="col col-md-2">
+  <div class="col col-md-3">
+        <h4>
+          <input type="checkbox" name="state" value="dispatching" class="cb_state" checked >
+          <span class="label label-info">dispatching</span></h4>
+        </h4>
+  </div>
+  <div class="col col-md-3">
         <h4>
           <input type="checkbox" name="state" value="running" class="cb_state" checked >
           <span class="label label-info">running</span></h4>
         </h4>
   </div>
-  <div class="col col-md-2">
+</div>
+<div class=row>
+  <div class="col col-md-3">
         <h4>
           <input type="checkbox" name="state" value="scheduled" class="cb_state"         >
           <span class="label label-warning">scheduled</span>
         </h4>
   </div>
-  <div class="col col-md-2">
+  <div class="col col-md-3">
         <h4>
           <input type="checkbox" name="state" value="triggered" class="cb_state"         >
           <span class="label label-warning">triggered</span>
         </h4>
   </div>
-  <div class="col col-md-2">
+  <div class="col col-md-3">
         <h4>
           <input type="checkbox" name="state" value="skipped" class="cb_state"         >
           <span class="label label-warning">skipped</span>
         </h4>
+  </div>
+  <div class="col col-md-3">
   </div>
 </div>
 <div id=top_pager class=row>

@@ -90,7 +90,7 @@ sub get_job_activ {
                     ->search(
                       {
                         name=>$job_name,
-			state => ["scheduled","triggered","running"]
+			state => ["scheduled","triggered","running","dispatching"]
                       },{
                         order_by=>{
                           '-desc'=>'creation_time'

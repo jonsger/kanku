@@ -45,11 +45,11 @@ use JSON::XS;
 use Kanku::MQ;
 use Try::Tiny;
 
-has kmq               => (is=>'rw',isa=>'Object');
+has kmq              => (is=>'rw',isa=>'Object');
+
+has local_job_queue_name              => (is=>'rw',isa=>'Str');
 
 has job               => (is=>'rw',isa=>'Object');
-
-has job_queue         => (is=>'rw',isa=>'Object');
 
 has module            => (is=>'rw',isa=>'Str');
 
@@ -73,7 +73,7 @@ sub run {
   my $data = encode_json(
     {
       action => 'send_task_to_all_workers',
-      answer_queue => $self->job_queue->queue_name,
+      answer_queue => $self->local_job_queue_name,
       task_args => {
         job       => {
           context     => $job->context,
@@ -86,17 +86,16 @@ sub run {
     }
   );
 
-  $kmq->mq->publish(
-	$kmq->channel,
+  $kmq->publish(
 	'',
 	$data,
-	{ exchange => 'kanku_to_all_workers' }
+	{ exchange => 'kanku.to_all_hosts' }
   );
 
   sleep($self->wait_for_workers);
 
   # Getting response from workers
-  while ( my $msg = $self->job_queue->mq->recv(100) ) {
+  while ( my $msg = $self->kmq->recv(100) ) {
 	if ($msg ) {
       $logger->debug("Incomming message while waiting for confirmations");
       $self->_inspect_msg($msg);
@@ -112,7 +111,7 @@ sub run {
   $logger->debug("Number of confirms/results: $confirms/$results");
 
   while ( $confirms  > $results  ) {
-    my $msg = $self->job_queue->mq->recv(1000);
+    my $msg = $self->kmq->recv(1000);
     if ($msg) {
         $logger->debug("Got msg while waiting for task result:");
         $self->_inspect_msg($msg);
@@ -128,11 +127,48 @@ sub run {
   
   $self->logger->trace("all_workers task_results\n".Dumper($self->results));
 
-  return {
-    result => encode_json($self->results),
-    state  => 'succeed' 
+  return $self->_calculate_results;
+
+}
+
+sub _calculate_results {
+  my ($self) = @_;
+
+  my $state     = 'succeed';
+  my %aggregate = ();
+  my @phases    = (qw/prepare execute finalize/);
+
+  foreach my $host (keys(%{$self->results})){
+    if ($self->results->{$host}->{result}->{state} eq 'failed') {
+      $state='failed';
+      $aggregate{error_message} .= "*** $host:\n" . $self->results->{$host}->{result}->{error_message};
+    } else {
+      for my $phase (@phases) {
+        my $t_result = decode_json($self->results->{$host}->{result}->{result});
+        $aggregate{$phase} .= "*** Host: $host: ***\n" . $t_result->{$phase}->{message};
+      }
+    }
   }
 
+  if ($state eq 'failed') {
+    return {
+      state => $state,
+      error_message => $aggregate{error_message}
+    }
+  } else {
+    my $final_result = {};
+    for my $phase (@phases) {
+      $final_result->{$phase} = {
+        message => "Aggregated results:\n$aggregate{$phase}",
+        code    => 0
+      };
+    }
+
+    return  {
+      result => encode_json($final_result),
+      state  => 'succeed' 
+    };
+  }
 }
 
 sub _inspect_msg {

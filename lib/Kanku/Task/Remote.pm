@@ -45,8 +45,6 @@ use JSON::XS;
 use Kanku::MQ;
 use Try::Tiny;
 
-has kmq => (is=>'rw',isa=>'Object');
-
 has job => (is=>'rw',isa=>'Object');
 
 has module => (is=>'rw',isa=>'Str');
@@ -60,8 +58,8 @@ has final_args => (is=>'rw',isa=>'HashRef');
 has queue => (is=>'rw',isa=>'Str');
 
 sub run {
-  my ($self) = @_;
-  my $kmq = $self->kmq;
+  my ($self)      = @_;
+  my $kmq         = $self->job_queue;
   my $all_workers = {};
   my $logger      = $self->logger;
 
@@ -92,7 +90,7 @@ sub run {
   $logger->debug(" - queue_name ".$self->queue);
   $logger->trace(Dumper($data));
 
-  $kmq->mq->publish(
+  $kmq->queue->publish(
 	$kmq->channel,
 	$self->queue,
 	$data,
@@ -103,27 +101,30 @@ sub run {
   my $result;
   my $state;
   while ( my $msg = $self->job_queue->recv() ) {
-        my $data;
-        $self->logger->debug("Incomming task result");
-        $self->logger->trace(Dumper($msg));
-        my $body = $msg->{body};
+    my $data;
+    $self->logger->debug("Incomming task result");
+    $self->logger->trace(Dumper($msg));
+    my $body = $msg->{body};
 
-        try {
-          $data = decode_json($body);
-        } catch {
-          $self->logger->debug("Error in JSON:\n$_\n$body\n");
-        };
+    try {
+      $data = decode_json($body);
+    } catch {
+      $self->logger->debug("Error in JSON:\n$_\n$body\n");
+    };
+
     if ( $data->{action} eq 'finished_task' ) {
-        $logger->trace(Dumper($data));
+      $logger->trace(Dumper($data));
+      if ( $data->{error_message} ) {
+        die $data->{error_message};
+      } else {
         my $job = decode_json($data->{job});
         $result = $data->{result};
         $self->job->context(${job}->{context});
         last;
+      }
     }
   }
-
   return $result
-
 }
 
 __PACKAGE__->meta->make_immutable();

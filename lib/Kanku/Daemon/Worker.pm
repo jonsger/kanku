@@ -11,6 +11,7 @@ use POSIX;
 use JSON::XS;
 use Try::Tiny;
 use Kanku::MQ;
+use Kanku::RabbitMQ;
 use Kanku::Config;
 use Kanku::Task::Local;
 use Kanku::Job;
@@ -19,6 +20,7 @@ use Sys::LoadAvg qw( loadavg );
 use Sys::MemInfo qw(totalmem freemem);
 use Carp;
 use Net::Domain qw/hostfqdn/;
+use UUID qw/uuid/;
 
 with 'Kanku::Roles::Logger';
 with 'Kanku::Roles::ModLoader';
@@ -27,105 +29,169 @@ with 'Kanku::Roles::DB';
 has child_pids => (is=>'rw',isa=>'ArrayRef',default => sub {[]});
 has kmq => (is=>'rw',isa=>'Object');
 has job_queue_name => (is=>'rw',isa=>'Str');
+has remote_job_queue_name => (is=>'rw',isa=>'Str');
+has local_job_queue_name => (is=>'rw',isa=>'Str');
+has worker_id => (is=>'rw',isa=>'Str',default => sub {uuid()});
 
 sub run {
   my $self   = shift;
 
   my $config = Kanku::Config->instance->config->{ref($self)};
-
-
   my $logger = $self->logger();
 
-  $logger->debug("kanku worker config:\n".Dumper($config));
+  my @childs=();
 
-  $self->kmq(Kanku::MQ->new(%{ $config->{rabbitmq} || {}}));
+  my $pid;
 
-  my $mq     = $self->kmq->mq;
+  # for host queue
+  $pid = fork();
 
-  $logger->info("Started consumer '".$self->kmq->consumer_id."' with PID $$\n");
-
-  while (1) {
-
-    my $msg = $mq->recv();
+  if (! $pid ) {
+    my $kmq = Kanku::RabbitMQ->new(%{ $config->{rabbitmq} || {}});
+    $kmq->connect(); 
+    $kmq->setup_worker();
+    $self->local_job_queue_name(hostfqdn());
+    $kmq->create_queue(
+      queue_name=>$self->local_job_queue_name,
+      exchange_name=>'kanku.to_all_hosts'
+    );
     
-    my $data;
-    my $body = $msg->{body};
-    try {
-	  $data = decode_json($body);
-    } catch {
-	  $logger->error("Error in JSON:\n$_\n$body\n");
-    };
+    while(1) {
+      my $msg = $kmq->recv();
+      try { 
+        my $data;
+        my $body = $msg->{body};
+        try {
+          $data = decode_json($body);
+        } catch {
+          die("Error in JSON:\n$_\n$body\n");
+        };
 
-    if ( $data->{action} eq 'advertise_job' ) {
-      $self->handle_advertisement($data);
-    } elsif ( $data->{action} eq 'send_task_to_all_workers' ) {
+        if ( $data->{action} eq 'send_task_to_all_workers' ) {
 
-      $self->job_queue_name($data->{answer_queue});
+          my $answer = {
+              action => 'task_confirmation',
+              task_id => $data->{task_id},
+              # answer_queue is needed on dispatcher side
+              # to distinguish the results per worker host
+              answer_queue => $self->local_job_queue_name
+          };
+          $self->remote_job_queue_name($data->{answer_queue});
+          $kmq->publish(
+            $self->remote_job_queue_name,
+            encode_json($answer),
+            { exchange => 'kanku.to_dispatcher'}
+          );
 
-      my $answer = {
-          action => 'task_confirmation',
+          $self->handle_task($data,$kmq);
+        } else {
+          $logger->warn("Unknown action: ". $data->{action});
+        }
+      } catch {
+        $logger->error($_);
       };
-
-      $self->kmq->mq->publish(
-        $self->kmq->channel,
-        $self->job_queue_name,
-        encode_json($answer),
-        { exchange => 'kanku_to_dispatcher'}
-      );
-
-      $self->handle_task($data);
+      $self->remote_job_queue_name('');
+      $self->local_job_queue_name('');
     }
+  } else {
+    push(@childs,$pid);
   }
 
-  $mq->disconnect();
+  # wait for advertisements
+
+  $pid = fork();
+
+  if (! $pid ) {
+    while (1) {
+      try {
+        my $kmq = Kanku::RabbitMQ->new(%{ $config->{rabbitmq} || {}});
+        $kmq->connect(); 
+        $kmq->setup_worker();
+        $kmq->create_queue(
+          queue_name    => $self->worker_id,
+          exchange_name =>'kanku.to_all_workers'
+        );
+        my $msg  = $kmq->recv();
+        my $body = $msg->{body};
+        my $data;
+
+        try {
+          $data = decode_json($body);
+        } catch {
+          die("Error in JSON:\n$_\n$body\n");
+        };
+
+        if ( $data->{action} eq 'advertise_job' ) {
+          $self->handle_advertisement($data, $kmq);
+        }
+
+        $kmq->queue->disconnect();
+
+      } catch {
+        $logger->error($_);
+      };
+    }
+  } else {
+    push(@childs,$pid);
+  }
+
+  while (@childs) {
+    @childs = grep { waitpid($_,WNOHANG) == 0 } @childs;
+    sleep(1);
+  }
 }
 
 sub handle_advertisement {
-  my ($self, $data) = @_;
-  my $kmq    = $self->kmq;
-  my $mq     = $kmq->mq;
+  my ($self, $data, $kmq) = @_;
   my $logger = $self->logger();
 
   $logger->debug("Starting to handle advertisement");
   $logger->trace(Dumper($data));
 
   if ( $data->{answer_queue} ) {
-
+      $self->remote_job_queue_name($data->{answer_queue});
       my $job_id = $data->{job_id};
-
+      $self->local_job_queue_name("job-$job_id-".$self->worker_id);
       my $answer = "Process '$$' is applying for job '$job_id'";
+
+      my $job_kmq = Kanku::RabbitMQ->new(%{$kmq->connect_info},queue_name =>$self->local_job_queue_name);
+      $job_kmq->connect();
+      $job_kmq->create_queue();
 
       my $application = {
         job_id		  => $job_id, 
         message		  => $answer ,
         worker_fqhn   => hostfqdn(),
         worker_pid	  => $$,
-        answer_queue  => $kmq->queue_name,
+        answer_queue  => $self->local_job_queue_name,
         resources	  => collect_resources(),
       };
-      $logger->debug("Sending apllication for job_id $job_id on queue ".$data->{answer_queue});
+      $logger->debug("Sending apllication for job_id $job_id on queue ".$self->remote_job_queue_name);
       $logger->trace(Dumper($application));
 
-      my $json = encode_json($application);
+      my $json    = encode_json($application);
 
-      $mq->publish(
-        1, 
-        $data->{answer_queue}, 
+
+      $kmq->publish(
+        $self->remote_job_queue_name,
         $json,
-        { exchange => 'kanku_to_dispatcher' }
+        { exchange => 'kanku.to_dispatcher', mandatory => 1 }
       );
 
       # TODO: Need timeout
-      my $msg = $mq->recv();
+      my $msg = $job_kmq->recv();
       my $body = decode_json($msg->{body});
       if ( $body->{action} eq 'offer_job' ) {
         $logger->info("Starting with job ");
         $logger->trace(Dumper($msg,$body));
-        $self->job_queue_name($body->{answer_queue});
-        $self->handle_job($job_id);
 
+        $self->handle_job($job_id,$job_kmq);
+        return;
       } elsif ( $body->{action} eq 'decline_application' ) {
         $logger->debug("Nothing to do - application declined");
+        $self->remote_job_queue_name('');
+        $self->local_job_queue_name('');
+        return;
       } else {
         $logger->error("Answer on application for job $job_id unknown");
         $logger->trace(Dumper($msg,$body));
@@ -137,49 +203,56 @@ sub handle_advertisement {
 }
 
 sub handle_job {
-  my ($self,$job_id) = @_;
-  my $kmq    = $self->kmq;
-  my $mq     = $kmq->mq;
+  my ($self,$job_id,$job_kmq) = @_;
   my $logger = $self->logger;
 
-
   try  {
-    $logger->debug("Waiting for messages on ".$kmq->channel." / ".$kmq->routing_key." / ".$kmq->queue_name);
-
-    while ( my $task_msg = $mq->recv() ) {
+    while ( my $task_msg = $job_kmq->recv() ) {
       my $task_body = decode_json($task_msg->{body});
       $logger->debug("Got new message while waiting for tasks");
       $logger->trace(Dumper($task_body));
       if ( 
-        ( $task_body->{action} eq 'task' and $task_body->{job_id} == $job_id )
-        or $task_body->{action} eq 'send_task_to_all_workers'
+         $task_body->{action} eq 'task' and $task_body->{job_id} == $job_id
       ){
         $logger->info("Starting with task");
         $logger->trace(Dumper($task_msg,$task_body));
-        $self->handle_task($task_body,$mq);
+
+        $self->handle_task($task_body,$job_kmq,$job_id);
       }
-      last if ( $task_body->{action} eq 'finished_job' and $task_body->{job_id} == $job_id);
+      if ( $task_body->{action} eq 'finished_job' and $task_body->{job_id} == $job_id) {
+        $logger->debug("Got finished_job for job_id: $job_id");
+        last;
+      }
       $logger->debug("Waiting for next task");
     }
   } catch {
     my $e = $_;
     $logger->error($e);
 
-    $mq->publish(
-      $kmq->channel,
-      $self->job_queue_name,
+    $job_kmq->publish(
+      $self->remote_job_queue_name,
       encode_json({
         action => 'finished_task',
         error_message =>$e
-      })
+      }),
+      { exchange => 'kanku.to_dispatcher' }
     );
+    my $task_msg = $job_kmq->recv(10000);
+    my $task_body = decode_json($task_msg->{body});
+    if ( $task_body->{action} eq 'finished_job' and $task_body->{job_id} == $job_id) {
+      $logger->debug("Got finished_job for job_id: $job_id");
+      return;
+    } else {
+      $logger->debug("Unknown answer when waitingin for finish_job:");
+      $logger->trace(Dumper($task_body));
+    }
   };
 
-  $logger->info("Finished job $job_id");
+  return;
 }
 
 sub handle_task {
-  my ($self, $data) = @_;
+  my ($self, $data, $job_kmq, $job_id) = @_;
 
   confess "Got no task_args" if (! $data->{task_args});
 
@@ -196,19 +269,16 @@ sub handle_task {
   my $answer = {
 	  action        => 'finished_task',
       result        => $result,
-      answer_queue  => $self->kmq->queue_name,
+      answer_queue  => $self->local_job_queue_name,,
       job           => $job->to_json
   };
 
-  my $aq = $data->{answer_queue} || $self->job_queue_name;
+  $self->logger->trace("Sending answer to '".$self->remote_job_queue_name."':\n".Dumper($answer));
 
-  $self->logger->trace("Sending answer to queue '$aq':\n".Dumper($answer));
-
-  $self->kmq->mq->publish(
-    $self->kmq->channel,
-    $aq,
+  $job_kmq->publish(
+    $self->remote_job_queue_name,
 	encode_json($answer),
-    { exchange => 'kanku_to_dispatcher'}
+    { exchange => 'kanku.to_dispatcher'}
   );
 }
 

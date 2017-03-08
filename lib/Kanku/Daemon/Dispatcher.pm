@@ -20,7 +20,6 @@ use Moose;
 use Data::Dumper;
 
 with 'Kanku::Roles::ModLoader';
-with 'Kanku::Roles::DB';
 
 sub run {
   my ($self) = @_;
@@ -29,7 +28,7 @@ sub run {
   my $mod = $cfg->config->{dispatcher} || "Kanku::Dispatch::Local";
   $self->load_module($mod);
 
-  $mod->new(schema=>$self->schema)->run();
+  $mod->new()->run();
 }
 
 __PACKAGE__->meta->make_immutable;

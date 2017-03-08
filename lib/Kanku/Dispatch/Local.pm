@@ -89,6 +89,17 @@ sub run_job {
   return $job;
 }
 
+sub cleanup_on_startup {
+
+}
+
+sub cleanup_on_exit {
+
+}
+
+sub initialize {
+
+}
 __PACKAGE__->meta->make_immutable();
 
 1;

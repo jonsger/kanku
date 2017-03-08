@@ -15,6 +15,7 @@ alert_map['succeed'] = 'success';
 alert_map['running'] = 'info';
 alert_map['failed']  = 'danger';
 alert_map['skipped']  = 'warning';
+alert_map['dispatching']  = 'warning';
 
 function update_job_history (data) {
 
@@ -43,6 +44,7 @@ function update_job_history (data) {
       alert_map['running']  = 'info';
       alert_map['failed']   = 'danger';
       alert_map['skipped']  = 'warning';
+      alert_map['dispatching']  = 'warning';
 
       var duration_min = 0;
       var duration_sec = 0;
