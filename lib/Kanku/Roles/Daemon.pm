@@ -24,6 +24,7 @@ use Data::Dumper;
 use YAML;
 use Try::Tiny;
 use FindBin;
+use Log::Log4perl;
 
 requires 'run';
 
@@ -48,6 +49,12 @@ has daemon_basename => (
   default => sub { Path::Class::File->new($0)->basename }
 );
 
+has logger_conf => (
+  is => 'rw',
+  isa => 'Str',
+  default => sub { Path::Class::File->new("$FindBin::Bin/../etc/log4perl.conf") }
+);
+
 sub print_usage {
   my ($self) = @_;
   my $basename = $self->daemon_basename;
@@ -59,7 +66,21 @@ sub prepare {
   my ($self) = @_;
 
   if ( $self->daemon_options()->{stop}) {
+    $self->initialize_shutdown();
+    exit 0;
   };
+
+  $self->setup_logging();
+
+}
+
+sub setup_logging {
+  my ($self) = @_;
+
+  if ( $self->daemon_options->{foreground} ) {
+    $self->logger_conf("$FindBin::Bin/../etc/console-log.conf");
+  }
+  Log::Log4perl->init($self->logger_conf);
 
 }
 
