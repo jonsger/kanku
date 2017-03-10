@@ -25,6 +25,7 @@ use UUID qw/uuid/;
 with 'Kanku::Roles::Logger';
 with 'Kanku::Roles::ModLoader';
 with 'Kanku::Roles::DB';
+with 'Kanku::Roles::Daemon';
 
 has child_pids => (is=>'rw',isa=>'ArrayRef',default => sub {[]});
 has kmq => (is=>'rw',isa=>'Object');
@@ -57,41 +58,45 @@ sub run {
     );
     
     while(1) {
-      my $msg = $kmq->recv();
-      try { 
-        my $data;
-        my $body = $msg->{body};
-        try {
-          $data = decode_json($body);
-        } catch {
-          die("Error in JSON:\n$_\n$body\n");
-        };
+      my $msg = $kmq->recv(1000);
+      if ($msg) {
+	try { 
+	  my $data;
+	  my $body = $msg->{body};
+	  try {
+	    $data = decode_json($body);
+	  } catch {
+	    die("Error in JSON:\n$_\n$body\n");
+	  };
 
-        if ( $data->{action} eq 'send_task_to_all_workers' ) {
+	  if ( $data->{action} eq 'send_task_to_all_workers' ) {
 
-          my $answer = {
-              action => 'task_confirmation',
-              task_id => $data->{task_id},
-              # answer_queue is needed on dispatcher side
-              # to distinguish the results per worker host
-              answer_queue => $self->local_job_queue_name
-          };
-          $self->remote_job_queue_name($data->{answer_queue});
-          $kmq->publish(
-            $self->remote_job_queue_name,
-            encode_json($answer),
-            { exchange => 'kanku.to_dispatcher'}
-          );
+	    my $answer = {
+		action => 'task_confirmation',
+		task_id => $data->{task_id},
+		# answer_queue is needed on dispatcher side
+		# to distinguish the results per worker host
+		answer_queue => $self->local_job_queue_name
+	    };
+	    $self->remote_job_queue_name($data->{answer_queue});
+	    $kmq->publish(
+	      $self->remote_job_queue_name,
+	      encode_json($answer),
+	      { exchange => 'kanku.to_dispatcher'}
+	    );
 
-          $self->handle_task($data,$kmq);
-        } else {
-          $logger->warn("Unknown action: ". $data->{action});
-        }
-      } catch {
-        $logger->error($_);
-      };
-      $self->remote_job_queue_name('');
-      $self->local_job_queue_name('');
+	    $self->handle_task($data,$kmq);
+	  } else {
+	    $logger->warn("Unknown action: ". $data->{action});
+	  }
+	} catch {
+	  $logger->error($_);
+	};
+        $self->remote_job_queue_name('');
+        $self->local_job_queue_name('');
+      } else {
+        exit 0 if ($self->detect_shutdown);
+      }
     }
   } else {
     push(@childs,$pid);
@@ -111,25 +116,27 @@ sub run {
           queue_name    => $self->worker_id,
           exchange_name =>'kanku.to_all_workers'
         );
-        my $msg  = $kmq->recv();
-        my $body = $msg->{body};
-        my $data;
+        my $msg  = $kmq->recv(1000);
+	if ( $msg ) {
+	  my $body = $msg->{body};
+	  my $data;
 
-        try {
-          $data = decode_json($body);
-        } catch {
-          die("Error in JSON:\n$_\n$body\n");
-        };
+	  try {
+	    $data = decode_json($body);
+	  } catch {
+	    die("Error in JSON:\n$_\n$body\n");
+	  };
 
-        if ( $data->{action} eq 'advertise_job' ) {
-          $self->handle_advertisement($data, $kmq);
-        }
+	  if ( $data->{action} eq 'advertise_job' ) {
+	    $self->handle_advertisement($data, $kmq);
+	  }
 
-        $kmq->queue->disconnect();
-
+	  $kmq->queue->disconnect();
+	}
       } catch {
         $logger->error($_);
       };
+      exit 0 if $self->detect_shutdown;
     }
   } else {
     push(@childs,$pid);

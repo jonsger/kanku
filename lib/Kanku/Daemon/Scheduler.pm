@@ -19,8 +19,9 @@ package Kanku::Daemon::Scheduler;
 use Moose;
 with 'Kanku::Roles::Logger';
 with 'Kanku::Roles::DB';
+with 'Kanku::Roles::Daemon';
 
-use Kanku::Config;
+#use Kanku::Config;
 use Kanku::Job;
 use Kanku::Dispatch::Local;
 use Kanku::Task;
@@ -31,41 +32,17 @@ use Try::Tiny;
 sub run {
   my $self    = shift;
   my $logger  = $self->logger();
-  my $schema  = $self->schema();
-
-  $SIG{'INT'} = sub {
-    $logger->warn("Trapped INT");
-    my $sf = "$FindBin::Bin/../var/run/kanku-scheduler.shutdown";
-    open(F,'>',$sf) || die "Could not open $sf\n";
-    close(F);
-  };
-
-  $SIG{'TERM'} = sub {
-    $logger->warn("Trapped TERM");
-    my $sf = "$FindBin::Bin/../var/run/kanku-scheduler.shutdown";
-    open(F,'>',$sf) || die "Could not open $sf\n";
-    close(F);
-  };
 
   $logger->info("Running Kanku::Daemon::Scheduler");
 
   while (1) {
     $self->create_scheduled_jobs();
     
-    last if $self->_detect_shutdown();
+    last if $self->detect_shutdown();
 
     # TODO: we need a better delay algorithm here
     sleep 1;
   }
-
-  unlink "$FindBin::Bin/../var/run/kanku-scheduler.shutdown";
-
-  $logger->info("Exiting Kanku::Daemon::Scheduler");
-}
-
-sub _detect_shutdown {
-  return 1 if ( -f "$FindBin::Bin/../var/run/kanku-scheduler.shutdown");
-  return 0;
 }
 
 sub create_scheduled_jobs {

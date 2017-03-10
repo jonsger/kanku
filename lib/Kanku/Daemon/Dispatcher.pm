@@ -18,15 +18,16 @@ package Kanku::Daemon::Dispatcher;
 
 use Moose;
 use Data::Dumper;
+use Kanku::Dispatch::Local;
+use Kanku::Dispatch::RabbitMQ;
 
-with 'Kanku::Roles::ModLoader';
+with 'Kanku::Roles::Daemon';
 
 sub run {
   my ($self) = @_;
   my $cfg = Kanku::Config->instance();
 
   my $mod = $cfg->config->{dispatcher} || "Kanku::Dispatch::Local";
-  $self->load_module($mod);
 
   $mod->new()->run();
 }

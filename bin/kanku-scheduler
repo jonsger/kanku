@@ -4,23 +4,8 @@ use warnings;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 
-use Kanku::Config;
 use Kanku::Daemon::Scheduler;
-use Kanku::Schema;
-use Log::Log4perl;
 
-chdir("$FindBin::Bin/..");
-
-my $logger_conf = "$FindBin::Bin/../etc/log4perl.conf";
-
-if (@ARGV and $ARGV[0] eq '-c' ) {
-  $logger_conf = "$FindBin::Bin/../etc/console-log.conf"
-}
-
-Kanku::Config->initialize();
-
-Log::Log4perl->init($logger_conf);
-
-Kanku::Daemon::Scheduler->new()->run();
+Kanku::Daemon::Scheduler->new()->prepare_and_run();
 
 exit 0;

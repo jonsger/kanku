@@ -20,11 +20,12 @@ use Moose::Role;
 use Getopt::Long;
 use Path::Class::File;
 use Path::Class::Dir;
-use Data::Dumper;
-use YAML;
-use Try::Tiny;
+use POSIX ":sys_wait_h";
 use FindBin;
 use Log::Log4perl;
+use Kanku::Config;
+
+with 'Kanku::Roles::Logger';
 
 requires 'run';
 
@@ -52,7 +53,37 @@ has daemon_basename => (
 has logger_conf => (
   is => 'rw',
   isa => 'Str',
-  default => sub { Path::Class::File->new("$FindBin::Bin/../etc/log4perl.conf") }
+  default => "$FindBin::Bin/../etc/log4perl.conf"
+);
+
+has run_dir => (
+  is => 'rw',
+  isa => 'Object',
+  default => sub { 
+    my $rd = Path::Class::Dir->new("$FindBin::Bin/../var/run");
+    $rd->mkpath if (! -d $rd);
+    return $rd
+  }
+);
+
+has pid_file => (
+  is      => 'rw',
+  isa     => 'Object',
+  lazy    => 1,
+  default => sub { 
+    my ($self) = @_;
+    Path::Class::File->new($self->run_dir,$self->daemon_basename.".pid"); 
+  }
+);
+
+has shutdown_file => (
+  is      => 'rw',
+  isa     => 'Object',
+  lazy    => 1,
+  default => sub { 
+    my ($self) = @_;
+    Path::Class::File->new($self->run_dir,$self->daemon_basename.".shutdown") 
+  }
 );
 
 sub print_usage {
@@ -62,15 +93,31 @@ sub print_usage {
   return "\nUsage: $basename [--stop]\n";
 }
 
-sub prepare {
+sub prepare_and_run {
   my ($self) = @_;
 
-  if ( $self->daemon_options()->{stop}) {
-    $self->initialize_shutdown();
-    exit 0;
-  };
+  Kanku::Config->initialize();
 
   $self->setup_logging();
+
+  $self->initialize_shutdown if ($self->daemon_options->{stop});
+
+  $self->check_pid if ( -f $self->pid_file );
+
+  $self->logger->info("Starting service ".ref(__PACKAGE__));
+
+  $SIG{'INT'} = $SIG{'TERM'} = sub { $self->initialize_shutdown };
+
+  # daemonize
+  if (! $self->daemon_options->{foreground}) {
+    exit 0 if fork();
+  }
+
+  $self->pid_file->spew("$$");
+
+  $self->run;
+
+  $self->finalize_shutdown();
 
 }
 
@@ -81,20 +128,44 @@ sub setup_logging {
     $self->logger_conf("$FindBin::Bin/../etc/console-log.conf");
   }
   Log::Log4perl->init($self->logger_conf);
-
 }
 
 sub initialize_shutdown {
   my ($self) = @_;
 
-  my $run_dir       = "$FindBin::Bin/../var/run";
+  $self->shutdown_file->touch();
 
-  if ( ! -d $run_dir ) {
-    Path::Class::Dir->new($run_dir)->mkpath();
+  exit 0;
+}
+
+sub finalize_shutdown {
+  my ($self) = @_;
+
+  $self->shutdown_file->remove();
+  $self->pid_file->remove();
+
+  $self->logger->info("Shutting down service ".ref(__PACKAGE__));
+
+  exit 0;
+}
+
+sub check_pid {
+  my ($self) = @_;
+
+  my $pid = $self->pid_file->slurp;
+
+  if (kill(0,$pid)) {
+    die "Another instance already running with pid $pid\n";
   }
 
-  Path::Class::File->new($run_dir,$self->daemon_basename.".shutdown")->touch();
+  $self->logger->warn("Process $pid seems to be died unexpectedly");
+  $self->pid_file->remove() 
 
 }
 
+sub detect_shutdown {
+  my ($self) = @_;
+  return 1 if ( -f $self->shutdown_file );
+  return 0;
+}
 1;

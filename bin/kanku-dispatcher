@@ -1,26 +1,11 @@
 #!/usr/bin/env perl
-
-
 use strict;
 use warnings;
+
 use FindBin;
-use Log::Log4perl;
 use lib "$FindBin::Bin/../lib";
-use Kanku::Config;
+
 use Kanku::Daemon::Dispatcher;
-
-chdir("$FindBin::Bin/..");
-
-my $logger_conf = "$FindBin::Bin/../etc/log4perl.conf";
-
-if (@ARGV and $ARGV[0] eq '-c' ) {
-  $logger_conf = "$FindBin::Bin/../etc/console-log.conf"
-}
-
-Kanku::Config->initialize();
-
-Log::Log4perl->init($logger_conf);
-
-Kanku::Daemon::Dispatcher->new()->run();
+                                                                                                                                                                                                                                             Kanku::Daemon::Dispatcher->new()->prepare_and_run();
 
 exit 0;
