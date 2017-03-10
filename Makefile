@@ -6,15 +6,7 @@ CONFIG_DIRS		= etc etc/templates etc/templates/cmd etc/jobs etc/jobs/examples
 
 all:
 
-install:
-	install -m 755 -d $(DESTDIR)$(PREFIX)
-	install -m 755 -d $(DESTDIR)$(PREFIX)/etc
-	install -m 755 -d $(DESTDIR)$(PREFIX)/var/log
-	install -m 755 -d $(DESTDIR)$(PREFIX)/var/cache
-	install -m 755 -d $(DESTDIR)$(PREFIX)/share
-	install -m 755 -d $(DESTDIR)/etc/sudoers.d/
-	install -m 755 -d $(DESTDIR)/etc/apache2/conf.d
-	install -m 755 -d $(DESTDIR)/etc/profile.d
+install: install_dirs install_full_dirs
 	install -m 644 ./dist/sudoers.d.kanku $(DESTDIR)/etc/sudoers.d/kanku
 	install -m 644 dist/kanku.conf.mod_proxy $(DESTDIR)/etc/apache2/conf.d/kanku.conf
 	install -m 644 dist/profile.d-kanku.sh $(DESTDIR)/etc/profile.d/kanku.sh
@@ -26,10 +18,22 @@ install:
 	for i in $(CONFIG_FILES);do \
 		cp -av ./etc/$$i $(DESTDIR)$(PREFIX)/etc/$$i ;\
 	done
+
+install_full_dirs:
 	#
 	for i in $(FULL_DIRS) ;do \
 		cp -av ./$$i `dirname $(DESTDIR)$(PREFIX)/$$i` ;\
 	done
+
+install_dirs:
+	install -m 755 -d $(DESTDIR)$(PREFIX)
+	install -m 755 -d $(DESTDIR)$(PREFIX)/etc
+	install -m 755 -d $(DESTDIR)$(PREFIX)/var/log
+	install -m 755 -d $(DESTDIR)$(PREFIX)/var/cache
+	install -m 755 -d $(DESTDIR)$(PREFIX)/share
+	install -m 755 -d $(DESTDIR)/etc/sudoers.d/
+	install -m 755 -d $(DESTDIR)/etc/apache2/conf.d
+	install -m 755 -d $(DESTDIR)/etc/profile.d
 
 dist_dirs:
 	mkdir kanku-$(VERSION)
