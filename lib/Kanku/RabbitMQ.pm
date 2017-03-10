@@ -61,7 +61,7 @@ sub connect {
     }
   );
 
-  $self->logger->debug("Trying to connect to rabbitmq with the folloing options:\n".Dumper(\@opts));
+  $self->logger->trace("Trying to connect to rabbitmq with the folloing options:\n".Dumper(\@opts));
 
   $self->queue->connect(@opts);
 
@@ -92,27 +92,16 @@ sub setup_worker {
     'kanku.to_all_hosts',
     { exchange_type => 'fanout' }
   );
-
-#  $self->queue->exchange_declare(
-#    $self->channel,
-#    'kanku.to_dispatcher',
-#    { exchange_type => 'direct' }
-#  );
-
 }
-
-#sub shutdown {
-#  my $self = shift;
-#}
 
 sub recv {
   my $self = shift;
 
   my $logger = $self->logger;
 
-  $logger->debug("Waiting for message on channel:     '".$self->channel."'");
-  $logger->debug("                       queue:       '".$self->queue_name."'");
-  $logger->debug("                       routing_key: '".$self->routing_key."'");
+  $logger->trace("Waiting for message on channel:     '".$self->channel."'");
+  $logger->trace("                       queue:       '".$self->queue_name."'");
+  $logger->trace("                       routing_key: '".$self->routing_key."'");
 
   return $self->queue->recv(@_);
 }
