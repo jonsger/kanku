@@ -35,7 +35,7 @@ sub init {
   my $self = shift;
   my $cfg_ = Kanku::Config->instance();
   my $cfg  = $cfg_->config();
-  my $pkg  = __PACKAGE__;
+  my $pkg  = ref(__PACKAGE__);
   my $logger    = $self->logger();
 
 
