@@ -39,7 +39,7 @@ has [qw/
       management_interface        management_network
     / ]  => ( is=>'rw', isa => 'Str');
 
-#has console       => ( is => 'rw', isa => 'Object' );
+has job_id        => ( is => 'rw', isa => 'Int' );
 has root_disk     => ( is => 'rw', isa => 'Object' );
 has use_9p        => ( is => 'rw', isa => 'Bool' );
 has empty_disks   => ( is => 'rw', isa => 'ArrayRef', default => sub {[]});
@@ -107,6 +107,7 @@ has console => (
         domain_name => $self->domain_name,
         login_user  => $self->login_user,
         login_pass  => $self->login_pass,
+        job_id      => $self->job_id
       );
 
       $con->init();

@@ -19,13 +19,7 @@ package Kanku::Handler::RevertQcow2Snapshot;
 use Moose;
 use Kanku::Config;
 use Sys::Guestfs;
-#use Kanku::Util::VM;
-#use Kanku::Util::IPTables;
 
-#use IO::Uncompress::AnyUncompress qw(anyuncompress $AnyUncompressError) ;
-#use File::Copy qw/copy/;
-
-#use Data::Dumper;
 with 'Kanku::Roles::Handler';
 
 has [qw/disk_image_file/] => (is => 'rw',isa=>'Str');
@@ -53,14 +47,6 @@ has gui_config => (
       ];
   }
 );
-#
-#sub prepare {
-#
-#  return {
-#    code    => 0,
-#    message => "Nothing todo"
-#  };
-#}
 
 sub execute {
   my $self = shift;
@@ -88,17 +74,16 @@ __END__
 
 =head1 NAME
 
-Kanku::Handler::CreateDisk
+Kanku::Handler::RevertQcow2Snapshot
 
 =head1 SYNOPSIS
 
 Here is an example how to configure the module in your jobs file or KankuFile
 
   -
-    use_module: Kanku::Handler::CreateDisk
+    use_module: Kanku::Handler::RevertQcow2Snapshot
     options:
       disk_image_file: domain-additional-disk.qcow2
-      format: qcow2
       ....
 
 =head1 DESCRIPTION
@@ -108,10 +93,10 @@ This handler creates a new disk from the given parameters.
 
 =head1 OPTIONS
 
-
     disk_image_file       : filename of the disk to create
 
-    format                : formate of the disk to create (qcow2, raw, ...)
+    snapshot_id           : id of snapshot to revert to
+
 
 =head1 CONTEXT
 

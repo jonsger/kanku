@@ -133,7 +133,8 @@ sub execute {
       use_9p                => $self->use_9p,
       management_interface  => $self->management_interface,
       management_network    => $self->management_network,
-      empty_disks           => $self->empty_disks
+      empty_disks           => $self->empty_disks,
+      job_id                => $self->job->id,
   );
 
   if ( $ctx->{use_cache} ) {

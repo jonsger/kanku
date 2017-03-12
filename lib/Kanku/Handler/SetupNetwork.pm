@@ -55,9 +55,9 @@ sub execute {
 
   $con = Kanku::Util::VM::Console->new(
         domain_name => $self->domain_name,
-        login_user => $self->login_user(),
-        login_pass => $self->login_pass(),
-        debug => $cfg->{'Kanku::Util::VM::Console'}->{debug} || 0
+        login_user  => $self->login_user(),
+        login_pass  => $self->login_pass(),
+        job_id      => $self->job->id,
   );
 
   $con->init();
@@ -69,7 +69,10 @@ sub execute {
 
   $con->logout();
 
-  my $vm = Kanku::Util::VM->new(domain_name => $self->domain_name);
+  my $vm = Kanku::Util::VM->new(
+    domain_name => $self->domain_name,
+    job_id      => $self->job->id
+  );
 
   $ctx->{ipaddress} = $vm->get_ipaddress();
 
