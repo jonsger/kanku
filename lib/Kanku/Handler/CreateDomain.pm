@@ -136,12 +136,13 @@ sub execute {
       empty_disks           => $self->empty_disks
   );
 
+  my $final_file = $ctx->{vm_image_file};
+
   if ( $ctx->{use_cache} ) {
-    my $final_file = $self->_create_image_file_from_cache();
-    $ctx->{vm_image_file} = $final_file;
+    $final_file = $self->_create_image_file_from_cache();
   }
 
-  $vm->image_file($ctx->{vm_image_file});
+  $vm->image_file($final_file);
 
   if ( $ctx->{vm_template_file} ) {
     $vm->template_file($ctx->{vm_template_file});

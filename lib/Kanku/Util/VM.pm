@@ -188,12 +188,14 @@ sub process_template {
     $self->logger->warn("Template file $template_path$input not found");
     $self->logger->warn("Using internal template");
     my $template;
+    my $start = tell DATA;
     while ( <DATA> ) { $template .= $_ };
+    seek DATA, $start,0;
     $input = \$template;
   } else {
     $self->logger->info("Using template file '$template_path$input'");
   }
-
+  $self->logger->trace("template:\n${$input}");
   my $output = '';
   # process input template, substituting variables
   $template->process($input, $vars, \$output)
@@ -250,10 +252,11 @@ sub create_domain {
 
   $disk_xml .= $self->create_empty_disks();
 
-
   my $xml   = $self->process_template($disk_xml);
-  my $vmm   = undef;
-  my $dom   = undef;
+  my $vmm;
+  my $dom;
+
+  $self->logger->trace("disk_xml:\n$xml");
 
   # connect to libvirtd
   try {
