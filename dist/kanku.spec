@@ -104,6 +104,7 @@ Requires: perl(IPC::Run)
 Requires: perl-DBD-SQLite
 Requires: perl(LWP::Protocol::https)
 Requires: perl(Mail::Sendmail)
+Requires: perl(Archive::Cpio)
 
 %description common
 TODO:
