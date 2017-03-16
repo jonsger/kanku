@@ -18,11 +18,12 @@ package Kanku::Handler::ImageDownload;
 
 use Moose;
 use Kanku::Util::CurlHttpDownload;
-use Path::Class::Dir;
+use Path::Class qw/dir file/;
 use feature 'say';
 use Data::Dumper;
 use File::Copy;
 use Try::Tiny;
+use Archive::Cpio;
 extends 'Kanku::Handler::HTTPDownload';
 
 with 'Kanku::Roles::Handler';
@@ -81,7 +82,7 @@ sub execute {
   $self->logger->debug("Using output file: ".$curl->output_file);
 
   $ctx->{vm_image_file} = $curl->output_file;
-
+  
   my $tmp_file;
 
   try {
@@ -96,14 +97,40 @@ sub execute {
 
     $self->logger->debug("obs_direct_url = $ctx->{obs_direct_url}");
     $curl->url($ctx->{obs_direct_url});
-    $ctx->{vm_image_url} = $ctx->{obs_direct_url};
+  
+    $curl->output_file($self->_calc_output_file($ctx->{public_api}));
+
     $self->logger->info("Trying alternate url ".$curl->url);
 
-    $curl->username($ctx->{obs_username}) if $ctx->{obs_username};
-    $curl->password($ctx->{obs_password}) if $ctx->{obs_password};
-
+    if (! $ctx->{public_api} ) {
+      $curl->username($ctx->{obs_username}) if $ctx->{obs_username};
+      $curl->password($ctx->{obs_password}) if $ctx->{obs_password};
+    }
     $tmp_file = $curl->download();
 
+
+    if ($ctx->{public_api} ) {
+      my $cpio = Archive::Cpio->new;
+      my $out_file = file(file($tmp_file)->parent, $ctx->{obs_filename})->stringify;
+
+      $self->logger->debug("extracting from $tmp_file to $out_file");
+
+      open(INFILE,  '<',$tmp_file) || die "Could not open $tmp_file: $!";
+      open(OUTFILE, '>',$out_file) || die "Could not open $out_file: $!";
+      $cpio->read_with_handler(\*INFILE,
+        sub {
+          my ($e) = @_;
+          if ($e->name eq $ctx->{obs_filename}) {
+            print OUTFILE $e->get_content;
+          }
+        }
+      );
+      close INFILE  || die "Could not close $tmp_file: $!";
+      close OUTFILE || die "Could not close $out_file: $!";
+      unlink($tmp_file);
+      $tmp_file = $out_file;
+      $ctx->{vm_image_file} = $ctx->{obs_filename};
+    }
   };
 
   push(
@@ -120,10 +147,14 @@ sub execute {
 }
 
 sub _calc_output_file {
-  my $self        = shift;
-  my $ctx         = $self->job()->context();
+  my ($self,$use_public_api) = shift;
+  my $ctx                    = $self->job()->context();
   my $output_file;
-  if ( $self->use_cache ) {
+
+  $self->logger->trace("job->context:\n".Dumper($ctx));
+  if ($use_public_api) {
+    $output_file = $ctx->{obs_project}."-".$ctx->{obs_package} . '.cpio';
+  } elsif ( $self->use_cache ) {
     $output_file =  $self->url;
     $output_file =~ s#.*/(.*)$#$1#;
   } else {

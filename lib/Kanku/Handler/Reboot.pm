@@ -69,9 +69,10 @@ sub execute {
   my $cfg  = Kanku::Config->instance()->config();
 
   my $vm = Kanku::Util::VM->new(
-      domain_name           => $self->domain_name,
-      login_user            => $self->login_user,
-      login_pass            => $self->login_pass,
+      domain_name => $self->domain_name,
+      login_user  => $self->login_user,
+      login_pass  => $self->login_pass,
+      job_id      => $self->job->id,
   );
 
   my $con = $vm->console();

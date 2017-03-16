@@ -133,7 +133,17 @@ sub setup_logging {
 sub initialize_shutdown {
   my ($self) = @_;
 
-  $self->shutdown_file->touch();
+  # nothing should be running if no pid_file exists
+  exit 0 if (! -f  $self->pid_file);
+
+  my $pid = $self->pid_file->slurp;
+
+  if (kill(0,$pid)) {
+    $self->shutdown_file->touch();
+  } else {
+    $self->logger->warn("Process $pid seems to be died unexpectedly");
+    $self->pid_file->remove() 
+  }
 
   exit 0;
 }

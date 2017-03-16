@@ -17,11 +17,6 @@
 package Kanku::Handler::ResizeImage;
 
 use Moose;
-use Kanku::Config;
-use Kanku::Util::VM;
-use Kanku::Util::VM::Image;
-use Kanku::Util::IPTables;
-
 use Path::Class::File;
 use Data::Dumper;
 

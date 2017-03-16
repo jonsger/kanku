@@ -62,7 +62,10 @@ sub execute {
       }
   }
 
-  my $vm    = Kanku::Util::VM->new( domain_name => $self->domain_name );
+  my $vm    = Kanku::Util::VM->new(
+    domain_name => $self->domain_name,
+    job_id      => $self->job->id
+  );
 
   try {
     $vm->remove_domain();
