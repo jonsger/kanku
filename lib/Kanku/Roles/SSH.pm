@@ -79,7 +79,7 @@ sub connect {
   $ssh2->connect($ip) or die $!;
 
   if ( $self->auth_type eq 'publickey' ) {
-    $self->logger->debug(" - ssh2: using auth_publickey");
+    $self->logger->debug(" - ssh2: using auth_publickey SSH_AUT_SOCK: $::ENV{SSH_AUTH_SOCK}");
     $ssh2->auth_publickey(
       $self->username,
       $self->publickey_path,
