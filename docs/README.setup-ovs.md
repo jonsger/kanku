@@ -1,6 +1,12 @@
 # Install openvswitch and openvswitch-switch
 
-'''zypper -n in openvswitch and openvswitch-switch'''
+'''zypper -n in openvswitch openvswitch-switch'''
+
+# Enable and start openvswitch
+'''
+systemctl enable openvswitch
+systemctl start openvswitch
+'''
 
 # Adept/Create libvirt network hook script
 

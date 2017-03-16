@@ -47,9 +47,9 @@ sub init {
   my $exp = Expect->new;
   $exp->debug($cfg->{$pkg}->{debug} || 0);
 
-  $logger->debug("Config -> $pkg (log_to_file): $cfg->{$pkg}->{log_to_file}");
-
   if ($cfg->{$pkg}->{log_to_file}) {
+    $logger->debug("Config -> $pkg (log_to_file): $cfg->{$pkg}->{log_to_file}");
+
     my $lf = file($cfg->{$pkg}->{log_dir},"job-".$self->job_id."-console.log");
     if (! -d $lf->parent() ) {
       $lf->parent->mkpath();

@@ -1,5 +1,5 @@
 <network>
-  <name>kanku</name>
+  <name>kanku-ovs</name>
   <forward mode='bridge'/>
   <bridge name='kanku-br0'/>
   <virtualport type='openvswitch'/>

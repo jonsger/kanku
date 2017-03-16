@@ -41,7 +41,15 @@ use Try::Tiny;
 with 'Kanku::Roles::Dispatcher';
 with 'Kanku::Roles::ModLoader';
 
-has 'max_processes' => (is=>'rw',isa=>'Int',default=>2);
+has 'max_processes' => (
+  is      => 'rw',
+  isa     => 'Int',
+  lazy    => 1,
+  default => sub {
+    my ($self) = @_;
+    return $self->config->{max_processes} || 2
+  }
+);
 
 has kmq => (is=>'rw',isa=>'Object');
 

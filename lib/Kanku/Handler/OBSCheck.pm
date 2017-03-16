@@ -182,6 +182,8 @@ sub execute {
 
   $ctx->{vm_image_url}   = $binary->{url};
   $ctx->{obs_direct_url} = $binary->{bin_url};
+  $ctx->{public_api}     = $binary->{public_api};
+  $ctx->{obs_filename}   = $binary->{filename};
   $self->logger->debug("obs_direct_url = '".( $ctx->{obs_direct_url} || '')."'");
   $ctx->{obs_username}   = $binary->{obs_username};
   $ctx->{obs_password}   = $binary->{obs_password};
