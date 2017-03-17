@@ -25,7 +25,10 @@ use UUID ':all';
 
 with 'Kanku::Roles::Logger';
 
-has 'channel'	=> (is=>'rw',isa=>'Int',default => 1);
+has 'channel' => (is=>'rw',isa=>'Int',default => 1);
+has 'port'	  => (is=>'rw',isa=>'Int',default => 5671);
+
+has [qw/ssl ssl_verify_host ssl_init/]	=> (is=>'rw',isa=>'Bool',default => 1);
 
 has [qw/
   host vhost user password
@@ -33,6 +36,7 @@ has [qw/
   exchange_name
   routing_key
   consumer_id
+  ssl_cacert
 /] => (is=>'rw',isa=>'Str');
 
 has '+host'	          => ( default => 'localhost');
@@ -55,9 +59,14 @@ sub connect {
   my @opts = (
     $self->host,
     { 
-      vhost		=> $self->vhost, 
-      user		=> $self->user,
-      password	=> $self->password
+      vhost		      => $self->vhost, 
+      user		      => $self->user,
+      password	      => $self->password,
+      port	          => $self->port,
+      ssl	          => $self->ssl,
+      ssl_cacert      => $self->ssl_cacert,
+      ssl_verify_host => $self->ssl_verify_host,
+      ssl_init        => $self->ssl_init,
     }
   );
 
@@ -71,10 +80,15 @@ sub connect {
 sub connect_info {
   my ($self) = @_;
   return  {
-    host      => $self->host,
-    vhost     => $self->vhost, 
-    user      => $self->user,
-    password  => $self->password
+    host            => $self->host,
+    vhost           => $self->vhost, 
+    user            => $self->user,
+    password        => $self->password,
+    port	        => $self->port,
+    ssl             => $self->ssl,
+    ssl_cacert      => $self->ssl_cacert,
+    ssl_verify_host => $self->ssl_verify_host,
+    ssl_init        => $self->ssl_init,
   };
 }
 #
