@@ -28,6 +28,7 @@ Source:         %{name}-%{version}.tar.xz
 BuildArch:      noarch
 BuildRequires:  perl-macros
 BuildRequires:  fdupes
+BuildRequires:  systemd-rpm-macros
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
 Requires: kanku-cli
@@ -196,10 +197,23 @@ TODO:
 %package web
 Summary: WebUI for kanku
 Requires: kanku-common
+Requires: %{?systemd_requires}
 
 %description web
 TODO:
  add a useful description
+
+%pre web
+%service_add_pre kanku-web.service
+
+%post web
+%service_add_post kanku-web.service
+
+%preun web
+%service_del_preun kanku-web.service
+
+%postun web
+%service_del_postun kanku-web.service
 
 %files web
 %attr(755,root,root) /opt/kanku/bin/kanku-apache2.psig
@@ -232,6 +246,7 @@ TODO:
 Summary: Worker daemon for kanku
 
 Requires: kanku-common
+Requires: %{?systemd_requires}
 Requires: perl(Net::AMQP::RabbitMQ)
 Requires: perl(UUID)
 Requires: perl(Sys::CPU)
@@ -240,6 +255,18 @@ Requires: perl(Sys::MemInfo)
 
 %description worker
 A simple remote worker for kanku based on RabbitMQ
+
+%pre worker
+%service_add_pre kanku-worker.service
+
+%post worker
+%service_add_post kanku-worker.service
+
+%preun worker
+%service_del_preun kanku-worker.service
+
+%postun worker
+%service_del_postun kanku-worker.service
 
 %files worker
 /usr/lib/systemd/system/kanku-worker.service
@@ -250,11 +277,24 @@ A simple remote worker for kanku based on RabbitMQ
 Summary: Dispatcher daemon for kanku
 
 Requires: kanku-common
+Requires: %{?systemd_requires}
 Requires: perl(Net::AMQP::RabbitMQ)
 Recommends: rabbitmq-server
 
 %description dispatcher
 A simple dispatcher for kanku based on RabbitMQ
+
+%pre dispatcher
+%service_add_pre kanku-dispatcher.service
+
+%post dispatcher
+%service_add_post kanku-dispatcher.service
+
+%preun dispatcher
+%service_del_preun kanku-dispatcher.service
+
+%postun dispatcher
+%service_del_postun kanku-dispatcher.service
 
 %files dispatcher
 /usr/lib/systemd/system/kanku-dispatcher.service
@@ -265,9 +305,22 @@ A simple dispatcher for kanku based on RabbitMQ
 %package scheduler
 Summary: Scheduler daemon for kanku
 Requires: kanku-common
+Requires: %{?systemd_requires}
 
 %description scheduler
 A simple scheduler for kanku based on RabbitMQ
+
+%pre scheduler
+%service_add_pre kanku-scheduler.service
+
+%post scheduler
+%service_add_post kanku-scheduler.service
+
+%preun scheduler
+%service_del_preun kanku-scheduler.service
+
+%postun scheduler
+%service_del_postun kanku-scheduler.service
 
 %files scheduler
 %attr(755,root,root) /opt/kanku/bin/kanku-scheduler
