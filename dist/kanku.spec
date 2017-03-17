@@ -197,7 +197,7 @@ TODO:
 %package web
 Summary: WebUI for kanku
 Requires: kanku-common
-Requires: %{?systemd_requires}
+#Requires: %{?systemd_requires}
 
 %description web
 TODO:
@@ -219,7 +219,7 @@ TODO:
 %attr(755,root,root) /opt/kanku/bin/kanku-apache2.psig
 %attr(755,root,root) /opt/kanku/bin/kanku-app.psgi
 %dir /opt/kanku/views/
-/usr/lib/systemd/system/kanku-web.service
+%{_unitdir}/kanku-web.service
 /opt/kanku/views/admin.tt
 /opt/kanku/views/guest.tt
 /opt/kanku/views/index.tt
@@ -246,7 +246,7 @@ TODO:
 Summary: Worker daemon for kanku
 
 Requires: kanku-common
-Requires: %{?systemd_requires}
+#Requires: %{?systemd_requires}
 Requires: perl(Net::AMQP::RabbitMQ)
 Requires: perl(UUID)
 Requires: perl(Sys::CPU)
@@ -269,7 +269,7 @@ A simple remote worker for kanku based on RabbitMQ
 %service_del_postun kanku-worker.service
 
 %files worker
-/usr/lib/systemd/system/kanku-worker.service
+%{_unitdir}/kanku-worker.service
 /opt/kanku/bin/kanku-worker
 /opt/kanku/lib/Kanku/Daemon/Worker.pm
 
@@ -277,7 +277,7 @@ A simple remote worker for kanku based on RabbitMQ
 Summary: Dispatcher daemon for kanku
 
 Requires: kanku-common
-Requires: %{?systemd_requires}
+#Requires: %{?systemd_requires}
 Requires: perl(Net::AMQP::RabbitMQ)
 Recommends: rabbitmq-server
 
@@ -297,7 +297,7 @@ A simple dispatcher for kanku based on RabbitMQ
 %service_del_postun kanku-dispatcher.service
 
 %files dispatcher
-/usr/lib/systemd/system/kanku-dispatcher.service
+%{_unitdir}/kanku-dispatcher.service
 /opt/kanku/bin/kanku-dispatcher
 /opt/kanku/lib/Kanku/Daemon/Dispatcher.pm
 /opt/kanku/lib/Kanku/Dispatch
@@ -305,7 +305,7 @@ A simple dispatcher for kanku based on RabbitMQ
 %package scheduler
 Summary: Scheduler daemon for kanku
 Requires: kanku-common
-Requires: %{?systemd_requires}
+#Requires: %{?systemd_requires}
 
 %description scheduler
 A simple scheduler for kanku based on RabbitMQ
@@ -325,7 +325,7 @@ A simple scheduler for kanku based on RabbitMQ
 %files scheduler
 %attr(755,root,root) /opt/kanku/bin/kanku-scheduler
 /opt/kanku/lib/Kanku/Daemon/Scheduler.pm
-/usr/lib/systemd/system/kanku-scheduler.service
+%{_unitdir}/kanku-scheduler.service
 
 
 %changelog
