@@ -6,7 +6,7 @@ CONFIG_DIRS		= etc etc/templates etc/templates/cmd etc/jobs etc/jobs/examples
 
 all:
 
-install: install_dirs install_full_dirs
+install: install_dirs install_full_dirs install_services
 	install -m 644 ./dist/sudoers.d.kanku $(DESTDIR)/etc/sudoers.d/kanku
 	install -m 644 dist/kanku.conf.mod_proxy $(DESTDIR)/etc/apache2/conf.d/kanku.conf
 	install -m 644 dist/profile.d-kanku.sh $(DESTDIR)/etc/profile.d/kanku.sh
@@ -34,6 +34,14 @@ install_dirs:
 	install -m 755 -d $(DESTDIR)/etc/sudoers.d/
 	install -m 755 -d $(DESTDIR)/etc/apache2/conf.d
 	install -m 755 -d $(DESTDIR)/etc/profile.d
+	install -m 755 -d $(DESTDIR)/usr/lib/systemd/system
+
+install_services: install_dirs
+	install -m 644 ./dist/kanku-worker.service $(DESTDIR)/usr/lib/systemd/system/kanku-worker.service
+	install -m 644 ./dist/kanku-scheduler.service $(DESTDIR)/usr/lib/systemd/system/kanku-scheduler.service
+	install -m 644 ./dist/kanku-web.service $(DESTDIR)/usr/lib/systemd/system/kanku-web.service
+	install -m 644 ./dist/kanku-dispatcher.service $(DESTDIR)/usr/lib/systemd/system/kanku-dispatcher.service
+
 
 dist_dirs:
 	mkdir kanku-$(VERSION)

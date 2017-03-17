@@ -52,6 +52,7 @@ make install DESTDIR=%{buildroot}
 
 %files
 %exclude /etc
+%exclude /usr
 
 %package common
 Summary: Common files for kanku
@@ -204,6 +205,7 @@ TODO:
 %attr(755,root,root) /opt/kanku/bin/kanku-apache2.psig
 %attr(755,root,root) /opt/kanku/bin/kanku-app.psgi
 %dir /opt/kanku/views/
+/usr/lib/systemd/system/kanku-web.service
 /opt/kanku/views/admin.tt
 /opt/kanku/views/guest.tt
 /opt/kanku/views/index.tt
@@ -240,6 +242,7 @@ Requires: perl(Sys::MemInfo)
 A simple remote worker for kanku based on RabbitMQ
 
 %files worker
+/usr/lib/systemd/system/kanku-worker.service
 /opt/kanku/bin/kanku-worker
 /opt/kanku/lib/Kanku/Daemon/Worker.pm
 
@@ -254,6 +257,7 @@ Recommends: rabbitmq-server
 A simple dispatcher for kanku based on RabbitMQ
 
 %files dispatcher
+/usr/lib/systemd/system/kanku-dispatcher.service
 /opt/kanku/bin/kanku-dispatcher
 /opt/kanku/lib/Kanku/Daemon/Dispatcher.pm
 /opt/kanku/lib/Kanku/Dispatch
@@ -268,5 +272,7 @@ A simple scheduler for kanku based on RabbitMQ
 %files scheduler
 %attr(755,root,root) /opt/kanku/bin/kanku-scheduler
 /opt/kanku/lib/Kanku/Daemon/Scheduler.pm
+/usr/lib/systemd/system/kanku-scheduler.service
+
 
 %changelog
