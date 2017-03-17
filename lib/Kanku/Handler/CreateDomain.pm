@@ -58,7 +58,10 @@ has ['cache_dir']     => (is=>'rw',isa=>'Str');
 
 has ['mnt_dir_9p']    => (is => 'rw', isa => 'Str', default => '/tmp/kanku');
 
-has ['noauto_9p']     => (is => 'rw', isa => 'Bool');
+has [qw/
+  noauto_9p
+  wait_for_systemd
+/]                    => (is => 'rw', isa => 'Bool');
 
 has ['_root_disk']    => (is => 'rw', isa => 'Object');
 
@@ -195,6 +198,12 @@ sub execute {
 	);
     }
 
+  }
+  if ( $self->wait_for_systemd ) {
+    $self->logger->info("Waiting for system to come up!");
+    $con->cmd(
+      'while [ "$s" != "No jobs running." ];do s=`systemctl list-jobs`;logger "systemctl list-jobs: $s";sleep 1;done'
+    );
   }
 
   $con->logout();

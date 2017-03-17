@@ -193,10 +193,10 @@ sub process_template {
     while ( <DATA> ) { $template .= $_ };
     seek DATA, $start,0;
     $input = \$template;
+    $self->logger->trace("template:\n${$input}");
   } else {
     $self->logger->info("Using template file '$template_path$input'");
   }
-  $self->logger->trace("template:\n${$input}");
   my $output = '';
   # process input template, substituting variables
   $template->process($input, $vars, \$output)
