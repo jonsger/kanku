@@ -59,12 +59,12 @@ sub connect {
   my @opts = (
     $self->host,
     { 
-      vhost		      => $self->vhost, 
-      user		      => $self->user,
+      vhost           => $self->vhost,
+      user            => $self->user,
       password	      => $self->password,
-      port	          => $self->port,
-      ssl	          => $self->ssl,
-      ssl_cacert      => $self->ssl_cacert,
+      port            => $self->port,
+      ssl             => $self->ssl,
+      ssl_cacert      => $self->ssl_cacert || '',
       ssl_verify_host => $self->ssl_verify_host,
       ssl_init        => $self->ssl_init,
     }
