@@ -105,9 +105,9 @@ sub execute {
   );
 
   # TODO: make dynamically switchable between systemV and systemd
-  $con->cmd("service sshd status || service sshd start");
+  $con->cmd("systemctl start sshd.service");
 
-  $con->cmd("chkconfig sshd on");
+  $con->cmd("systemctl enable sshd.service");
 
   $con->logout();
 
