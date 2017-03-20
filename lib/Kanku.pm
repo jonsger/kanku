@@ -234,6 +234,7 @@ get '/rest/job/:id.:format' => sub {
       name => $job->name,
       state => $job->state,
       subtasks => $subtasks,
+      result => $job->result || "{}",
   }
 };
 

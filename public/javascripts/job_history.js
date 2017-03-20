@@ -4,11 +4,13 @@ var subtask_result_template         = $("#subtask_result_panel").html();
 
 var subtask_result_success_template = $("#subtask_result_success").html();
 var subtask_result_failed_template  = $("#subtask_result_failed").html();
+var job_result_failed_template  = $("#job_result_failed").html();
 
 Mustache.parse(header_template);
 Mustache.parse(job_result_template);
 Mustache.parse(subtask_result_success_template);
 Mustache.parse(subtask_result_failed_template);
+Mustache.parse(job_result_failed_template);
 
 var alert_map =[];
 alert_map['succeed'] = 'success';
@@ -83,7 +85,22 @@ function update_job_history (data) {
 function update_job_result_panel_body (data) {
 
   var job_id = data.id;
-  var body = $("#jbody_"+job_id);
+  var body   = $("#jbody_"+job_id);
+
+
+  if ( data.result ) {
+    var job_result = JSON.parse(data.result);
+    console.log("error_message:"+job_result.error_message);
+    if (job_result.error_message) {
+      var rendered = Mustache.render(
+	job_result_failed_template,
+	{
+	  error_message   : job_result.error_message.replace(/\n/,"\n")
+	}
+      );
+      body.append(rendered);
+    }
+  }
 
   $.each(
     data.subtasks,

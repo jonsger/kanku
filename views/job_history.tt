@@ -184,6 +184,22 @@
 
 </script>
 
+<script id="job_result_failed" type="x-tmpl-mustache">
+
+    <div class=row>
+      <div class="col-md-1">
+      </div>
+      <div class="col-md-10">
+        <pre>
+{{ error_message  }}
+        </pre>
+      </div>
+      <div class="col-md-1">
+      </div>
+    </div>
+
+</script>
+
 <script src="[% request.uri_base %]/javascripts/job_history.js"></script>
 
 <!-- vim: set ft=html -->
