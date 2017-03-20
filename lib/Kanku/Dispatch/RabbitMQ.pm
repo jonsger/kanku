@@ -77,6 +77,15 @@ sub run_job {
   my $logger       = $self->logger();
   my $queue        = "job-queue-".$job->id;
 
+  # job definition should be parsed before advertising job
+  # if no valid job definition it should not be advertised
+  my $job_definition = $self->load_job_definition($job);
+
+  if ( ! $job_definition) {
+    $logger->error("No job definition found!");
+    return "failed";
+  }
+
   my $rmq = Kanku::RabbitMQ->new(%{ $self->config->{rabbitmq} || {}});
   $rmq->connect();
   $rmq->queue_name($queue);
@@ -107,13 +116,6 @@ sub run_job {
 
   $job->workerinfo($pa->{worker_fqhn}.":".$pa->{worker_pid}.":".$aq);
   $logger->trace("Result of job offer:\n".Dumper($result));
-
-  my $job_definition = $self->load_job_definition($job);
-
-  if ( ! $job_definition) {
-    $logger->error("No job definition found!");
-    return "failed";
-  }
 
   my $args              = $self->prepare_job_args($job);
 
