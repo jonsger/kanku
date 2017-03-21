@@ -30,6 +30,8 @@ has [qw/  domain_name     ipaddress   publickey_path
           privatekey_path passphrase  username
     /] => (is=>'rw',isa=>'Str');
 
+has 'connect_timeout' => (is=>'rw',isa=>'Int',default => 300);
+
 has [ qw/job ssh2/ ] => (
   is => 'rw',
   isa => 'Object'
@@ -69,17 +71,27 @@ sub get_defaults {
 sub connect {
   my $self    = shift;
   my $ssh2    = Net::SSH2->new(strict_host_key_checking=>'no');
+  my $logger  = $self->logger;
   $self->ssh2($ssh2);
 
   my $results = [];
   my $ip      = $self->ipaddress;
 
-  $self->logger->debug("Connecting to $ip");
+  $logger->debug("Connecting to $ip");
 
-  $ssh2->connect($ip) or die $!;
+  my $connect_count=0;
+
+  while (! $ssh2->connect($ip)) {
+    die "Could not connect to $ip: $!" if ($connect_count > $self->connect_timeout);
+    $connect_count++;
+    $logger->trace("Trying to reconnect: connect_count: ".$connect_count." timeout: ".$self->connect_timeout);
+    sleep 1;
+  }
+
+  $logger->debug("Connected successfully to $ip after $connect_count retries.");
 
   if ( $self->auth_type eq 'publickey' ) {
-    $self->logger->debug(" - ssh2: using auth_publickey SSH_AUT_SOCK: $::ENV{SSH_AUTH_SOCK}");
+    $logger->debug(" - ssh2: using auth_publickey SSH_AUT_SOCK: $::ENV{SSH_AUTH_SOCK}");
     $ssh2->auth_publickey(
       $self->username,
       $self->publickey_path,
@@ -87,7 +99,7 @@ sub connect {
       $self->passphrase
     );
   } elsif ( $self->auth_type eq 'agent' ) {
-    $self->logger->debug(" - ssh2: using auth_agent");
+    $logger->debug(" - ssh2: using auth_agent");
     $ssh2->auth_agent($self->username);
   } else {
     die "ssh auth_type not known!\n"
@@ -95,7 +107,7 @@ sub connect {
 
   if ( ! $ssh2->auth_ok()  ) {
 
-    $self->logger->info(
+    $logger->info(
       "Using the following login data:\n" .
           "username   : " . ( $self->username || '' )         . "\n".
           "pubkey     : " . ( $self->publickey_path || '' )   . "\n".
