@@ -1,0 +1,7 @@
+/opt/kanku/var/log/kanku.log 
+/opt/kanku/var/log/kanku-web.log 
+{
+  daily
+  rotate 7
+  copytruncate
+}
