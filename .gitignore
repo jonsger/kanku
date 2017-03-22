@@ -5,6 +5,7 @@ MYMETA.json
 MYMETA.yml
 Makefile.old
 var/log/*log
+var/run/*
 var/sqlite/*db
 share/kanku-schema.db
 etc/config.yml
