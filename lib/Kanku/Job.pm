@@ -18,8 +18,9 @@ package Kanku::Job;
 
 use Moose;
 use Data::Dumper;
-
+use JSON::XS;
 with 'Kanku::Roles::Serialize';
+with 'Kanku::Roles::Logger';
 
 has "context" => (
     is  => 'rw',
@@ -55,6 +56,16 @@ sub update_db {
 
   return $self->db_object->update($ds);
 
+}
+
+sub exit_with_error {
+  my ($self,$error) = @_;
+  $self->logger->error($error);
+  $self->result(encode_json({error_message=>$error}));
+  $self->state('failed');
+  $self->end_time(time());
+  $self->update_db();
+  die $error;
 }
 
 __PACKAGE__->meta->make_immutable;

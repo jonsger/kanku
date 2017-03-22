@@ -146,16 +146,6 @@ sub cleanup_dead_jobs {
   $dead_tasks->update({ state => 'failed'});
 }
 
-sub _detect_shutdown {
-  my ($self) = @_;
-  if ( -f "$FindBin::Bin/../var/run/kanku-dispatcher.shutdown" ) {
-    $self->logger->info("Found $FindBin::Bin/../var/run/kanku-dispatcher.shutdown. Shutting down.\n");
-    $self->_shutdown_detected(1);
-    return 1;
-  }
-  return 0;
-}
-
 sub run_notifiers {
   my ($self, $job, $last_task) = @_;
   my $logger    = $self->logger();
@@ -187,7 +177,7 @@ sub execute_notifier {
   return if (! @in);
 
   my $mod = $options->{use_module};
-  die "Now use_module definition in config (job: $job)" if ( ! $mod );
+  die "No use_module definition in config (job: $job)" if ( ! $mod );
 
   my $args = $options->{options} || {};
   die "args for $mod not a HashRef" if ( ref($args) ne 'HASH' );
@@ -209,8 +199,12 @@ sub load_job_definition {
 
   $self->logger->debug("Loading definition for job: ".$job->name);
 
-  $job_definition = Kanku::Config->instance()->job_config($job->name);
-
+  try {
+    $job_definition = Kanku::Config->instance()->job_config($job->name);
+  }
+  catch {
+    $job->exit_with_error($_);
+  };
   return $job_definition;
 } 
 
@@ -220,27 +214,16 @@ sub prepare_job_args  {
   my $parse_args_failed = 0;
   
   try {
-      my $args_string = $job->db_object->args();
-      
-      if ($args_string) {
-        $args = decode_json($args_string);
-      }
-      
-      die "args not containting a ArrayRef" if (ref($args) ne "ARRAY" );
-  
+    my $args_string = $job->db_object->args();
+
+    if ($args_string) {
+      $args = decode_json($args_string);
+    }
+    die "args not containting a ArrayRef" if (ref($args) ne "ARRAY" );
   }
   catch { 
-    my $e = $_;
-    
-    $self->logger->error($e);
-    $job->result(encode_json({error_message=>$e}));
-    $job->state('failed');
-    $job->end_time(time());
-    $job->update_db();
-    $parse_args_failed=1;
+    $job->exit_with_error($_);
   };
-
-  return undef if $parse_args_failed;
 
   $self->logger->trace("  -- args:".Dumper($args));
 

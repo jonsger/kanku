@@ -80,11 +80,7 @@ sub run_job {
   # job definition should be parsed before advertising job
   # if no valid job definition it should not be advertised
   my $job_definition = $self->load_job_definition($job);
-
-  if ( ! $job_definition) {
-    $logger->error("No job definition found!");
-    return "failed";
-  }
+  my $args           = $self->prepare_job_args($job);
 
   my $rmq = Kanku::RabbitMQ->new(%{ $self->config->{rabbitmq} || {}});
   $rmq->connect();
@@ -116,40 +112,34 @@ sub run_job {
 
   $job->workerinfo($pa->{worker_fqhn}.":".$pa->{worker_pid}.":".$aq);
   $logger->trace("Result of job offer:\n".Dumper($result));
-
-  my $args              = $self->prepare_job_args($job);
-
-  return 1 if (! $args);
-
   $logger->trace("  -- args:\n".Dumper($args));
 
   my $last_task;
 
   try {
-      foreach my $sub_task (@{$job_definition}) {
-        my $task_args = shift(@$args) || {};
-        $last_task = $self->run_task(
-          job       => $job,
-          options   => $sub_task->{options} || {},
-          module    => $sub_task->{use_module},
-          scheduler => $self,
-          args      => $task_args,
-          kmq       => $rmq,
-          queue     => $aq
-        );
+    foreach my $sub_task (@{$job_definition}) {
+      my $task_args = shift(@$args) || {};
+      $last_task = $self->run_task(
+	job       => $job,
+	options   => $sub_task->{options} || {},
+	module    => $sub_task->{use_module},
+	scheduler => $self,
+	args      => $task_args,
+	kmq       => $rmq,
+	queue     => $aq
+      );
 
-        last if ( $last_task->state eq 'failed' or $job->skipped);
-      }
+      last if ( $last_task->state eq 'failed' or $job->skipped);
+    }
+    $job->state($last_task->state);
   } catch {
     $job->state('failed');
-    $job->result(encode_json({error_msg=>$_}));
+    $job->result(encode_json({error_message=>$_}));
   };
 
   $self->send_finished_job($aq,$job->id);
 
   $self->end_job($job,$last_task);
-
-  $job->state($last_task->state);
 
   $self->run_notifiers($job,$last_task);
 
