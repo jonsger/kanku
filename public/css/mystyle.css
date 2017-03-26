@@ -16,3 +16,6 @@
 #job_history {
     margin-top:10px;
 }
+.result_toggler {
+    cursor: pointer;
+}
