@@ -24,7 +24,7 @@ use Net::OBS::Client::BuildResults;
 use Net::OBS::Client::Project;
 use Net::OBS::Client::Package;
 use Kanku::Util::CurlHttpDownload;
-
+use Kanku::Config;
 with 'Kanku::Roles::Logger';
 
 # http://download.opensuse.org/repositories/OBS:/Server:/Unstable/images/
@@ -107,7 +107,7 @@ has get_image_file_from_url => (
       arch        => $self->arch,
       package     => $self->package,
       apiurl      => $self->api_url,
-      use_oscrc   => 1
+      %{$self->auth_config}
     );
     my $record = $self->get_image_file_from_url_cb->($self,$build_results->binarylist());
     if ( $record ) {
@@ -128,6 +128,41 @@ has get_image_file_from_url => (
 
 has [qw/skip_all_checks skip_check_project skip_check_package use_cache/ ] => (is => 'ro', isa => 'Bool',default => 0 );
 
+has pkg_config => (
+  is => 'rw',
+  isa => 'HashRef',
+  lazy => 1,
+  default => sub {
+    my $self = shift;
+    my $pkg = __PACKAGE__;
+    $self->logger->trace("Getting config for package $pkg");
+    $self->logger->trace(Dumper(Kanku::Config->instance()->config()));
+    my $cfg = Kanku::Config->instance()->config()->{$pkg};
+    $self->logger->trace(Dumper($cfg));
+    return $cfg || {};
+  }
+);
+
+has auth_config => (
+  is => 'rw',
+  isa => 'HashRef',
+  lazy => 1,
+  default => sub {
+    my ($self)     = @_;
+    my $pkg_config = $self->pkg_config;
+    my $cfg        = {};
+    if (exists($pkg_config->{use_oscrc})) {
+      $cfg->{use_oscrc} = $pkg_config->{use_oscrc};
+      if (! $cfg->{use_oscrc} ) {
+	$cfg->{user} = $pkg_config->{$self->api_url}->{obs_username} || $pkg_config->{obs_username} || '';
+	$cfg->{pass} = $pkg_config->{$self->api_url}->{obs_password} || $pkg_config->{obs_password} || '';
+      }
+    } else {
+      $cfg->{use_oscrc} = 1;
+    }
+    return $cfg;
+  }
+);
 sub download {
   my $self  = shift;
   my $ua    = Net::OBS::Client->new(use_oscrc=>1,apiurl=>$self->api_url)->user_agent();
@@ -163,7 +198,7 @@ sub check_before_download {
           repository  => $self->repository,
           arch        => $self->arch,
           apiurl      => $self->api_url,
-          use_oscrc   => 1,
+	  %{$self->auth_config}
       );
 
       if ( $prj->dirty or $prj->code ne 'published' ) {
@@ -178,7 +213,7 @@ sub check_before_download {
           repository  => $self->repository,
           arch        => $self->arch,
           apiurl      => $self->api_url,
-          use_oscrc   => 1
+	  %{$self->auth_config}
       );
 
       if ( $pkg->code ne 'succeeded' ) {

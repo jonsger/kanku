@@ -1,14 +1,12 @@
 [Unit]
 Description=Kanku Scheduler
-#Documentation=man:dovecot(1)
 #Documentation=http://wiki2.dovecot.org/
 After=local-fs.target network.target
  
 [Service]
-Type=simple
+Type=forking
+PIDFile=/opt/kanku/var/run/kanku-scheduler.pid
 ExecStart=/opt/kanku/bin/kanku-scheduler
-#ExecReload=/usr/sbin/dovecot reload
-NonBlocking=yes
 
 [Install]
 WantedBy=multi-user.target

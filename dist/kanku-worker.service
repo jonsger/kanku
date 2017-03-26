@@ -5,10 +5,9 @@ Description=Kanku Worker
 After=local-fs.target network.target
  
 [Service]
-Type=simple
+Type=forking
+PIDFile=/opt/kanku/var/run/kanku-worker.pid
 ExecStart=/opt/kanku/bin/kanku-worker
-#ExecReload=/usr/sbin/dovecot reload
-NonBlocking=yes
 
 [Install]
 WantedBy=multi-user.target

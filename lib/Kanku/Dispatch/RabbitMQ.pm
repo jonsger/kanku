@@ -40,6 +40,7 @@ use Try::Tiny;
 
 with 'Kanku::Roles::Dispatcher';
 with 'Kanku::Roles::ModLoader';
+with 'Kanku::Roles::Daemon';
 
 has 'max_processes' => (
   is      => 'rw',

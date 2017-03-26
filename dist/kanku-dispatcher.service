@@ -1,14 +1,12 @@
 [Unit]
 Description=Kanku Dispatcher
 #Documentation=man:dovecot(1)
-#Documentation=http://wiki2.dovecot.org/
 After=local-fs.target network.target
  
 [Service]
-Type=simple
+Type=forking
+PIDFile=/opt/kanku/var/run/kanku-dispatcher.pid
 ExecStart=/opt/kanku/bin/kanku-dispatcher
-#ExecReload=/usr/sbin/dovecot reload
-NonBlocking=yes
 
 [Install]
 WantedBy=multi-user.target
