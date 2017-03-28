@@ -55,7 +55,7 @@ sub init {
       $lf->parent->mkpath();
     }
     $logger->debug("Setting logfile '".$lf->stringify()."'");
-    $exp->log_file($lf->stringify(),'w');
+    $exp->log_file($lf->stringify());
     $exp->log_stdout(0);
   }
 

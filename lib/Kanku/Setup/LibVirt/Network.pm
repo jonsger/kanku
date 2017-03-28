@@ -6,12 +6,20 @@ use Path::Class qw/file/;
 use Net::IP;
 use POSIX 'setsid';
 use IPC::Run qw/run/;
+use Kanku::LibVirt::HostList;
+
+has cfg_file => (
+  is      => 'rw',
+  isa     => 'Str',
+  lazy    => 1,
+  default => "$FindBin::Bin/../etc/config.yml"
+);
 
 has cfg => (
 	is => 'rw',
 	isa => 'HashRef',
 	lazy => 1,
-	default => sub { LoadFile("/opt/kanku/etc/config.yml") }
+	default => sub { LoadFile($_[0]->cfg_file) }
 );
 
 has logger => (
@@ -26,7 +34,7 @@ has dnsmasq_cfg_file => (
 	is => 'rw',
 	isa => 'Object',
 	lazy => 1,
-	default => sub { file('/var/lib/libvirt/dnsmasq/',$_[0]->cfg->{libvirt_network}->{name}.".conf") }
+	default => sub { file('/var/lib/libvirt/dnsmasq/',$_[0]->cfg->{'Kanku::LibVirt::Network::OpenVSwitch'}->{name}.".conf") }
 );
 
 has dnsmasq_pid_file => (
@@ -39,9 +47,10 @@ has dnsmasq_pid_file => (
 sub prepare_ovs {
 	my $self = shift;
 	my $cfg  = $self->cfg;
-	my $ncfg = $self->cfg->{libvirt_network};
+	my $ncfg = $self->cfg->{'Kanku::LibVirt::Network::OpenVSwitch'};
 	my $br   = $ncfg->{bridge};
 	my $vlan = $ncfg->{vlan};
+        my $lvhl = Kanku::Libvirt::HostList->new();
 	my $out;
 	my $fh;
 
@@ -55,7 +64,7 @@ sub prepare_ovs {
 	}
 
 	my $port_counter = 0;
-	for my $remote ( @{$ncfg->{remotes}} ) {
+	for my $remote ( @{$lvhl->remotes_ips}} ) {
 		my $port = "$vlan-$port_counter";
 		system('ovs-vsctl','port-to-br',$port);
 		if ( $? > 0 ) {
@@ -75,13 +84,11 @@ sub prepare_ovs {
 	$self->logger->debug("Configuring interface with command '@cmd'");
 
 	system(@cmd);
-
-
 }
 
 sub bridge_down {
 	my $self = shift;
-	my $ncfg = $self->cfg->{libvirt_network};
+	my $ncfg = $self->cfg->{'Kanku::LibVirt::Network::OpenVSwitch'};
 	my $br   = $ncfg->{bridge};
 
 	$self->logger->info("Deleting bridge $br");
@@ -96,7 +103,7 @@ sub bridge_down {
 sub prepare_dns {
 	my $self       = shift;
 	my $cfg        = $self->cfg;
-	my $net_cfg    = $cfg->{libvirt_network};
+	my $net_cfg    = $cfg->{'Kanku::LibVirt::Network::OpenVSwitch'};
 
 	return if (! $net_cfg->{start_dhcp} );
 
@@ -128,7 +135,7 @@ EOF
 sub start_dhcp {
 	my $self       = shift;
 	my $cfg        = $self->cfg;
-	my $net_cfg    = $cfg->{libvirt_network};
+	my $net_cfg    = $cfg->{'Kanku::LibVirt::Network::OpenVSwitch'};
 	return if (! $net_cfg->{start_dhcp} );
 
 	$ENV{VIR_BRIDGE_NAME} = $net_cfg->{bridge};
@@ -158,7 +165,7 @@ sub start_dhcp {
 
 sub configure_iptables {
 	my $self	= shift;
-	my $ncfg	= $self->cfg->{libvirt_network};
+	my $ncfg	= $self->cfg->{'Kanku::LibVirt::Network::OpenVSwitch'};
 	$self->logger->debug("Starting configuration of iptables");
 
 	return if (! $ncfg->{is_gateway} );
@@ -218,7 +225,7 @@ sub kill_dhcp {
 
 sub cleanup_iptables {
 	my $self = shift;
-	my $ncfg = $self->cfg->{libvirt_network};
+	my $ncfg = $self->cfg->{'Kanku::LibVirt::Network::OpenVSwitch'};
 	my $rules_to_delete = {
 		'filter' => {
 			'INPUT' 	=> [],

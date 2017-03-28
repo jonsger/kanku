@@ -1,17 +1,3 @@
----
-#dispatcher: Kanku::Dispatch::RabbitMQ
-
-plugins:
-  DBIC:
-    default:
-      dsn: dbi:SQLite:dbname=share/kanku-schema.db
-      schema_class: Kanku::Schema
-
-
-qemu:
-  user: qemu
-  images_dir: /var/lib/libvirt/images
-
 Kanku::LibVirt::HostList:
   -
     hostname: localhost
@@ -20,6 +6,7 @@ Kanku::LibVirt::HostList:
     remote_ip: 10.0.0.1
     driver: qemu
     transport: ssh
+    remote_user: root
     # remote_port: 22
     # remote_path: system
     # The following options are documented in
@@ -31,7 +18,6 @@ Kanku::LibVirt::HostList:
       known_hosts: /opt/kanku/etc/ssh/known_hosts
       sshauth: privkey
 
-
 Kanku::LibVirt::Network::OpenVSwitch:
   name:                kanku-ovs
   bridge:              kanku-br0
@@ -42,33 +28,3 @@ Kanku::LibVirt::Network::OpenVSwitch:
   start_dhcp:          1
   is_gateway:          1
 
-Kanku::Util::IPTables:
-  start_port: 49001
-
-Kanku::Util::VM::Console:
-  debug: 0
-
-Kanku::Daemon::Scheduler:
-  -
-    job_name: obs-server
-    delay: 86400
-    #delay: 600
-
-Kanku::Daemon::Worker:
-  rabbitmq:
-    vhost: /kanku
-    host: <YOUR_HOST>
-    user: <YOUR_USERNAME>
-    password: <YOUR_PASSWORD>
-
-Kanku::Dispatch::RabbitMQ:
-  rabbitmq:
-    vhost: /kanku
-    host: <YOUR_HOST>
-    user: <YOUR_USERNAME>
-    password: <YOUR_PASSWORD>
-
-Jobs:
-    obs-server:
-    obs-server-26:
-    sles11sp3:

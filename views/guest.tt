@@ -12,7 +12,7 @@
   <div class="panel-heading" id='gp_header_{{ id }}' onClick=toggle_guest_panel_body("{{ id }}")>
     <div class='row'>
       <div class="col-md-12">
-        <span class="badge">{{ id }}</span>
+        <span class="badge">{{ id }} ({{ host  }})</span>
       </div>
     </div>
   </div>

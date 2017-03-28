@@ -40,6 +40,7 @@ Mustache.parse(href_guest);
                         guest_panel_template,
                         {
                           id          : domain_name,
+                          host        : guest_data.host,
                           guest_class : ( guest_data.state == 1 ) ? "success" : "warning"
                         }
             );
