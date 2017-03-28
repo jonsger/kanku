@@ -93,13 +93,12 @@ sub run {
       } else {
         push (@child_pids,$pid);
        
-      
         # wait for childs to exit
         while ( @child_pids >= $self->max_processes ) {
           @child_pids = grep { waitpid($_,WNOHANG) == 0 } @child_pids;
           last if ( $self->detect_shutdown );
           sleep(1);
-          #$self->logger->debug("ChildPids: (@child_pids) ".$self->max_processes."\n");
+          $self->logger->debug("ChildPids: (@child_pids) max_processes: ".$self->max_processes."\n");
         }
       }
       last if ( $self->detect_shutdown );

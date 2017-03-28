@@ -64,7 +64,7 @@ sub prepare_ovs {
 	}
 
 	my $port_counter = 0;
-	for my $remote ( @{$lvhl->remotes_ips}} ) {
+	for my $remote ( @{$lvhl->remotes_ips} ) {
 		my $port = "$vlan-$port_counter";
 		system('ovs-vsctl','port-to-br',$port);
 		if ( $? > 0 ) {
