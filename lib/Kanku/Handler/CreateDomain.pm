@@ -35,7 +35,7 @@ has [qw/
       management_interface  management_network
       forward_port_list     images_dir
       short_hostname	    memory
-      network_name
+      network_name          network_bridge
 /] => (is => 'rw',isa=>'Str');
 
 has '+memory'         => ( default => 1024*1024 );
@@ -128,7 +128,11 @@ sub execute {
   $self->logger->debug("Using memory: '$mem'");
 
   if ( ! $self->network_name ) {
-    $self->network_name($cfg->{'Kanku::Util::VM'}->{network_name} || 'default'),
+    $self->network_name($cfg->{'Kanku::LibVirt::Network::OpenVSwitch'}->{name} || 'default'),
+  }
+
+  if ( ! $self->network_bridge ) {
+    $self->network_bridge($cfg->{'Kanku::LibVirt::Network::OpenVSwitch'}->{bridge} || 'virbr0'),
   }
 
   my $vm = Kanku::Util::VM->new(

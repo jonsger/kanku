@@ -37,7 +37,7 @@ has [qw/
       images_dir    login_user    login_pass  template_file
       ipaddress     uri           disks_xml
       management_interface        management_network
-      network_name
+      network_name  network_bridge
     / ]  => ( is=>'rw', isa => 'Str');
 
 has job_id        => ( is => 'rw', isa => 'Int' );
@@ -158,14 +158,15 @@ sub process_template {
   # define template variables for replacement
   my $vars = {
     domain => {
-      vcpu          => $self->vcpu        ,
-      memory        => $self->memory      ,
-      domain_name   => $self->domain_name ,
-      images_dir    => $self->images_dir  ,
-      image_file    => $self->image_file  ,
-      network_name  => $self->network_name  ,
-      hostshare     => "",
-      disk_xml      => $disk_xml
+      vcpu            => $self->vcpu        ,
+      memory          => $self->memory      ,
+      domain_name     => $self->domain_name ,
+      images_dir      => $self->images_dir  ,
+      image_file      => $self->image_file  ,
+      network_name    => $self->network_name  ,
+      network_bridge  => $self->network_bridge  ,
+      hostshare       => "",
+      disk_xml        => $disk_xml
     }
   };
 
@@ -526,7 +527,7 @@ __DATA__
       <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
     </controller>
     <interface type='network'>
-      <source network='[% domain.network_name %]' bridge='virbr0'/>
+      <source network='[% domain.network_name %]' bridge='[% domain.network_bridge %]'/>
       <model type='virtio'/>
       <alias name='net0'/>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x05' function='0x0'/>
