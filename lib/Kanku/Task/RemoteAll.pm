@@ -95,7 +95,7 @@ sub run {
   sleep($self->wait_for_workers);
 
   # Getting response from workers
-  while ( my $msg = $self->kmq->recv(100) ) {
+  while ( my $msg = $self->kmq->recv(10000) ) {
 	if ($msg ) {
       $logger->debug("Incomming message while waiting for confirmations");
       $self->_inspect_msg($msg);
@@ -111,7 +111,7 @@ sub run {
   $logger->debug("Number of confirms/results: $confirms/$results");
 
   while ( $confirms  > $results  ) {
-    my $msg = $self->kmq->recv(1000);
+    my $msg = $self->kmq->recv(10000);
     if ($msg) {
         $logger->debug("Got msg while waiting for task result:");
         $self->_inspect_msg($msg);

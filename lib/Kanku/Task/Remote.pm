@@ -49,7 +49,7 @@ has job => (is=>'rw',isa=>'Object');
 
 has module => (is=>'rw',isa=>'Str');
 
-has job_queue => (is=>'rw',isa=>'Object');
+has [qw/job_queue daemon/]=> (is=>'rw',isa=>'Object');
 
 has wait_for_workers => (is=>'ro',isa=>'Int',default=>1);
 
@@ -100,30 +100,37 @@ sub run {
   # Wait for task results from worker
   my $result;
   my $state;
-  while ( my $msg = $self->job_queue->recv() ) {
-    my $data;
-    $self->logger->debug("Incomming task result");
-    $self->logger->trace(Dumper($msg));
-    my $body = $msg->{body};
+  while (1){
+    my $msg = $self->job_queue->recv(10000);
+    if ( $msg ) {
+      my $data;
+      $self->logger->debug("Incomming task result");
+      $self->logger->trace(Dumper($msg));
+      my $body = $msg->{body};
 
-    try {
-      $data = decode_json($body);
-    } catch {
-      $self->logger->debug("Error in JSON:\n$_\n$body\n");
-    };
+      try {
+	$data = decode_json($body);
+      } catch {
+	$self->logger->debug("Error in JSON:\n$_\n$body\n");
+      };
 
-    if (
-      $data->{action} eq 'finished_task' or
-      $data->{action} eq 'aborted_job'
-    ) {
-      $logger->trace(Dumper($data));
-      if ( $data->{error_message} ) {
-        die $data->{error_message};
-      } else {
-        my $job = decode_json($data->{job});
-        $result = $data->{result};
-        $self->job->context(${job}->{context});
-        last;
+      if (
+	$data->{action} eq 'finished_task' or
+	$data->{action} eq 'aborted_job'
+      ) {
+	$logger->trace(Dumper($data));
+	if ( $data->{error_message} ) {
+	  die $data->{error_message};
+	} else {
+	  my $job = decode_json($data->{job});
+	  $result = $data->{result};
+	  $self->job->context(${job}->{context});
+	  last;
+	}
+      }
+    } else {
+      if ($self->daemon->detect_shutdown) {
+	die "Job ".$job->id." aborted by dispatcher daemon shutdown\n";
       }
     }
   }

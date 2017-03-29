@@ -214,7 +214,8 @@ sub handle_job {
   my $logger = $self->logger;
 
   try  {
-    while ( my $task_msg = $job_kmq->recv(1000) ) {
+    while (1){
+      my $task_msg = $job_kmq->recv(10000);
       if ( $task_msg ) {
         my $task_body = decode_json($task_msg->{body});
         $logger->debug("Got new message while waiting for tasks");

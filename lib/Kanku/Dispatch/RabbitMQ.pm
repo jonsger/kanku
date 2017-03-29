@@ -185,7 +185,8 @@ sub run_task {
     $tr = Kanku::Task::Remote->new(
       %defaults,
       job_queue => $self->job_queue,
-      queue           => $opts{queue},
+      queue     => $opts{queue},
+      daemon	=> $self,
     );
 
   } elsif ( $distributable == 2 ) {
@@ -303,7 +304,7 @@ sub advertise_job {
 
     sleep($self->wait_for_workers);
 
-    while ( my $msg = $rmq->recv(100) ) {
+    while ( my $msg = $rmq->recv(1000) ) {
       if ($msg ) {
           my $data;
           $logger->debug("Incomming application");
