@@ -50,7 +50,7 @@ sub prepare_ovs {
 	my $ncfg = $self->cfg->{'Kanku::LibVirt::Network::OpenVSwitch'};
 	my $br   = $ncfg->{bridge};
 	my $vlan = $ncfg->{vlan};
-        my $lvhl = Kanku::Libvirt::HostList->new();
+    my $lvhl = Kanku::LibVirt::HostList->new();
 	my $out;
 	my $fh;
 
@@ -64,7 +64,7 @@ sub prepare_ovs {
 	}
 
 	my $port_counter = 0;
-	for my $remote ( @{$lvhl->remotes_ips} ) {
+	for my $remote ( @{$lvhl->get_remote_ips} ) {
 		my $port = "$vlan-$port_counter";
 		system('ovs-vsctl','port-to-br',$port);
 		if ( $? > 0 ) {
