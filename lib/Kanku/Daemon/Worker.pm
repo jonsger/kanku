@@ -49,18 +49,18 @@ sub run {
 
   if (! $pid ) {
     my $kmq = Kanku::RabbitMQ->new(%{ $config->{rabbitmq} || {}});
-    $kmq->connect(); 
+    $kmq->connect();
     $kmq->setup_worker();
     $self->local_job_queue_name(hostfqdn());
     $kmq->create_queue(
       queue_name=>$self->local_job_queue_name,
       exchange_name=>'kanku.to_all_hosts'
     );
-    
+
     while(1) {
       my $msg = $kmq->recv(1000);
       if ($msg) {
-	try { 
+	try {
 	  my $data;
 	  my $body = $msg->{body};
 	  try {
@@ -110,7 +110,7 @@ sub run {
     while (1) {
       try {
         my $kmq = Kanku::RabbitMQ->new(%{ $config->{rabbitmq} || {}});
-        $kmq->connect(); 
+        $kmq->connect();
         $kmq->setup_worker();
         $kmq->create_queue(
           queue_name    => $self->worker_id,
@@ -166,7 +166,7 @@ sub handle_advertisement {
       $job_kmq->create_queue();
 
       my $application = {
-        job_id		  => $job_id, 
+        job_id		  => $job_id,
         message		  => $answer ,
         worker_fqhn   => hostfqdn(),
         worker_pid	  => $$,
@@ -214,23 +214,43 @@ sub handle_job {
   my $logger = $self->logger;
 
   try  {
-    while ( my $task_msg = $job_kmq->recv() ) {
-      my $task_body = decode_json($task_msg->{body});
-      $logger->debug("Got new message while waiting for tasks");
-      $logger->trace(Dumper($task_body));
-      if ( 
-         $task_body->{action} eq 'task' and $task_body->{job_id} == $job_id
-      ){
-        $logger->info("Starting with task");
-        $logger->trace(Dumper($task_msg,$task_body));
+    while ( my $task_msg = $job_kmq->recv(1000) ) {
+      if ( $task_msg ) {
+        my $task_body = decode_json($task_msg->{body});
+        $logger->debug("Got new message while waiting for tasks");
+        $logger->trace(Dumper($task_body));
+        if (
+           $task_body->{action} eq 'task' and $task_body->{job_id} == $job_id
+        ){
+          $logger->info("Starting with task");
+          $logger->trace(Dumper($task_msg,$task_body));
 
-        $self->handle_task($task_body,$job_kmq,$job_id);
+          $self->handle_task($task_body,$job_kmq,$job_id);
+        }
+        if ( $task_body->{action} eq 'finished_job' and $task_body->{job_id} == $job_id) {
+          $logger->debug("Got finished_job for job_id: $job_id");
+          last;
+        }
+        $logger->debug("Waiting for next task");
+      } else {
+
+        if ( $self->detect_shutdown ) {
+          my $answer = {
+              action        => 'aborted_job',
+              error_message => "Aborted job because of daemon shutdown",
+          };
+
+          $self->logger->trace("Sending answer to '".$self->remote_job_queue_name."':\n".Dumper($answer));
+
+          $job_kmq->publish(
+            $self->remote_job_queue_name,
+            encode_json($answer),
+            { exchange => 'kanku.to_dispatcher'}
+          );
+
+          exit 0;
+        }
       }
-      if ( $task_body->{action} eq 'finished_job' and $task_body->{job_id} == $job_id) {
-        $logger->debug("Got finished_job for job_id: $job_id");
-        last;
-      }
-      $logger->debug("Waiting for next task");
     }
   } catch {
     my $e = $_;
@@ -239,8 +259,8 @@ sub handle_job {
     $job_kmq->publish(
       $self->remote_job_queue_name,
       encode_json({
-        action => 'finished_task',
-        error_message =>$e
+        action        => 'finished_task',
+        error_message => $e
       }),
       { exchange => 'kanku.to_dispatcher' }
     );
@@ -265,14 +285,14 @@ sub handle_task {
 
   $self->logger->trace("task_args:\n".Dumper($data->{task_args}));
 
-  # create object from serialized data 
+  # create object from serialized data
   my $job = Kanku::Job->new($data->{task_args}->{job});
   $data->{task_args}->{job}=$job;
 
   my $task   = Kanku::Task::Local->new(%{$data->{task_args}},schema => $self->schema);
 
   my $result = $task->run();
-  
+
   my $answer = {
 	  action        => 'finished_task',
       result        => $result,
