@@ -37,6 +37,7 @@ has [qw/
       images_dir    login_user    login_pass  template_file
       ipaddress     uri           disks_xml
       management_interface        management_network
+      network_name
     / ]  => ( is=>'rw', isa => 'Str');
 
 has job_id        => ( is => 'rw', isa => 'Int' );
@@ -130,6 +131,12 @@ has wait_for_network => (
   default => 120
 );
 
+has network_name => (
+  is      => 'rw',
+  isa     => 'Str',
+  lazy    => 1,
+  default => 'default'
+);
 
 sub process_template {
   my ($self,$disk_xml) = @_;
@@ -156,6 +163,7 @@ sub process_template {
       domain_name   => $self->domain_name ,
       images_dir    => $self->images_dir  ,
       image_file    => $self->image_file  ,
+      network_name  => $self->network_name  ,
       hostshare     => "",
       disk_xml      => $disk_xml
     }
@@ -518,7 +526,7 @@ __DATA__
       <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
     </controller>
     <interface type='network'>
-      <source network='default' bridge='virbr0'/>
+      <source network='[% domain.network_name %]' bridge='virbr0'/>
       <model type='virtio'/>
       <alias name='net0'/>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x05' function='0x0'/>

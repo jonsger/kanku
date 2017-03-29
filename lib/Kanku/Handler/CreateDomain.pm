@@ -35,6 +35,7 @@ has [qw/
       management_interface  management_network
       forward_port_list     images_dir
       short_hostname	    memory
+      network_name
 /] => (is => 'rw',isa=>'Str');
 
 has '+memory'         => ( default => 1024*1024 );
@@ -98,7 +99,7 @@ sub prepare {
   $self->domain_name($ctx->{domain_name}) if ( ! $self->domain_name && $ctx->{domain_name});
   $self->login_user($ctx->{login_user})   if ( ! $self->login_user  && $ctx->{login_user});
   $self->login_pass($ctx->{login_pass})   if ( ! $self->login_pass  && $ctx->{login_pass});
-  $self->cache_dir($ctx->{cache_dir}) if ($ctx->{cache_dir});
+  $self->cache_dir($ctx->{cache_dir})     if ($ctx->{cache_dir});
 
   return {
     code    => 0,
@@ -126,6 +127,10 @@ sub execute {
 
   $self->logger->debug("Using memory: '$mem'");
 
+  if ( ! $self->network_name ) {
+    $self->network_name($cfg->{'Kanku::Util::VM'}->{network_name} || 'default'),
+  }
+
   my $vm = Kanku::Util::VM->new(
       vcpu                  => $self->vcpu,
       memory                => $mem,
@@ -138,6 +143,7 @@ sub execute {
       management_network    => $self->management_network,
       empty_disks           => $self->empty_disks,
       job_id                => $self->job->id,
+      network_name          => $self->network_name,
   );
 
   my $final_file = $ctx->{vm_image_file};
