@@ -13,7 +13,7 @@ my $logger = Log::Log4perl->get_logger();
 my $current_network_name = $ARGV[0];
 my $action               = $ARGV[1];
 my $setup		 = Kanku::Setup::LibVirt::Network->new();
-my $net_name             = $setup->cfg->{libvirt_network}->{name};
+my $net_name             = $setup->cfg->{'Kanku::LibVirt::Network::OpenVSwitch'}->{name};
 
 $logger->debug("ARGS: @ARGV\n");
 
