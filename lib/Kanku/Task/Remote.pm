@@ -112,7 +112,10 @@ sub run {
       $self->logger->debug("Error in JSON:\n$_\n$body\n");
     };
 
-    if ( $data->{action} eq 'finished_task' ) {
+    if (
+      $data->{action} eq 'finished_task' or
+      $data->{action} eq 'aborted_job'
+    ) {
       $logger->trace(Dumper($data));
       if ( $data->{error_message} ) {
         die $data->{error_message};

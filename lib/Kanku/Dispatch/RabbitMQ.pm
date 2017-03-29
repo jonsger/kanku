@@ -291,14 +291,6 @@ sub advertise_job {
 
   $logger->debug("creating new queue: ".$opts->{answer_queue});
 
-#  my $rmq = Kanku::RabbitMQ->new(
-#    %{$self->config->{rabbitmq} || {}},
-#    queue_name  => $opts->{answer_queue},
-#    routing_key => $opts->{answer_queue},
-#    exchange_name => 'kanku.to_dispatcher'
-#  );
-#  $rmq->connect();
-#  $rmq->create_queue();
   my $wcnt = 0;
 
   while(! %$all_applications ) {
