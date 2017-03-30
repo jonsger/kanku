@@ -50,6 +50,11 @@ sub prepare_ovs {
 	my $ncfg = $self->cfg->{'Kanku::LibVirt::Network::OpenVSwitch'};
 	my $br   = $ncfg->{bridge};
 	my $vlan = $ncfg->{vlan};
+
+    # Standard mtu size is 1500 bytes
+    # VXLAN header is 50 bytes
+    # 1500 - 50 = 1450
+    my $mtu  = $ncfg->{mtu} || '1450';
     my $lvhl = Kanku::LibVirt::HostList->new();
 	my $out;
 	my $fh;
@@ -77,9 +82,17 @@ sub prepare_ovs {
 		}
 	}
 
+        # Set ip address for bridge interface
 	my $ip = new Net::IP ($ncfg->{network});
 
 	my @cmd = ("ifconfig",$br,$ncfg->{host_ip},'netmask',$ip->mask);
+
+	$self->logger->debug("Configuring interface with command '@cmd'");
+
+	system(@cmd);
+
+	# Set MTU for bridge interface
+	@cmd=(qw/ip link set mtu/, $mtu, $br);
 
 	$self->logger->debug("Configuring interface with command '@cmd'");
 
