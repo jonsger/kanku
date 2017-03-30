@@ -128,11 +128,11 @@ sub execute {
   $self->logger->debug("Using memory: '$mem'");
 
   if ( ! $self->network_name ) {
-    $self->network_name($cfg->{'Kanku::LibVirt::Network::OpenVSwitch'}->{name} || 'default'),
+    $self->network_name($cfg->{'Kanku::Handler::CreateDomain'}->{name} || 'default'),
   }
 
   if ( ! $self->network_bridge ) {
-    $self->network_bridge($cfg->{'Kanku::LibVirt::Network::OpenVSwitch'}->{bridge} || 'virbr0'),
+    $self->network_bridge($cfg->{'Kanku::Handler::CreateDomain'}->{bridge} || 'virbr0'),
   }
 
   my $vm = Kanku::Util::VM->new(
