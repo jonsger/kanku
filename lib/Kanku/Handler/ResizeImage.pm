@@ -45,6 +45,8 @@ has gui_config => (
   }
 );
 
+sub distributable { 1 }
+
 sub execute {
   my $self = shift;
   my $ctx  = $self->job->context();
