@@ -140,7 +140,6 @@ sub execute {
         for my $line (@forward_rules) {
           # 2        0     0 ACCEPT     tcp  --  *      *       0.0.0.0/0            192.168.100.182      state NEW tcp dpt:22
           #
-          print "line: $line";
           if ($line =~ /^(\d+).*ACCEPT.*$old_guest_ip.*state NEW $proto dpt:$guest_port/ ) {
             $self->logger->debug("Found in FORWARD in line $1");
             $self->logger->debug($line);
@@ -167,7 +166,6 @@ sub execute {
 
     for my $cmd (@cmds) {
       $self->logger->debug("Executing command '$cmd'");
-      print "Executing command '$cmd'\n";
       my @out = `$sudo $cmd 2>&1`;
       if ($?) {
         die "Error while executing command '$cmd'\n@out\n";

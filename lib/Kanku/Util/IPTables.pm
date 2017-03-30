@@ -194,7 +194,6 @@ sub add_forward_rules_for_domain {
 
     for my $cmd (@cmds) {
       $self->logger->debug("Executing command '$cmd'");
-      print "Executing command '$cmd'\n";
       my @out = `$sudo$cmd 2>&1`;
       if ($?) {
         die "Error while adding rule by executing command: $?\n\t$cmd\n\n@out\n";
