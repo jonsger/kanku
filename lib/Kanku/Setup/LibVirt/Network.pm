@@ -195,6 +195,15 @@ sub configure_iptables {
 	}
 
 	my $prefix = $ip->prefix;
+        # MTU = MTU (e.g. 1500) - 50 bytes VXLAN Header
+        # MSS = MTU - 40 bytes TCP Header
+        my $mss    = ($ncfg->{mtu} || 1450) - 40;
+
+        if ( $mss < 1 ) {
+	  my $msg = "Calculated MSS lower than 1 ($mss). Please check your configured 'mtu' size in section ".__PACKAGE__.".";
+	  $self->logger->fatal($msg);
+	  die "$msg\n";
+        }
 
 	$self->logger->debug("prefix: $prefix");
 
@@ -204,6 +213,7 @@ sub configure_iptables {
 		["-I","FORWARD","1","-i",$ncfg->{bridge},"-o","$ncfg->{bridge}","-j","ACCEPT"],
 		["-I","FORWARD","1","-s",$prefix,"-i",$ncfg->{bridge},"-j","ACCEPT"],
 		["-I","FORWARD","1","-d",$prefix,"-o",$ncfg->{bridge},"-m","conntrack","--ctstate","RELATED,ESTABLISHED","-j","ACCEPT"],
+		["-I","FORWARD","1","-i",$ncfg->{bridge},"-p", "tcp","--tcp-flags", "SYN,RST", "SYN", "-j", "TCPMSS", "--set-mss",$mss],
 		["-t","nat","-I","POSTROUTING","-s",$prefix,"!","-d",$prefix,"-j","MASQUERADE"],
 		["-t","nat","-I","POSTROUTING","-s",$prefix,"!","-d",$prefix,"-p","udp","-j","MASQUERADE","--to-ports","1024-65535"],
 		["-t","nat","-I","POSTROUTING","-s",$prefix,"!","-d",$prefix,"-p","tcp","-j","MASQUERADE","--to-ports","1024-65535"],
