@@ -219,7 +219,8 @@ sub decline_applications {
   
   foreach my $queue( keys(%$declined_applications) ) {
     $rmq->queue_name($queue);
-	$rmq->publish(
+    $rmq->publish(
+      $queue,
       encode_json({action => 'decline_application'}),
     );
   }
