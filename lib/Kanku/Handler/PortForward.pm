@@ -22,7 +22,7 @@ use Kanku::Util::IPTables;
 
 with 'Kanku::Roles::Handler';
 
-has [qw/domain_name forward_port_list host_interface/] => (is => 'rw',isa=>'Str');
+has [qw/ipaddress domain_name forward_port_list host_interface/] => (is => 'rw',isa=>'Str');
 
 has '+domain_name' => (
   lazy => 1,
