@@ -34,6 +34,11 @@ has gui_config => (
   default => sub {
       [
         {
+          param => 'domain_name',
+          type  => 'text',
+          label => 'Domain Name:'
+        },
+        {
           param => 'disabled',
           type  => 'checkbox',
           label => 'Disabled'
