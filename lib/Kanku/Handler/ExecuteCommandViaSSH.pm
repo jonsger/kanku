@@ -17,16 +17,12 @@
 package Kanku::Handler::ExecuteCommandViaSSH;
 
 use Moose;
-
 use Data::Dumper;
-
 use namespace::autoclean;
 
 with 'Kanku::Roles::Handler';
-with 'Kanku::Roles::Logger';
 with 'Kanku::Roles::SSH';
 
-has [qw/ipaddress publickey_path privatekey_path passphrase username/] => (is=>'rw',isa=>'Str');
 has commands => (is=>'rw',isa=>'ArrayRef',default=>sub { [] });
 
 sub distributable { 1 }
@@ -67,15 +63,7 @@ sub execute {
   };
 }
 
-sub finalize {
-  return {
-    code    => 0,
-    message => "Nothing to do!"
-  }
-}
-
 __PACKAGE__->meta->make_immutable;
-
 1;
 
 __END__
@@ -105,34 +93,24 @@ This handler will connect to the ipaddress stored in job context and excute the 
 
 =head1 OPTIONS
 
-      publickey_path    : path to public key file (optional)
-
-      privatekey_path   : path to private key file
-
-      passphrase        : password to use for private key
-
-      username          : username used to login via ssh
-
       commands          : array of commands to execute
+
+
+SEE ALSO Kanku::Roles::SSH
 
 
 =head1 CONTEXT
 
 =head2 getters
 
- ipaddress
+SEE Kanku::Roles::SSH
 
 =head2 setters
 
- vm_image_file
-
+NONE
 
 =head1 DEFAULTS
 
-  privatekey_path       : $HOME/.ssh/id_rsa
-
-  username              : root
-
+SEE Kanku::Roles::SSH
 
 =cut
-

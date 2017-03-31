@@ -1,4 +1,4 @@
-# Copyright (c) 2016 SUSE LLC
+# Copyright (c) 2017 SUSE LLC
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 2 as
@@ -20,17 +20,50 @@ use Moose::Role;
 
 use Data::Dumper;
 use Net::SSH2;
-
 use namespace::autoclean;
-
-with 'Kanku::Roles::Logger';
 use Kanku::Config;
 
-has [qw/  domain_name     ipaddress   publickey_path
-          privatekey_path passphrase  username
-    /] => (is=>'rw',isa=>'Str');
+with 'Kanku::Roles::Logger';
 
-has 'connect_timeout' => (is=>'rw',isa=>'Int',default => 300);
+has 'passphrase' => (
+  is	  => 'rw',
+  isa	  => 'Str',
+  default => ''
+);
+
+has 'privatekey_path' => (
+  is	  => 'rw',
+  isa	  => 'Str',
+  lazy	  => 1,
+  default => sub { $_[0]->job->context->{privatekey_path} || '' }
+);
+
+has 'publickey_path' => (
+  is	  => 'rw',
+  isa	  => 'Str',
+  lazy	  => 1,
+  default => sub { $_[0]->job->context->{publickey_path} || '' }
+);
+
+has 'ipaddress' => (
+  is	  => 'rw',
+  isa	  => 'Str',
+  lazy    => 1,
+  default => sub { $_[0]->job->context->{ipaddress} || '' }
+);
+
+has 'username' => (
+  is	  => 'rw',
+  isa	  => 'Str',
+  lazy    => 1,
+  default => 'root'
+);
+
+has 'connect_timeout' => (
+  is	  => 'rw',
+  isa	  => 'Int',
+  default => 300
+);
 
 has [ qw/job ssh2/ ] => (
   is => 'rw',
@@ -43,15 +76,11 @@ has auth_type => (
   lazy => 1,
   default=>
   sub {
-    my $logger = $_[0]->logger;
     my $cfg = Kanku::Config->instance->config();
-    $logger->debug(Dumper($cfg));
-    my $class = __PACKAGE__;
-    $logger->debug("PACKAGE = $class");
-    if ( $cfg->{$class}->{auth_type}) {
-      return $cfg->{$class}->{auth_type};
-    }
-    return 'agent'
+    my $pkg = __PACKAGE__;
+
+    # agent has to stay default for cli tool
+    return $cfg->{$pkg}->{auth_type} || 'agent';
   }
 );
 
@@ -59,11 +88,16 @@ sub get_defaults {
   my $self = shift;
 
   if (! $self->privatekey_path ) {
-    $self->privatekey_path("$ENV{HOME}/.ssh/id_rsa");
-    $self->publickey_path($self->privatekey_path.".pub") if (! $self->publickey_path );
+    if ( $::ENV{HOME} ) {
+      my $key_path = "$::ENV{HOME}/.ssh/id_rsa";
+      $self->privatekey_path($key_path) if ( -f $key_path);
+    }
   }
-  $self->username('root') if (! $self->username );
-  $self->ipaddress($self->job()->context()->{ipaddress});
+
+  if (! $self->publickey_path && $self->privatekey_path) {
+    my $key_path = $self->privatekey_path.".pub";
+    $self->publickey_path($key_path) if ( -f $key_path);
+  }
 
   return 1;
 }
@@ -144,3 +178,95 @@ sub exec_command {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+Kanku::Roles::SSH - A generic role for handling ssh connections using Net::SSH2
+
+=head1 SYNOPSIS
+
+  package Kanku::Handler::MySSHHandler;
+  use Moose;
+  with 'Kanku::Roles::SSH';
+
+  sub execute {
+    my ($self) = @_;
+
+    ...
+
+    $self->get_defaults();
+
+    $self->connect();
+
+    $self->exec_command("/bin/true");
+  }
+
+=head1 DESCRIPTION
+
+This module contains a generic role for handling ssh connections in kanku using Net::SSH2
+
+=head1 METHODS
+
+
+=head2 get_defaults
+
+
+
+=head2 connect
+
+
+
+=head2 exec_command
+
+
+
+=head1 ATTRIBUTES
+
+  ipaddress         : IP address of host to connect to
+
+  publickey_path    : path to public key file (optional)
+
+  privatekey_path   : path to private key file
+
+  passphrase        : password to use for private key
+
+  username          : username used to login via ssh
+
+  connect_timeout   : time to wait for successful connection to host
+
+  job               : a Kanku::Job object (required for context)
+
+  ssh2              : a Net::SSH2 object (usually created by role itself)
+
+  auth_type	    : SEE Net::SSH2 for further information
+
+=head1 CONTEXT
+
+=head2 getters
+
+  ipaddress
+
+  publickey_path
+
+  privatekey_path
+
+=head2 setters
+
+  NONE
+
+
+=head1 DEFAULTS
+
+  privatekey_path       : $HOME/.ssh/id_rsa
+
+  publickey_path        : $HOME/.ssh/id_rsa.pub
+
+  username              : root
+
+  connect_timeout	: 300 (sec)
+
+  auth_type		: agent
+
+=cut

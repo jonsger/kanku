@@ -25,7 +25,6 @@ use IPC::Run qw/run/;
 use URI;
 
 with 'Kanku::Roles::Handler';
-with 'Kanku::Roles::Logger';
 with 'Kanku::Roles::SSH';
 
 has [qw/  giturl          revision    destination
@@ -72,13 +71,10 @@ has gui_config => (
 
 sub prepare {
   my $self = shift;
-  my $ctx  = $self->job->context;
 
   die "No giturl given"  if (! $self->giturl );
 
-  if ( $self->mirror ) {
-    $self->_prepare_mirror();
-  }
+  $self->_prepare_mirror if ( $self->mirror );
 
   # inherited by Kanku::Roles::SSH
   $self->get_defaults();
@@ -115,8 +111,6 @@ sub _prepare_mirror {
 
   $self->logger->info("Running command '@cmd'");
   run \@cmd ,\$io[0],\$io[1],\$io[2] || die "git $?\n";
-
-
 }
 
 sub execute {
@@ -153,22 +147,14 @@ sub execute {
   };
 }
 
-sub finalize {
-  return {
-    code    => 0,
-    message => "Nothing to do!"
-  }
-}
-
 __PACKAGE__->meta->make_immutable;
-
-
 1;
+
 __END__
 
 =head1 NAME
 
-Kanku::Handler::Git
+Kanku::Handler::GIT - handle git repositories
 
 =head1 SYNOPSIS
 
@@ -177,22 +163,36 @@ Here is an example how to configure the module in your jobs file or KankuFile
   -
     use_module: Kanku::Handler::GIT
     options:
-      giturl: https://github.com/M0ses/kanku.git
+      mirror:     1
+      giturl:     http://192.168.199.1/git/github.com/M0ses/kanku.git
+      remote_url: https://github.com/M0ses/kanku.git
+      destination: /root/kanku
       revision: master
-      destination: /tmp/kankua
-      submodules: 1
-      
+      submodules : 1
 
 =head1 DESCRIPTION
 
 This handler logs into the guest os via ssh and clones/checks out a git repository.
 
+=over 1
+
+=item update cached git repository on master server (only in mirror mode)
+
+=item login into guest vm and clone (from master cache or directly)
+
+=item checkout specific revision
+
+=item update submodules
+
+=back
 
 =head1 OPTIONS
 
-SEE ALSO Kanku::Roles::SSH
+SEE ALSO L<Kanku::Roles::SSH>
 
-  giturl      : url to clone git repository from
+  mirror      : boolean, if set to 1, use mirror mode
+
+  giturl      : url to clone git repository from (in mirror mode use local cache)
 
   revision    : revision to checkout in git working copy
 
@@ -200,11 +200,13 @@ SEE ALSO Kanku::Roles::SSH
 
   submodules  : boolean, if set to 1, submodules will be initialized and updated
 
+  remote_url  : origin of cached git repository (only used in mirror mode)
+
 =head1 CONTEXT
 
 =head2 getters
 
-SEE Kanku::Roles::SSH
+SEE L<Kanku::Roles::SSH>
 
 =head2 setters
 
