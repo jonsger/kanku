@@ -26,8 +26,6 @@ with 'Kanku::Roles::Handler';
 has domain_name => (
   is   => 'rw',
   isa  => 'Str',
-  lazy => 1,
-  default => sub { $_[0]->job()->context()->{domain_name} || '' }
 );
 
 has disabled => (is => 'rw',isa=>'Bool');
@@ -53,8 +51,9 @@ has gui_config => (
 );
 
 sub execute {
+  my ($self) = @_;
 
-  my $self = shift;
+  $self->domain_name($self->job->context->{domain_name}) if (! $self->domain_name);
 
   confess "No domain_name given!\n" if (! $self->domain_name );
 
@@ -83,7 +82,7 @@ __END__
 
 =head1 NAME
 
-Kanku::Handler::CleanupIPTables
+Kanku::Handler::CleanupIPTables - Cleanup iptables rules from master server
 
 =head1 SYNOPSIS
 
@@ -96,7 +95,8 @@ Here is an example how to configure the module in your jobs file or KankuFile
 
 =head1 DESCRIPTION
 
-This handler removes configured port forwarding rules.
+This handler removes the configured iptables port forwarding rules for
+the specified domain on the master server.
 
 =head1 OPTIONS
 
