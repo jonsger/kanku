@@ -25,6 +25,8 @@ with 'Kanku::Roles::Handler';
 has [qw/domain_name login_user login_pass/] => (is=>'rw',isa=>'Str',lazy=>1,default=>'');
 has timeout =>  => (is=>'rw',isa=>'Int',lazy=>1,default=>3600);
 
+sub distributable { 1 }
+
 sub prepare {
   my $self = shift;
   my $ctx  = $self->job()->context();
