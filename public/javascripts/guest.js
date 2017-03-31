@@ -32,10 +32,16 @@ Mustache.parse(href_guest);
       uri_base + '/rest/guest/list.json',
       function (gc) {
         var guests = gc;
+        var gl = Object.keys(gc.guest_list).sort();
+	console.log(gl);
 
         $.each(
-          gc.guest_list,
-          function (domain_name,guest_data) {
+          //gc.guest_list,
+	  gl,
+          function (num,domain_name) {
+	    console.log("domain_name = "+domain_name);
+	    var guest_data = gc.guest_list[domain_name];
+	    console.log(guest_data);
             var r_guest_panel = Mustache.render(
                         guest_panel_template,
                         {
@@ -51,6 +57,7 @@ Mustache.parse(href_guest);
               guest_data.nics,
               function (i) {
                   var nic = this;
+console.log("nic: "+nic.name);
                   var r_iface_line = Mustache.render(
                           iface_line_template,
                           {
@@ -81,9 +88,8 @@ Mustache.parse(href_guest);
 
             });
 
-
             $.each(
-              this.forwarded_ports,
+              guest_data.forwarded_ports,
               function (host_ip,forwarded_ports) {
                 $.each(
                   forwarded_ports,
