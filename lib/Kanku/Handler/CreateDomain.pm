@@ -86,6 +86,16 @@ has gui_config => (
           type  => 'text',
           label => 'List of Forwarded Ports'
         },
+        {
+          param => 'network_name',
+          type  => 'text',
+          label => 'Name of libvirt network'
+        },
+        {
+          param => 'network_bridge',
+          type  => 'text',
+          label => 'Name of network bridge'
+        },
       ];
   }
 );
@@ -345,6 +355,7 @@ If configured a port_forward_list, it tries to find the next free port and confi
     management_network    :
 
     forward_port_list     : list of ports to forward from host_interface`s IP to VM
+                            DONT USE IN DISTRIBUTED ENV - SEE Kanku::Handler::PortForward
 
     memory                : memory in KB to be used by VM
 
