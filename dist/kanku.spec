@@ -175,6 +175,7 @@ TODO:
 /opt/kanku/lib/Kanku/Schema.pm
 /opt/kanku/lib/Kanku/JobList.pm
 /opt/kanku/lib/Kanku/Task.pm
+%dir /opt/kanku/lib/Kanku/LibVirt
 /opt/kanku/lib/Kanku/LibVirt/HostList.pm
 
 %package cli
