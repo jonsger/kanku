@@ -175,6 +175,7 @@ TODO:
 /opt/kanku/lib/Kanku/Schema.pm
 /opt/kanku/lib/Kanku/JobList.pm
 /opt/kanku/lib/Kanku/Task.pm
+/opt/kanku/lib/Kanku/LibVirt/HostList.pm
 
 %package cli
 Summary: Command line client for kanku
