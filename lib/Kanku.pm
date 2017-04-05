@@ -53,6 +53,10 @@ get '/job_history' => sub {
     template 'job_history' , { %{ get_defaults_for_views() }, page => ( param('page') || 1 ), kanku => { module => 'History'} };
 };
 
+get '/job_result/:id' => sub {
+    template 'job_result' , { %{ get_defaults_for_views() }, id => param('id'), kanku => { module => 'History'} };
+};
+
 get '/job' => require_any_role [qw/Admin User/] => sub {
     template 'job' , { %{ get_defaults_for_views() } , kanku => { module => 'Job' }  };
 };
