@@ -111,7 +111,10 @@
       </div>
       <div class="col-md-3">{{ start_time }}</div>
       <div class="col-md-3">({{ duration_min }}min {{ duration_sec }}sec)</div>
-      <div class="col-md-2"><span class="glyphicon glyphicon-download pull-right"/></div>
+      <div class="col-md-2">
+	<a class="pull-right" href="[% request.uri_base %]/job_result/{{ id }}"><span class="glyphicon glyphicon-link"/></a>
+	<span class="glyphicon glyphicon-download pull-right"/>
+      </div>
     </div>
   </div>
   <div class="panel-body" style='display:none;'id="jbody_{{ id }}">

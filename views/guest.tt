@@ -11,8 +11,11 @@
 <div class="panel panel-default panel-{{ guest_class }}" id="guest_panel{{ id }}">
   <div class="panel-heading" id='gp_header_{{ id }}' onClick=toggle_guest_panel_body("{{ id }}")>
     <div class='row'>
-      <div class="col-md-12">
+      <div class="col-md-10">
         <span class="badge">{{ id }} ({{ host  }})</span>
+      </div>
+      <div class="col-md-2">
+	<a class="pull-right" href="[% request.uri_base %]/guest#{{ id }}"><span class="glyphicon glyphicon-link"/></a>
       </div>
     </div>
   </div>

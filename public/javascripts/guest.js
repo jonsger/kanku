@@ -33,15 +33,12 @@ Mustache.parse(href_guest);
       function (gc) {
         var guests = gc;
         var gl = Object.keys(gc.guest_list).sort();
-	console.log(gl);
 
         $.each(
           //gc.guest_list,
 	  gl,
           function (num,domain_name) {
-	    console.log("domain_name = "+domain_name);
 	    var guest_data = gc.guest_list[domain_name];
-	    console.log(guest_data);
             var r_guest_panel = Mustache.render(
                         guest_panel_template,
                         {
@@ -57,7 +54,7 @@ Mustache.parse(href_guest);
               guest_data.nics,
               function (i) {
                   var nic = this;
-console.log("nic: "+nic.name);
+
                   var r_iface_line = Mustache.render(
                           iface_line_template,
                           {
@@ -128,10 +125,21 @@ console.log("nic: "+nic.name);
                 );
               }
             );
+            var href = window.location.href;
+            var parts = href.split('#');
+            var vm = parts[1];
+
+            if ( vm == domain_name) {
+                var element = $('#gp_body_' + vm );
+                element.css("display","block");
+            }
           }
         );
+
+
       }
     );
+
   }
 );
 
