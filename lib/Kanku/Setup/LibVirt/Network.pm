@@ -194,6 +194,8 @@ sub configure_iptables {
 		return 0;
 	}
 
+        system('sysctl net.ipv4.ip_forward=1');
+
 	my $prefix = $ip->prefix;
         # MTU = MTU (e.g. 1500) - 50 bytes VXLAN Header
         # MSS = MTU - 40 bytes TCP Header
