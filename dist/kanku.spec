@@ -108,6 +108,8 @@ Requires: perl(LWP::Protocol::https)
 Requires: perl(Mail::Sendmail)
 Requires: perl(Archive::Cpio)
 
+Conflicts: perl-DBD-SQLite-Amalgamation
+
 %description common
 TODO:
  add a useful description
