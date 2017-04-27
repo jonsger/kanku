@@ -21,6 +21,9 @@ use Kanku::Config;
 use Kanku::Util::VM;
 use Data::Dumper;
 use Net::IP;
+
+with 'Kanku::Roles::SSH';
+
 extends qw(MooseX::App::Cmd::Command);
 
 has user => (
@@ -70,10 +73,26 @@ sub execute {
                 login_pass  => $self->login_pass,
                 management_network  => $cfg->config->{management_network} || ''
               );
-  my $ip    = $vm->get_ipaddress;
-  my $user  = $self->user;
+  my $state = $vm->state;
 
-  system("ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -l $user $ip");
+  if ( $state eq 'on' ) {
+    my $ip    = $vm->get_ipaddress;
+    my $user  = $self->user;
+
+    $self->ipaddress($ip);
+    $self->username($user);
+
+    $self->connect();
+
+    system("ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -l $user $ip");
+    exit 0;
+  } elsif ($state eq 'off') {
+    $self->logger->warn("VM is off - use 'kanku startvm' to start VM and try again");
+    exit 1;
+  } else {
+    $self->logger->fatal("No VM found or VM in state 'unknown'");
+    exit 2;
+  }
 
 }
 

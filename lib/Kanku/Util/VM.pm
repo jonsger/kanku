@@ -403,6 +403,26 @@ sub get_disk_list {
   return $result;
 }
 
+sub state {
+  my $self    	= shift;
+  my %opts    	= @_;
+  my $dom       = $self->dom;
+
+  if ($dom) {
+    my $info = $dom->get_info();
+    $self->logger->debug("State: $info->{state}");
+    if ( $info->{state} == 5 ) {
+      return "off";
+    } elsif ( $info->{state} == 1 ) {
+      return "on";
+    } else {
+      return "unkown";
+    }
+  } else {
+    die "Domain ".$self->domain_name." does not exists";
+  }
+}
+
 sub _get_ip_from_console {
   my $self        = shift;
   my $interface   = $self->management_interface() || 'eth0';
@@ -449,15 +469,15 @@ sub _get_ip_from_dhcp {
   my $self          = shift;
   my $domain_name   = $self->domain_name;
   my $dom           = $self->dom;
-  my @nics          = $dom->get_interface_addresses(
-                          Sys::Virt::Domain::INTERFACE_ADDRESSES_SRC_LEASE
-                      );
   my $ipaddress;
 
 
   my $wait = $self->wait_for_network;
 
   while ( $wait > 0) {
+      my @nics = $dom->get_interface_addresses(
+                   Sys::Virt::Domain::INTERFACE_ADDRESSES_SRC_LEASE
+      );
 
       if (! $self->management_network() ) {
         $ipaddress = $nics[0]->{addrs}->[0]->{addr};

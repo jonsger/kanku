@@ -14,7 +14,7 @@
 # Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 #
-package Kanku::Cmd::Command::stopvm;
+package Kanku::Cmd::Command::status;
 
 use Moose;
 use Kanku::Config;
@@ -32,7 +32,7 @@ has domain_name => (
     traits        => [qw(Getopt)],
     isa           => 'Str',
     is            => 'rw',
-    cmd_aliases   => 'd',
+    cmd_aliases   => 'X',
     documentation => 'name of domain to create',
     lazy          => 1,
     default       => sub { $_[0]->cfg->config->{domain_name} }
@@ -45,17 +45,9 @@ has cfg => (
     default       => sub { Kanku::Config->instance(); }
 );
 
-has force => (
-    traits        => [qw(Getopt)],
-    isa           => 'Bool',
-    is            => 'rw',
-    cmd_aliases   => 'f',
-    documentation => 'destroy domain instead of shutdown',
-);
+sub abstract { "Start kanku VM" }
 
-sub abstract { "Stop kanku VM" }
-
-sub description { "This command can be used to stop/shutdown a running VM" }
+sub description { "This command can be used to start an already existing VM" }
 
 sub execute {
   my $self    = shift;
@@ -63,19 +55,16 @@ sub execute {
 
   my $vm = Kanku::Util::VM->new(domain_name=>$self->domain_name);
   $logger->debug("Searching for domain: ".$self->domain_name);
-  if ($vm->dom) {
-    $logger->info("Stopping domain: ".$self->domain_name);
-    if ($self->force) {
-      $vm->dom->destroy();
-    } else {
-      $vm->dom->shutdown();
-    }
-    while ($vm->state eq 'on') {
-      sleep 1;
-    }
-    $logger->info("Stopped domain: ".$self->domain_name." successfully");
+  my $state = $vm->state();
+
+  if ($state eq 'on' ) {
+    $logger->info("VM is running");
+  } elsif ( $state eq 'off' ) {
+    $logger->error("VM isn't running");
+  } elsif ( $state eq 'unknown' ) {
+    $logger->warn("VM is in state 'unknown'");
   } else {
-    $logger->fatal("Domain ".$self->domain_name." already exists");
+    $logger->fatal("Kanku::Util::VM returned an impossible state '$state'");
     exit 1;
   }
 

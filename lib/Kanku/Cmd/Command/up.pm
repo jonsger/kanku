@@ -64,6 +64,22 @@ has skip_all_checks => (
     documentation => 'Skip all checks when downloading from OBS server e.g.',
 );
 
+has skip_check_project => (
+  traits        => [qw(Getopt)],
+    isa           => 'Bool',
+    is            => 'rw',
+    #cmd_aliases   => 'X',
+    documentation => 'Skip checks if project is ready when downloading from OBS',
+);
+
+has skip_check_package => (
+  traits        => [qw(Getopt)],
+    isa           => 'Bool',
+    is            => 'rw',
+    #cmd_aliases   => 'X',
+    documentation => 'Skip checks if package is ready when downloading from OBS',
+);
+
 sub abstract { "start the job defined in KankuFile" }
 
 sub description { "start the job defined in KankuFile" }
@@ -114,12 +130,14 @@ sub execute {
         scheduled => 0,
         triggered => 0,
         context   => {
-          domain_name     => $self->domain_name,
-          login_user      => $cfg->config->{login_user},
-          login_pass      => $cfg->config->{login_pass},
-          use_cache       => $cfg->config->{use_cache},
-          offline         => $self->offline         || 0,
-          skip_all_checks => $self->skip_all_checks || 0,
+          domain_name        => $self->domain_name,
+          login_user         => $cfg->config->{login_user},
+          login_pass         => $cfg->config->{login_pass},
+          use_cache          => $cfg->config->{use_cache},
+          offline            => $self->offline            || 0,
+          skip_all_checks    => $self->skip_all_checks    || 0,
+          skip_check_project => $self->skip_check_project || 0,
+          skip_check_package => $self->skip_check_package || 0,
         }
   );
 

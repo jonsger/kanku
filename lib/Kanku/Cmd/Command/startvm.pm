@@ -56,6 +56,7 @@ sub execute {
   my $vm = Kanku::Util::VM->new(domain_name=>$self->domain_name);
   $logger->debug("Searching for domain: ".$self->domain_name);
   if ($vm->dom) {
+    $logger->info("Starting domain: ".$self->domain_name);
     $vm->dom->create();
   } else {
     $logger->fatal("Domain ".$self->domain_name." already exists");

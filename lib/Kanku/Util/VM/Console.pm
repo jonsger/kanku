@@ -30,7 +30,7 @@ has 'prompt_regex' => (is=>'rw', isa=>'Object',default=>sub { qr/^Kanku-prompt: 
 has _expect_object  => (is=>'rw', isa => 'Object' );
 has [qw/grub_seen user_is_logged_in console_connected/] => (is=>'rw', isa => 'Bool' );
 has 'connect_uri' => (is=>'rw', isa=>'Str',default=>'qemu:///system');
-has ['job_id'] => (is=>'rw', isa=>'Int');
+has ['job_id'] => (is=>'rw', isa=>'Int|Undef');
 
 sub init {
   my $self = shift;
@@ -47,7 +47,7 @@ sub init {
   my $exp = Expect->new;
   $exp->debug($cfg->{$pkg}->{debug} || 0);
 
-  if ($cfg->{$pkg}->{log_to_file}) {
+  if ($cfg->{$pkg}->{log_to_file} && $self->job_id) {
     $logger->debug("Config -> $pkg (log_to_file): $cfg->{$pkg}->{log_to_file}");
 
     my $lf = file($cfg->{$pkg}->{log_dir},"job-".$self->job_id."-console.log");
