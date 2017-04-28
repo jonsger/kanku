@@ -216,6 +216,7 @@ sub configure_iptables {
 		["-I","FORWARD","1","-s",$prefix,"-i",$ncfg->{bridge},"-j","ACCEPT"],
 		["-I","FORWARD","1","-d",$prefix,"-o",$ncfg->{bridge},"-m","conntrack","--ctstate","RELATED,ESTABLISHED","-j","ACCEPT"],
 		["-I","FORWARD","1","-i",$ncfg->{bridge},"-p", "tcp","--tcp-flags", "SYN,RST", "SYN", "-j", "TCPMSS", "--set-mss",$mss],
+		["-I","FORWARD","1","-o",$ncfg->{bridge},"-p", "tcp","--tcp-flags", "SYN,RST", "SYN", "-j", "TCPMSS", "--set-mss",$mss],
 		["-t","nat","-I","POSTROUTING","-s",$prefix,"!","-d",$prefix,"-j","MASQUERADE"],
 		["-t","nat","-I","POSTROUTING","-s",$prefix,"!","-d",$prefix,"-p","udp","-j","MASQUERADE","--to-ports","1024-65535"],
 		["-t","nat","-I","POSTROUTING","-s",$prefix,"!","-d",$prefix,"-p","tcp","-j","MASQUERADE","--to-ports","1024-65535"],
