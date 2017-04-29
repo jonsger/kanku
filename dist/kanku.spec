@@ -161,6 +161,9 @@ TODO:
 %dir /etc/profile.d/
 %config /etc/profile.d/kanku.sh
 
+%dir /etc/logrotate.d/
+%config /etc/logrotate.d/kanku
+
 /opt/kanku/lib/Kanku/Handler/
 /opt/kanku/lib/Kanku/Roles/
 /opt/kanku/lib/Kanku/Schema/
