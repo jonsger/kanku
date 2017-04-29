@@ -90,13 +90,18 @@ sub run_job {
   $rmq->create_queue();
   $self->job_queue($rmq);
 
-  my $applications = $self->advertise_job( 
-    $rmq,
-    {
-       answer_queue	  => $queue,
-       job_id	  	  => $job->id,
-    }
-  );
+  my $applications={};;
+
+  while (! keys(%{$applications})) {
+    $applications = $self->advertise_job(
+      $rmq,
+      {
+	 answer_queue	  => $queue,
+	 job_id	  	  => $job->id,
+      }
+    );
+    sleep 1;
+  }
 
   $logger->trace("List of all applications:\n" . Dumper($applications));
 
