@@ -140,12 +140,13 @@ TODO:
 %config /opt/kanku/etc/config.yml.template
 
 %dir /opt/kanku/etc/templates
+%dir /opt/kanku/etc/templates/examples-vm/
 %dir /opt/kanku/etc/templates/cmd
 %config /opt/kanku/etc/templates/cmd/setup.config.yml.tt2
 %config /opt/kanku/etc/templates/cmd/init.tt2
-%config /opt/kanku/etc/templates/obs-server-26.tt2
-%config /opt/kanku/etc/templates/sles11sp3.tt2
-%config /opt/kanku/etc/templates/obs-server.tt2
+%config /opt/kanku/etc/templates/examples-vm/obs-server-26.tt2
+%config /opt/kanku/etc/templates/examples-vm/sles11sp3.tt2
+%config /opt/kanku/etc/templates/examples-vm/obs-server.tt2
 
 %dir /opt/kanku/etc/jobs
 %dir /opt/kanku/etc/jobs/examples

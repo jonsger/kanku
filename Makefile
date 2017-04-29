@@ -1,8 +1,8 @@
 PREFIX				=	/opt/kanku
 VERSION				=	$(shell grep VERSION lib/Kanku.pm |perl -p -e "s/.*'([\d.]+)'.*/\$$1/")
-CONFIG_FILES 	= templates/cmd/init.tt2 templates/obs-server-26.tt2 templates/sles11sp3.tt2 templates/obs-server.tt2 console-log.conf config.yml.template jobs/examples/obs-server.yml jobs/examples/sles11sp3.yml jobs/examples/obs-server-26.yml log4perl.conf templates/cmd/setup.config.yml.tt2 kanku-network-setup-logging.conf
+CONFIG_FILES 	= templates/cmd/init.tt2 templates/examples-vm/obs-server-26.tt2 templates/examples-vm/sles11sp3.tt2 templates/examples-vm/obs-server.tt2 console-log.conf config.yml.template jobs/examples/obs-server.yml jobs/examples/sles11sp3.yml jobs/examples/obs-server-26.yml log4perl.conf templates/cmd/setup.config.yml.tt2 kanku-network-setup-logging.conf
 FULL_DIRS			= bin lib share/migrations share/fixtures public views
-CONFIG_DIRS		= etc etc/templates etc/templates/cmd etc/jobs etc/jobs/examples
+CONFIG_DIRS		= etc etc/templates etc/templates/cmd etc/templates/examples-vm/ etc/jobs etc/jobs/examples
 
 all:
 
