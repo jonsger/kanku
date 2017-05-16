@@ -50,8 +50,9 @@ sub prepare {
 }
 
 sub execute {
-  my $self = shift;
-  my $ctx  = $self->job()->context();
+  my $self   = shift;
+  my $ctx    = $self->job()->context();
+  my $logger = $self->logger;
 
   if ( $self->offline ) {
     return $self->get_from_history();
@@ -79,13 +80,14 @@ sub execute {
     $curl->use_temp_file(1);
   }
 
-  $self->logger->debug("Using output file: ".$curl->output_file);
+  $logger->debug("Using output file: ".$curl->output_file);
 
   $ctx->{vm_image_file} = $curl->output_file;
   
   my $tmp_file;
 
   try {
+    $logger->debug(" - use_cache: ".$curl->use_cache);
     $tmp_file = $curl->download();
   } catch {
     my $e = $_;
@@ -93,14 +95,14 @@ sub execute {
     die $e if ( $e !~ /'404'$/);
     die $e if ( ! $ctx->{obs_direct_url} );
 
-    $self->logger->warn("Failed to download: ".$curl->url);
+    $logger->warn("Failed to download: ".$curl->url);
 
-    $self->logger->debug("obs_direct_url = $ctx->{obs_direct_url}");
+    $logger->debug("obs_direct_url = $ctx->{obs_direct_url}");
     $curl->url($ctx->{obs_direct_url});
   
     $curl->output_file($self->_calc_output_file($ctx->{public_api}));
 
-    $self->logger->info("Trying alternate url ".$curl->url);
+    $logger->info("Trying alternate url ".$curl->url);
 
     if (! $ctx->{public_api} ) {
       $curl->username($ctx->{obs_username}) if $ctx->{obs_username};
@@ -113,7 +115,7 @@ sub execute {
       my $cpio = Archive::Cpio->new;
       my $out_file = file(file($tmp_file)->parent, $ctx->{obs_filename})->stringify;
 
-      $self->logger->debug("extracting from $tmp_file to $out_file");
+      $logger->debug("extracting from $tmp_file to $out_file");
 
       open(INFILE,  '<',$tmp_file) || die "Could not open $tmp_file: $!";
       open(OUTFILE, '>',$out_file) || die "Could not open $out_file: $!";
