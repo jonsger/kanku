@@ -20,21 +20,24 @@ use strict;
 use warnings;
 
 use base 'LWP::UserAgent';
+use Log::Log4perl;
 
 sub mirror
 {
     my($self, %opt) = @_;
-
-    my $url = $opt{url};
-    my $file = $opt{file};
+    my $logger      = Log::Log4perl->get_logger();
+    my $url         = $opt{url};
+    my $file        = $opt{file};
 
     my $request = $opt{request} || HTTP::Request->new('GET', $url);
 
     # If the file exists, add a cache-related header
     if ( -e $file ) {
-        my ($mtime) = ( stat($file) )[9];
+        my ($mtime)   = ( stat($file) )[9];
+        my $http_date = HTTP::Date::time2str($mtime);
+        $logger->debug("Output file exists - adding 'If-Modified-Since: $http_date' ($mtime) ");
         if ($mtime) {
-            $request->header( 'If-Modified-Since' => HTTP::Date::time2str($mtime) );
+            $request->header('If-Modified-Since' => $http_date);
         }
     }
     my $tmpfile = "$file-$$";
