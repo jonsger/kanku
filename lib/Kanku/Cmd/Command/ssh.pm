@@ -81,7 +81,7 @@ sub execute {
 
     $self->ipaddress($ip);
     $self->username($user);
-
+    $self->job(Kanku::Job->new());
     $self->connect();
 
     system("ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -l $user $ip");
