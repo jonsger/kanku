@@ -22,6 +22,7 @@ use Net::AMQP::RabbitMQ;
 use JSON::XS;
 use Data::Dumper;
 use UUID ':all';
+use Try::Tiny;
 
 with 'Kanku::Roles::Logger';
 
@@ -71,9 +72,15 @@ sub connect {
   );
 
   $self->logger->trace("Trying to connect to rabbitmq with the folloing options:\n".Dumper(\@opts));
-
-  $self->queue->connect(@opts);
-
+  my $connect_success = 0;
+  while (! $connect_success ) {
+    try {
+      $self->queue->connect(@opts);
+      $connect_success = 1;
+    } catch {
+      sleep 1;
+    };
+  }
   $self->queue->channel_open($self->channel);
 }
 
