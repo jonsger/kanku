@@ -18,7 +18,6 @@ package Kanku::Handler::RevertQcow2Snapshot;
 
 use Moose;
 use Kanku::Config;
-use Sys::Guestfs;
 
 with 'Kanku::Roles::Handler';
 
