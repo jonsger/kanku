@@ -44,6 +44,7 @@ use Data::Dumper;
 use JSON::XS;
 use Kanku::MQ;
 use Try::Tiny;
+use MIME::Base64;
 
 has job => (is=>'rw',isa=>'Object');
 
@@ -118,12 +119,23 @@ sub run {
 	$data->{action} eq 'finished_task' or
 	$data->{action} eq 'aborted_job'
       ) {
-	$logger->trace(Dumper($data));
+	$logger->trace("Content of \$data:\n".Dumper($data));
 	if ( $data->{error_message} ) {
 	  die $data->{error_message};
 	} else {
 	  my $job = decode_json($data->{job});
-	  $result = $data->{result};
+          $logger->debug("Content of \$data->result: ".Dumper($data->{result}));
+
+          try {
+            $data->{result}->{result} = decode_base64($data->{result}->{result}) if ($data->{result}->{result});
+            $result = $data->{result};
+             $logger->debug("Content of \$data->result->{result}: $data->{result}->{result}");
+          } catch {
+            $logger->fatal("Error while decoding base64: $_");
+            $logger->debug(Dumper($data));
+            $data->{result} = "Error while decoding base64: $_";
+          };
+
 	  $self->job->context(${job}->{context});
 	  last;
 	}

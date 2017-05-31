@@ -21,6 +21,7 @@ use Sys::MemInfo qw(totalmem freemem);
 use Carp;
 use Net::Domain qw/hostfqdn/;
 use UUID qw/uuid/;
+use MIME::Base64;
 
 with 'Kanku::Roles::Logger';
 with 'Kanku::Roles::ModLoader';
@@ -293,9 +294,9 @@ sub handle_task {
   my $task   = Kanku::Task::Local->new(%{$data->{task_args}},schema => $self->schema);
 
   my $result = $task->run();
-
+  $result->{result} = encode_base64($result->{result}) if ($result->{result});
   my $answer = {
-	  action        => 'finished_task',
+      action        => 'finished_task',
       result        => $result,
       answer_queue  => $self->local_job_queue_name,,
       job           => $job->to_json

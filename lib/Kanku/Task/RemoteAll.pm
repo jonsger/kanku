@@ -44,6 +44,8 @@ use Data::Dumper;
 use JSON::XS;
 use Kanku::MQ;
 use Try::Tiny;
+use MIME::Base64;
+
 
 has kmq              => (is=>'rw',isa=>'Object');
 
@@ -180,6 +182,13 @@ sub _inspect_msg {
   my $body = $msg->{body};
   try {
     $data = decode_json($body);
+    try {
+      $data->{result}->{result} = decode_base64($data->{result}->{result}) if ($data->{result}->{result});
+    } catch {
+      $logger->fatal("Error while decoding base64: $_");
+      $logger->debug(Dumper($data));
+      $data->{result} = "Error while decoding base64: $_";
+    };
     if ( $data->{action} eq 'task_confirmation' ) {
       $self->confirmations()->{$data->{answer_queue}} = $data;
     } elsif ( $data->{action} eq 'finished_task' ) {
