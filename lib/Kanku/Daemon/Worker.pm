@@ -214,6 +214,23 @@ sub handle_job {
   my ($self,$job_id,$job_kmq) = @_;
   my $logger = $self->logger;
 
+  $SIG{TERM} = sub {
+    my $answer = {
+	action        => 'aborted_job',
+	error_message => "Aborted job because of TERM signal",
+    };
+
+    $self->logger->trace("Sending answer to '".$self->remote_job_queue_name."':\n".Dumper($answer));
+
+    $job_kmq->publish(
+      $self->remote_job_queue_name,
+      encode_json($answer),
+      { exchange => 'kanku.to_dispatcher'}
+    );
+
+    exit 0;
+  };
+
   try  {
     while (1){
       my $task_msg = $job_kmq->recv(10000);

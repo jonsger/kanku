@@ -104,8 +104,11 @@ sub get_defaults {
 
 sub connect {
   my $self    = shift;
-  my $ssh2    = Net::SSH2->new(strict_host_key_checking=>'no');
   my $logger  = $self->logger;
+  my $ssh2    = Net::SSH2->new(
+    strict_host_key_checking=>'no',
+    timeout => 1000 * 60 * 60 * 4 # default timeout 4 hours in milliseconds
+  );
   $self->ssh2($ssh2);
 
   my $results = [];
