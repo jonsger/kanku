@@ -4,13 +4,15 @@ var subtask_result_template         = $("#subtask_result_panel").html();
 
 var subtask_result_success_template = $("#subtask_result_success").html();
 var subtask_result_failed_template  = $("#subtask_result_failed").html();
-var job_result_failed_template  = $("#job_result_failed").html();
+var job_result_failed_template      = $("#job_result_failed").html();
+var job_result_panel_info           = $("#job_result_panel_info").html();
 
 Mustache.parse(header_template);
 Mustache.parse(job_result_template);
 Mustache.parse(subtask_result_success_template);
 Mustache.parse(subtask_result_failed_template);
 Mustache.parse(job_result_failed_template);
+Mustache.parse(job_result_panel_info);
 
 var alert_map =[];
 alert_map['succeed'] = 'success';
@@ -60,6 +62,11 @@ function update_job_history (data) {
         duration_min = Math.floor( duration / 60 );
         duration_sec = duration % 60;
       }
+      // workerinfo : host:pid:queue
+      var winfo = ('Not started',0,'Not started');
+      if ( this.workerinfo ) {
+         winfo = this.workerinfo.split(':');
+      }
 
       var rendered = Mustache.render(
                       job_result_template,
@@ -70,6 +77,7 @@ function update_job_history (data) {
                         duration_min  : duration_min,
                         duration_sec  : duration_sec,
                         state_class   : alert_map[this.state],
+                        workerhost    : winfo[0],
                       }
       );
       $("#job_history").append(rendered);
@@ -101,6 +109,18 @@ function update_job_result_panel_body (data) {
       body.append(rendered);
     }
   }
+
+  var info_box = Mustache.render(
+                  job_result_panel_info,
+                  {
+                    'id'          : data.id,
+                    'workerhost'  : data.workerhost,
+                    'workerpid'   : data.workerpid,
+                    'workerqueue' : data.workerqueue,
+                  }
+  );
+
+  body.append(info_box);
 
   $.each(
     data.subtasks,

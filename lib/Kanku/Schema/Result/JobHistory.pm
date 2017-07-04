@@ -136,7 +136,7 @@ __PACKAGE__->has_many(
 sub TO_JSON {
   my $self = shift;
   my $rv = {};
-  for my $col (qw/id name state args result creation_time start_time end_time last_modified/) {
+  for my $col (qw/id name state args result creation_time start_time end_time last_modified workerinfo masterinfo/) {
     $rv->{$col} = $self->$col();
   }
   

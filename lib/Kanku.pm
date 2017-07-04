@@ -236,12 +236,19 @@ get '/rest/job/:id.:format' => sub {
     );
   }
 
+  # workerinfo:
+  # kata.suse.de:23108:job-3878-340a157a-d27d-4138-97ab-bb8f49b5bef7
+  my ($workerhost, $workerpid, $workerqueue) = split(/:/,$job->workerinfo);
+
   return {
-      id => $job->id,
-      name => $job->name,
-      state => $job->state,
-      subtasks => $subtasks,
-      result => $job->result || "{}",
+      id          => $job->id,
+      name        => $job->name,
+      state       => $job->state,
+      subtasks    => $subtasks,
+      result      => $job->result || "{}",
+      workerhost  => $workerhost,
+      workerpid   => $workerpid,
+      workerqueue => $workerqueue,
   }
 };
 
