@@ -210,6 +210,8 @@ sub configure_iptables {
 	$self->logger->debug("prefix: $prefix");
 
 	my $rules = [
+		["-I","INPUT","1","-i",$ncfg->{bridge},"-p", "tcp","--tcp-flags", "SYN,RST", "SYN", "-j", "TCPMSS", "--set-mss",$mss],
+		["-I","OUTPUT","1","-o",$ncfg->{bridge},"-p", "tcp","--tcp-flags", "SYN,RST", "SYN", "-j", "TCPMSS", "--set-mss",$mss],
 		["-I","FORWARD","1","-i",$ncfg->{bridge},"-j","REJECT","--reject-with","icmp-port-unreachable"],
 		["-I","FORWARD","1","-o",$ncfg->{bridge},"-j","REJECT","--reject-with","icmp-port-unreachable"],
 		["-I","FORWARD","1","-i",$ncfg->{bridge},"-o","$ncfg->{bridge}","-j","ACCEPT"],
