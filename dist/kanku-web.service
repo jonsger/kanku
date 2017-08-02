@@ -7,7 +7,6 @@ After=local-fs.target network.target
 [Service]
 Type=simple
 ExecStart=/usr/bin/plackup /opt/kanku/bin/kanku-app.psgi
-#ExecReload=/usr/sbin/dovecot reload
 NonBlocking=yes
 
 [Install]

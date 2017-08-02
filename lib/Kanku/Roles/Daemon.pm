@@ -151,7 +151,9 @@ sub initialize_shutdown {
 sub finalize_shutdown {
   my ($self) = @_;
 
+  $self->logger->trace("Removing shutdown file: ". $self->shutdown_file->stringify);
   $self->shutdown_file->remove();
+  $self->logger->trace("Removing PID file: ". $self->pid_file->stringify);
   $self->pid_file->remove();
 
   $self->logger->info("Shutting down service ".ref(__PACKAGE__));

@@ -7,6 +7,7 @@ After=local-fs.target network.target
 Type=forking
 PIDFile=/opt/kanku/var/run/kanku-scheduler.pid
 ExecStart=/opt/kanku/bin/kanku-scheduler
+ExecStop=/opt/kanku/bin/kanku-scheduler --stop
 
 [Install]
 WantedBy=multi-user.target
