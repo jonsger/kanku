@@ -4,6 +4,8 @@ CONFIG_FILES 	= templates/cmd/init.tt2 templates/examples-vm/obs-server-26.tt2 t
 FULL_DIRS			= bin lib share/migrations share/fixtures public views
 CONFIG_DIRS		= etc etc/templates etc/templates/cmd etc/templates/examples-vm/ etc/jobs etc/jobs/examples
 
+PERL_CRITIC_READY := bin/*
+
 all:
 
 install: install_dirs install_full_dirs install_services
@@ -68,5 +70,8 @@ clean:
 
 test:
 	prove -Ilib -It/lib t/*.t
+
+critic:
+	perlcritic -brutal $(PERL_CRITIC_READY)
 
 .PHONY: dist install
