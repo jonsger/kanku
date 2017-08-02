@@ -123,15 +123,17 @@ sub run {
 
   $self->cleanup_dead_jobs();
 
-  unlink("$FindBin::Bin/../var/run/kanku-dispatcher.shutdown");
-
-  exit 0;
+  $self->finalize_shutdown();
+ 
+  return;
 }
 
 
 sub cleanup_dead_jobs {
   my ($self) = @_;
   my $logger = $self->logger;
+
+  $logger->debug("Cleaning up dead jobs");
 
   my $dead_jobs = $self->schema->resultset('JobHistory')->search(
     { state => ['running','dispatching'] }
@@ -143,6 +145,11 @@ sub cleanup_dead_jobs {
   );
 
   $dead_tasks->update({ state => 'failed'});
+
+
+  $logger->debug("Cleaning up dead jobs finished");
+
+  return;
 }
 
 sub run_notifiers {
