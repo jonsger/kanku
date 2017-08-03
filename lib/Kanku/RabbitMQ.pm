@@ -48,7 +48,12 @@ has '+exchange_name'  => ( default => 'amq.direct');
 has '+routing_key'    => ( default => '');
 
 has queue => (
-	  is	  => 'rw', 
+	  is	  => 'rw',
+	  isa	  => 'Object',
+);
+
+has shutdown_file => (
+	  is	  => 'rw',
 	  isa	  => 'Object',
 );
 
@@ -59,7 +64,7 @@ sub connect {
 
   my @opts = (
     $self->host,
-    { 
+    {
       vhost           => $self->vhost,
       user            => $self->user,
       password	      => $self->password,
@@ -78,17 +83,24 @@ sub connect {
       $self->queue->connect(@opts);
       $connect_success = 1;
     } catch {
+      if ( $self->shutdown_file ) {
+        $self->logger->trace("shutdown_file: ".$self->shutdown_file->stringify);
+        return if ( -f $self->shutdown_file);
+      }
       sleep 1;
     };
   }
+
   $self->queue->channel_open($self->channel);
+
+  return 1;
 }
 
 sub connect_info {
   my ($self) = @_;
   return  {
     host            => $self->host,
-    vhost           => $self->vhost, 
+    vhost           => $self->vhost,
     user            => $self->user,
     password        => $self->password,
     port	        => $self->port,
@@ -101,7 +113,7 @@ sub connect_info {
 #
 sub setup_worker {
   my ($self,$mq)=@_;
-  
+
   $self->queue->exchange_declare(
     $self->channel,
     'kanku.to_all_workers',
@@ -178,5 +190,5 @@ sub create_queue {
   return $mq;
 }
 
-1; 
+1;
 

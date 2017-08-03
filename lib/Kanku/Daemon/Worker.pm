@@ -49,21 +49,23 @@ sub run {
   $pid = fork();
 
   if (! $pid ) {
-    my $kmq = Kanku::RabbitMQ->new(%{ $config->{rabbitmq} || {}});
-    $kmq->connect();
-    $kmq->setup_worker();
-    $self->local_job_queue_name(hostfqdn());
-    $kmq->create_queue(
-      queue_name=>$self->local_job_queue_name,
-      exchange_name=>'kanku.to_all_hosts'
-    );
-
     while(1) {
-      my $msg = $kmq->recv(1000);
-      if ($msg) {
-	try {
+      try {
+        my $kmq = Kanku::RabbitMQ->new(%{ $config->{rabbitmq} || {}});
+        $kmq->shutdown_file($self->shutdown_file);
+        $kmq->connect() or die "Could not connect to rabbitmq\n";
+        $kmq->setup_worker();
+        $self->local_job_queue_name(hostfqdn());
+        $kmq->create_queue(
+	  queue_name=>$self->local_job_queue_name,
+	  exchange_name=>'kanku.to_all_hosts'
+        );
+	my $msg = $kmq->recv(1000);
+	if ($msg) {
 	  my $data;
 	  my $body = $msg->{body};
+          # Extra try/catch to get better debugging output
+          # like adding body to log message
 	  try {
 	    $data = decode_json($body);
 	  } catch {
@@ -71,13 +73,12 @@ sub run {
 	  };
 
 	  if ( $data->{action} eq 'send_task_to_all_workers' ) {
-
 	    my $answer = {
-		action => 'task_confirmation',
-		task_id => $data->{task_id},
-		# answer_queue is needed on dispatcher side
-		# to distinguish the results per worker host
-		answer_queue => $self->local_job_queue_name
+	      action => 'task_confirmation',
+	      task_id => $data->{task_id},
+	      # answer_queue is needed on dispatcher side
+	      # to distinguish the results per worker host
+	      answer_queue => $self->local_job_queue_name
 	    };
 	    $self->remote_job_queue_name($data->{answer_queue});
 	    $kmq->publish(
@@ -90,13 +91,15 @@ sub run {
 	  } else {
 	    $logger->warn("Unknown action: ". $data->{action});
 	  }
-	} catch {
-	  $logger->error($_);
-	};
-        $self->remote_job_queue_name('');
-        $self->local_job_queue_name('');
-      } else {
-        exit 0 if ($self->detect_shutdown);
+	}
+      } catch {
+	$logger->error($_);
+      };
+      $self->remote_job_queue_name('');
+      $self->local_job_queue_name('');
+      if ($self->detect_shutdown) {
+	$logger->info("AllWorker process detected shutdown - exiting");
+	exit 0;
       }
     }
   } else {
@@ -111,13 +114,15 @@ sub run {
     while (1) {
       try {
         my $kmq = Kanku::RabbitMQ->new(%{ $config->{rabbitmq} || {}});
-        $kmq->connect();
-        $kmq->setup_worker();
-        $kmq->create_queue(
-          queue_name    => $self->worker_id,
-          exchange_name =>'kanku.to_all_workers'
-        );
-        my $msg  = $kmq->recv(1000);
+        $kmq->shutdown_file($self->shutdown_file);
+        $kmq->connect() or die "Could not connect to rabbitmq\n";
+	$kmq->setup_worker();
+	$kmq->create_queue(
+	  queue_name    => $self->worker_id,
+	  exchange_name =>'kanku.to_all_workers'
+	);
+	$self->logger->debug("Waiting for message (1000) ms");
+	my $msg  = $kmq->recv(1000);
 	if ( $msg ) {
 	  my $body = $msg->{body};
 	  my $data;
@@ -137,7 +142,10 @@ sub run {
       } catch {
         $logger->error($_);
       };
-      exit 0 if $self->detect_shutdown;
+      if ($self->detect_shutdown) {
+        $logger->info("Worker process '$$' detected shutdown - exiting");
+        exit 0;
+      }
     }
   } else {
     push(@childs,$pid);
@@ -145,8 +153,12 @@ sub run {
 
   while (@childs) {
     @childs = grep { waitpid($_,WNOHANG) == 0 } @childs;
+    $logger->trace("Active Childs: (@childs)");
     sleep(1);
   }
+
+  $logger->info("No more childs running, returning from Daemon->run()!");
+  return;
 }
 
 sub handle_advertisement {
@@ -208,6 +220,8 @@ sub handle_advertisement {
   } else {
     $logger->error("No answer queue found. Ignoring advertisement");
   }
+
+  return;
 }
 
 sub handle_job {

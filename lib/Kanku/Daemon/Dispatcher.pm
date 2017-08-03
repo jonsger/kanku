@@ -17,6 +17,7 @@
 package Kanku::Daemon::Dispatcher;
 
 use Moose;
+use Try::Tiny;
 use Data::Dumper;
 use Kanku::Dispatch::Local;
 use Kanku::Dispatch::RabbitMQ;
@@ -28,8 +29,12 @@ sub run {
   my $cfg = Kanku::Config->instance();
 
   my $mod = $cfg->config->{dispatcher} || "Kanku::Dispatch::Local";
-
-  $mod->new()->run();
+  my $daemon = $mod->new();
+  try {
+    $daemon->run();
+  } catch {
+    $daemon->logger->fatal("Error while running dispatcher: $_");
+  };
 }
 
 __PACKAGE__->meta->make_immutable;

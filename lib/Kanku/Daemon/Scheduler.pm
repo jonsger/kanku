@@ -43,8 +43,8 @@ sub run {
     # TODO: we need a better delay algorithm here
     sleep 1;
   }
-  $logger->trace("Finalizing shutdown");
-  $self->finalize_shutdown();
+  
+  return;
 }
 
 sub create_scheduled_jobs {

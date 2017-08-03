@@ -84,7 +84,8 @@ sub run_job {
   my $args           = $self->prepare_job_args($job);
 
   my $rmq = Kanku::RabbitMQ->new(%{ $self->config->{rabbitmq} || {}});
-  $rmq->connect();
+  $rmq->shutdown_file($self->shutdown_file);
+  $rmq->connect() || die "Could not connect to rabbitmq\n";
   $rmq->queue_name($queue);
   $rmq->exchange_name('kanku.to_dispatcher');
   $rmq->create_queue();
@@ -220,7 +221,8 @@ sub check_task {
 sub decline_applications {
   my ($self, $declined_applications) = @_;
   my $rmq = Kanku::RabbitMQ->new(%{ $self->config->{rabbitmq} || {}});
-  $rmq->connect();
+  $rmq->shutdown_file($self->shutdown_file);
+  $rmq->connect() || die "Could not connect to rabbitmq\n";
   
   foreach my $queue( keys(%$declined_applications) ) {
     $rmq->queue_name($queue);
@@ -339,10 +341,9 @@ sub cleanup_on_startup {
 
 sub cleanup_on_exit {
   my ($self) = @_;
-  my $rmq = Kanku::RabbitMQ->new(
-    %{$self->config->{rabbitmq} || {}},
-  );
-  $rmq->connect();
+  my $rmq = Kanku::RabbitMQ->new(%{$self->config->{rabbitmq} || {}});
+  $rmq->shutdown_file($self->shutdown_file);
+  $rmq->connect() || die "Could not connect to rabbitmq\n";
 
   my $exchange='kanku.to_dispatcher';
 
@@ -356,10 +357,9 @@ sub cleanup_on_exit {
 
 sub initialize {
   my ($self) = @_;
-  my $rmq = Kanku::RabbitMQ->new(
-    %{$self->config->{rabbitmq} || {}},
-  );
-  $rmq->connect();
+  my $rmq = Kanku::RabbitMQ->new(%{$self->config->{rabbitmq} || {}});
+  $rmq->shutdown_file($self->shutdown_file);
+  $rmq->connect() || die "Could not connect to rabbitmq\n";
 
   my $exchange='kanku.to_dispatcher';
 

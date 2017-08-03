@@ -59,7 +59,7 @@ has logger_conf => (
 has run_dir => (
   is => 'rw',
   isa => 'Object',
-  default => sub { 
+  default => sub {
     my $rd = Path::Class::Dir->new("$FindBin::Bin/../var/run");
     $rd->mkpath if (! -d $rd);
     return $rd
@@ -70,9 +70,9 @@ has pid_file => (
   is      => 'rw',
   isa     => 'Object',
   lazy    => 1,
-  default => sub { 
+  default => sub {
     my ($self) = @_;
-    Path::Class::File->new($self->run_dir,$self->daemon_basename.".pid"); 
+    Path::Class::File->new($self->run_dir,$self->daemon_basename.".pid");
   }
 );
 
@@ -80,9 +80,9 @@ has shutdown_file => (
   is      => 'rw',
   isa     => 'Object',
   lazy    => 1,
-  default => sub { 
+  default => sub {
     my ($self) = @_;
-    Path::Class::File->new($self->run_dir,$self->daemon_basename.".shutdown") 
+    Path::Class::File->new($self->run_dir,$self->daemon_basename.".shutdown");
   }
 );
 
@@ -100,7 +100,10 @@ sub prepare_and_run {
 
   $self->setup_logging();
 
-  $self->initialize_shutdown if ($self->daemon_options->{stop});
+  if ($self->daemon_options->{stop}) {
+    $self->initialize_shutdown;
+    exit 0;
+  }
 
   $self->check_pid if ( -f $self->pid_file );
 
@@ -119,6 +122,7 @@ sub prepare_and_run {
 
   $self->finalize_shutdown();
 
+  exit 0;
 }
 
 sub setup_logging {
@@ -134,7 +138,10 @@ sub initialize_shutdown {
   my ($self) = @_;
 
   # nothing should be running if no pid_file exists
-  exit 0 if (! -f  $self->pid_file);
+  if (! -f  $self->pid_file) {
+    $self->logger->debug("No pidfile found, exiting");
+    exit 0;
+  }
 
   my $pid = $self->pid_file->slurp;
 
@@ -142,23 +149,26 @@ sub initialize_shutdown {
     $self->shutdown_file->touch();
   } else {
     $self->logger->warn("Process $pid seems to be died unexpectedly");
-    $self->pid_file->remove() 
+    $self->pid_file->remove() or
+      $self->logger->error('Unable to remove \''.$self->pid_file."': $!");
   }
 
-  exit 0;
+  return;
 }
 
 sub finalize_shutdown {
   my ($self) = @_;
 
   $self->logger->trace("Removing shutdown file: ". $self->shutdown_file->stringify);
-  $self->shutdown_file->remove();
+  $self->shutdown_file->remove() or
+      $self->logger->error('Unable to remove \''.$self->shutdown_file."': $!");
   $self->logger->trace("Removing PID file: ". $self->pid_file->stringify);
-  $self->pid_file->remove();
+  $self->pid_file->remove() or
+      $self->logger->error('Unable to remove \''.$self->pid_file."': $!");
 
   $self->logger->info("Shutting down service ".ref(__PACKAGE__));
 
-  exit 0;
+  return;
 }
 
 sub check_pid {
@@ -171,8 +181,9 @@ sub check_pid {
   }
 
   $self->logger->warn("Process $pid seems to be died unexpectedly");
-  $self->pid_file->remove() 
+  $self->pid_file->remove();
 
+  return;
 }
 
 sub detect_shutdown {
