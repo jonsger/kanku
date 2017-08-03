@@ -49,51 +49,51 @@ sub run {
   $pid = fork();
 
   if (! $pid ) {
+    my $kmq = Kanku::RabbitMQ->new(%{ $config->{rabbitmq} || {}});
+    $kmq->shutdown_file($self->shutdown_file);
+    $kmq->connect() or die "Could not connect to rabbitmq\n";
+    $kmq->setup_worker();
+    $self->local_job_queue_name(hostfqdn());
+    $kmq->create_queue(
+      queue_name=>$self->local_job_queue_name,
+      exchange_name=>'kanku.to_all_hosts'
+    );
     while(1) {
       try {
-        my $kmq = Kanku::RabbitMQ->new(%{ $config->{rabbitmq} || {}});
-        $kmq->shutdown_file($self->shutdown_file);
-        $kmq->connect() or die "Could not connect to rabbitmq\n";
-        $kmq->setup_worker();
-        $self->local_job_queue_name(hostfqdn());
-        $kmq->create_queue(
-	  queue_name=>$self->local_job_queue_name,
-	  exchange_name=>'kanku.to_all_hosts'
-        );
-	my $msg = $kmq->recv(1000);
-	if ($msg) {
-	  my $data;
-	  my $body = $msg->{body};
+        my $msg = $kmq->recv(1000);
+        if ($msg) {
+          my $data;
+          my $body = $msg->{body};
           # Extra try/catch to get better debugging output
           # like adding body to log message
-	  try {
-	    $data = decode_json($body);
-	  } catch {
-	    die("Error in JSON:\n$_\n$body\n");
-	  };
+          try {
+            $data = decode_json($body);
+          } catch {
+            die("Error in JSON:\n$_\n$body\n");
+          };
 
-	  if ( $data->{action} eq 'send_task_to_all_workers' ) {
-	    my $answer = {
-	      action => 'task_confirmation',
-	      task_id => $data->{task_id},
-	      # answer_queue is needed on dispatcher side
-	      # to distinguish the results per worker host
-	      answer_queue => $self->local_job_queue_name
-	    };
-	    $self->remote_job_queue_name($data->{answer_queue});
-	    $kmq->publish(
-	      $self->remote_job_queue_name,
-	      encode_json($answer),
-	      { exchange => 'kanku.to_dispatcher'}
-	    );
+          if ( $data->{action} eq 'send_task_to_all_workers' ) {
+            my $answer = {
+              action => 'task_confirmation',
+              task_id => $data->{task_id},
+              # answer_queue is needed on dispatcher side
+              # to distinguish the results per worker host
+              answer_queue => $self->local_job_queue_name
+            };
+            $self->remote_job_queue_name($data->{answer_queue});
+            $kmq->publish(
+              $self->remote_job_queue_name,
+              encode_json($answer),
+              { exchange => 'kanku.to_dispatcher'}
+            );
 
-	    $self->handle_task($data,$kmq);
-	  } else {
-	    $logger->warn("Unknown action: ". $data->{action});
-	  }
-	}
+            $self->handle_task($data,$kmq);
+          } else {
+            $logger->warn("Unknown action: ". $data->{action});
+          }
+        }
       } catch {
-	$logger->error($_);
+        $logger->error($_);
       };
       $self->remote_job_queue_name('');
       $self->local_job_queue_name('');
