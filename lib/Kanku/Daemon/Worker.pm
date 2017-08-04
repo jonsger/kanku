@@ -287,7 +287,10 @@ sub handle_job {
   } catch {
     my $e = $_;
     $logger->debug("EXCEPTION REFERENCE: ".ref($e));
-    $e = $e->trace->as_string if (ref($e) =~ /^Moose::Execption::/ );
+    if (ref($e) =~ /^Moose::Exception::/ ) {
+      $logger->debug("Converting exeption to string");
+      $e = $e->trace->as_string;
+    }
 
     $logger->error($e);
 
