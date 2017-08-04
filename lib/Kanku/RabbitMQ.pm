@@ -20,7 +20,6 @@ use Moose;
 
 use Net::AMQP::RabbitMQ;
 use JSON::XS;
-use Data::Dumper;
 use UUID ':all';
 use Try::Tiny;
 
@@ -76,7 +75,7 @@ sub connect {
     }
   );
 
-  $self->logger->trace("Trying to connect to rabbitmq with the folloing options:\n".Dumper(\@opts));
+  $self->logger->trace("Trying to connect to rabbitmq with the folloing options: ".$self->dump(\@opts));
   my $connect_success = 0;
   while (! $connect_success ) {
     try {
@@ -147,8 +146,8 @@ sub publish {
   $logger->trace("Publishing for message:");
   $logger->trace("  channel    : '".$self->channel."'");
   $logger->trace("  routing_key: '$rk'");
-  $logger->trace("  data       :\n",Dumper($data));
-  $logger->trace("  opts       :\n",Dumper($opts));
+  $logger->trace("  data       : ".$self->dump($data));
+  $logger->trace("  opts       : ".$self->dump($opts));
 
   return $self->queue->publish($self->channel, $rk, $data, $opts);
 }

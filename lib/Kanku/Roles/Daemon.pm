@@ -23,6 +23,7 @@ use Path::Class::Dir;
 use POSIX ":sys_wait_h";
 use FindBin;
 use Log::Log4perl;
+use Data::Dumper;
 use Kanku::Config;
 
 with 'Kanku::Roles::Logger';
@@ -191,4 +192,15 @@ sub detect_shutdown {
   return 1 if ( -f $self->shutdown_file );
   return 0;
 }
+
+sub dump {
+    local $Data::Dumper::Indent    = 0;
+    local $Data::Dumper::Terse     = 1;
+    local $Data::Dumper::Sortkeys  = 1;
+    local $Data::Dumper::Quotekeys = 0;
+    local $Data::Dumper::Deparse   = 1;
+
+    return Data::Dumper::Dumper(@_);
+}
+
 1;
