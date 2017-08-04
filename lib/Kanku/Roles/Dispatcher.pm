@@ -59,11 +59,6 @@ sub run {
 
   $self->cleanup_dead_jobs();
 
-  $SIG{'INT'} = sub {
-    open(F,'>',"$FindBin::Bin/../var/run/kanku-dispatcher.shutdown");
-    close F;
-  };
-
   try {
     $self->cleanup_on_startup();
   } catch {
