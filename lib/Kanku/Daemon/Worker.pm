@@ -286,7 +286,9 @@ sub handle_job {
     }
   } catch {
     my $e = $_;
-    $logger->error("ERROR REFERENCE:".ref($e));
+    $logger->debug("EXCEPTION REFERENCE: ".ref($e));
+    $e = $e->trace->as_string if (ref($e) =~ /^Moose::Execption::/ );
+
     $logger->error($e);
 
     $job_kmq->publish(
