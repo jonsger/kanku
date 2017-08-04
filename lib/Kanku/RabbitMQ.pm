@@ -24,6 +24,7 @@ use UUID ':all';
 use Try::Tiny;
 
 with 'Kanku::Roles::Logger';
+with 'Kanku::Roles::Helpers';
 
 has 'channel' => (is=>'rw',isa=>'Int',default => 1);
 has 'port'	  => (is=>'rw',isa=>'Int',default => 5671);
@@ -75,7 +76,7 @@ sub connect {
     }
   );
 
-  $self->logger->trace("Trying to connect to rabbitmq with the folloing options: ".$self->dump(\@opts));
+  $self->logger->trace("Trying to connect to rabbitmq with the folloing options: ".$self->dump_it(\@opts));
   my $connect_success = 0;
   while (! $connect_success ) {
     try {
@@ -146,8 +147,8 @@ sub publish {
   $logger->trace("Publishing for message:");
   $logger->trace("  channel    : '".$self->channel."'");
   $logger->trace("  routing_key: '$rk'");
-  $logger->trace("  data       : ".$self->dump($data));
-  $logger->trace("  opts       : ".$self->dump($opts));
+  $logger->trace("  data       : ".$self->dump_it($data));
+  $logger->trace("  opts       : ".$self->dump_it($opts));
 
   return $self->queue->publish($self->channel, $rk, $data, $opts);
 }

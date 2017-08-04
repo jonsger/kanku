@@ -60,11 +60,13 @@ sub execute {
 
   if ( $ctx->{vm_image_url} ) {
     $self->url($ctx->{vm_image_url});
+  } elsif ( $ctx->{obs_direct_url} ) {
+    $self->url($ctx->{obs_direct_url});
+  } else {
+    die "Neither vm_image_url nor obs_direct_url found in context"
   }
 
-  my $curl =  Kanku::Util::CurlHttpDownload->new(
-                url           => $self->url,
-              );
+  my $curl =  Kanku::Util::CurlHttpDownload->new(url => $self->url);
 
   $curl->output_file($self->_calc_output_file());
 

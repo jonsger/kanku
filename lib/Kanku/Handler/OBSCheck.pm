@@ -114,7 +114,11 @@ sub execute {
   my $last_run  = $self->last_run_result();
   my $dod       = $self->dod_object();
 
-  if ( $self->base_url ) { $dod->base_url($self->base_url) };
+  if ( $self->base_url ) {
+    # prevent from errors because of missing trailing slash
+    if (  $self->base_url !~ q{/$} ) { $self->base_url($self->base_url.'/') }
+    $dod->base_url($self->base_url);
+  }
   $dod->base_url($self->base_url)     if $self->base_url;
   $dod->repository($self->repository) if $self->repository;
 
@@ -190,12 +194,28 @@ sub execute {
   $ctx->{obs_project}    = $self->project;
   $ctx->{obs_package}    = $self->package;
 
+  if (!$ctx->{vm_image_url} and !$ctx->{obs_direct_url}) {
+    die "Neither vm_image_url nor obs_direct_url found\n"
+      ."HINT: Try \n\nosc api /build/"
+      . $dod->project ."/"
+      . $dod->repository ."/"
+      . $dod->arch ."/"
+      . $dod->package
+      . "\n\nfor further debugging\n"
+    ;
+  }
+
   $self->update_history();
 
   return {
     code    => 0,
     state   => 'succeed',
-    message => "Sucessfully checked project ".$self->project." under url ".$self->api_url
+    message => "Sucessfully checked project ".$self->project." under url "
+                 .$self->api_url ."\n"
+                 ." ("
+                 .    "vm_image_url: $ctx->{vm_image_url}, "
+                 .    "obs_direct_url: $ctx->{obs_direct_url}"
+                 .")"
   };
 }
 

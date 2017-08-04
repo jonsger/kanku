@@ -193,14 +193,4 @@ sub detect_shutdown {
   return 0;
 }
 
-sub dump {
-    local $Data::Dumper::Indent    = 0;
-    local $Data::Dumper::Terse     = 1;
-    local $Data::Dumper::Sortkeys  = 1;
-    local $Data::Dumper::Quotekeys = 0;
-    local $Data::Dumper::Deparse   = 1;
-
-    return Data::Dumper::Dumper(@_);
-}
-
 1;
