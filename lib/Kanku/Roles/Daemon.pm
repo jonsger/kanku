@@ -25,6 +25,7 @@ use FindBin;
 use Log::Log4perl;
 use Data::Dumper;
 use Kanku::Config;
+use Kanku::Airbrake;
 
 with 'Kanku::Roles::Logger';
 
@@ -87,6 +88,13 @@ has shutdown_file => (
   }
 );
 
+has airbrake => (
+  is      => 'rw',
+  isa     => 'Object',
+  lazy    => 1,
+  default => sub  { Kanku::Airbrake->instance() }
+);
+
 sub print_usage {
   my ($self) = @_;
   my $basename = $self->daemon_basename;
@@ -118,6 +126,8 @@ sub prepare_and_run {
   }
 
   $self->pid_file->spew("$$");
+
+  Kanku::Airbrake->initialize();
 
   $self->run;
 

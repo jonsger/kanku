@@ -9,11 +9,6 @@ use lib "$FindBin::Bin/lib";
 use POSIX;
 use JSON::XS;
 use Try::Tiny;
-use Kanku::MQ;
-use Kanku::RabbitMQ;
-use Kanku::Config;
-use Kanku::Task::Local;
-use Kanku::Job;
 use Sys::CPU;
 use Sys::LoadAvg qw( loadavg );
 use Sys::MemInfo qw(totalmem freemem);
@@ -22,23 +17,33 @@ use Net::Domain qw/hostfqdn/;
 use UUID qw/uuid/;
 use MIME::Base64;
 
+use Kanku::MQ;
+use Kanku::RabbitMQ;
+use Kanku::Config;
+use Kanku::Task::Local;
+use Kanku::Job;
+use Kanku::Airbrake;
+
 with 'Kanku::Roles::Logger';
 with 'Kanku::Roles::ModLoader';
 with 'Kanku::Roles::DB';
 with 'Kanku::Roles::Daemon';
 with 'Kanku::Roles::Helpers';
 
-has child_pids => (is=>'rw',isa=>'ArrayRef',default => sub {[]});
-has kmq => (is=>'rw',isa=>'Object');
-has job_queue_name => (is=>'rw',isa=>'Str');
-has remote_job_queue_name => (is=>'rw',isa=>'Str');
-has local_job_queue_name => (is=>'rw',isa=>'Str');
-has worker_id => (is=>'rw',isa=>'Str',default => sub {uuid()});
+has child_pids            => (is=>'rw', isa => 'ArrayRef'
+                              , default => sub {[]});
+has worker_id             => (is=>'rw', isa => 'Str'
+                              , default => sub {uuid()});
+
+has kmq                   => (is=>'rw', isa => 'Object');
+has job_queue_name        => (is=>'rw', isa => 'Str');
+has remote_job_queue_name => (is=>'rw', isa => 'Str');
+has local_job_queue_name  => (is=>'rw', isa => 'Str');
 
 sub run {
   my $self   = shift;
-
   my $config = Kanku::Config->instance->config->{ref($self)};
+  $self->airbrake()->notify_with_backtrace("Starting worker ($$)");
   my $logger = $self->logger();
 
   my @childs=();
@@ -199,22 +204,30 @@ sub handle_advertisement {
       );
 
       # TODO: Need timeout
-      my $msg = $job_kmq->recv();
-      my $body = decode_json($msg->{body});
-      if ( $body->{action} eq 'offer_job' ) {
-        $logger->info("Starting with job ");
-        $logger->trace($self->dump_it($msg,$body));
+      my $timeout = 1 * 60 * 1000;
+      my $msg = $job_kmq->recv($timeout);
+      if ( $msg ) {
+        my $body = decode_json($msg->{body});
+        if ( $body->{action} eq 'offer_job' ) {
+          $logger->info("Starting with job ");
+          $logger->trace($self->dump_it($msg,$body));
 
-        $self->handle_job($job_id,$job_kmq);
-        return;
-      } elsif ( $body->{action} eq 'decline_application' ) {
-        $logger->debug("Nothing to do - application declined");
-        $self->remote_job_queue_name('');
-        $self->local_job_queue_name('');
-        return;
+          $self->handle_job($job_id,$job_kmq);
+          return;
+        } elsif ( $body->{action} eq 'decline_application' ) {
+          $logger->debug("Nothing to do - application declined");
+          $self->remote_job_queue_name('');
+          $self->local_job_queue_name('');
+          return;
+        } else {
+          $logger->error("Answer on application for job $job_id unknown");
+          $logger->trace($self->dump_it($msg,$body));
+        }
       } else {
-        $logger->error("Answer on application for job $job_id unknown");
-        $logger->trace($self->dump_it($msg,$body));
+          $logger->error("Got no answer for application (job_id: $job_id)");
+          $self->airbrake->notifiy_with_backtrace(
+            "Got no answer for application (job_id: $job_id)"
+          );
       }
 
   } else {
