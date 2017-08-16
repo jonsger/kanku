@@ -58,11 +58,14 @@ sub execute {
     $self->vm_image_file($ctx->{vm_image_file});
   }
 
-  if ( $self->vm_image_file =~ /\.qcow2$/ ) {
+  if ( $self->vm_image_file =~ /\.(qcow2|raw|img)$/ ) {
+    my $ext = $1;
     if ( $self->disk_size ) {
-	$img  = $self->vm_image_file;
-	$size = $self->disk_size;
-        `qemu-img resize $img $size`
+      my %formats = (qcow2 => 'qcow2', raw => 'raw', img => 'raw');
+      my $format = ($formats{$ext}) ? "-f $formats{$ext}" : '';
+      $img  = $self->vm_image_file;
+      $size = $self->disk_size;
+      `qemu-img resize $format $img $size`;
     }
   } else {
     die "Image file has wrong suffix '".$self->vm_image_file."'.\nOnly qcow2 supported at the moment!\n";
