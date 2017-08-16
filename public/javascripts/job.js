@@ -76,7 +76,10 @@ function schedule_job(job_name) {
     uri_base + "/rest/job/trigger/" + job_name + ".json",
     'args=' + JSON.stringify(data),
     function(response) {
-      $("#schedule_result").text("Successfully triggered job with id " + response.id)
+      $("#schedule_result").removeClass("alert-success");
+      $("#schedule_result").removeClass("alert-warning");
+      $("#schedule_result").addClass("alert-" + response.state);
+      $("#schedule_result").text(response.msg);
       $("#schedule_result").fadeIn();
       $("#schedule_result").delay(10000).fadeOut("slow");
     }

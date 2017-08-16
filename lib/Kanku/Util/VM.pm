@@ -220,7 +220,6 @@ sub _generate_disk_xml {
 
     # ASCII 97 = a + 0
     my $drive = "hd" . chr(97+$unit);
-    my $source = '';
 
     return "
     <disk type='file' device='disk'>
