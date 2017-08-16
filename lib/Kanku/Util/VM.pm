@@ -237,14 +237,15 @@ sub create_empty_disks  {
   my ($self) = @_;
   my $unit   = 1;
   my $xml    = "";
+  my $fmt    = $disk->{format} || 'qcow2';
 
   for my $disk (@{$self->empty_disks}) {
     my $img = Kanku::Util::VM::Image->new(
-                vol_name  => $self->domain_name ."-".$disk->{name}.".qcow2",
+                vol_name  => $self->domain_name ."-".$disk->{name}.".$fmt",
                 size      => $disk->{size},
                 vmm       => $self->vmm,
                 pool_name => $disk->{pool}   || 'default',
-		format    => $disk->{format} || 'qcow2'
+                format    => $fmt,
               );
     my $vol = $img->create_volume();
 
