@@ -371,6 +371,16 @@ If configured a port_forward_list, it tries to find the next free port and confi
 
     root_disk_size        : define size of root disk - ONLY FOR RAW IMAGES
 
+    empty_disks           : Array of empty disks to be created
+
+                            * name   - name of disk (required)
+
+                            * size   - size of disk (required)
+
+                            * pool   - name of pool (default: 'default')
+
+                            * format - format of new disk (default: 'qcow2')
+
 
 =head1 CONTEXT
 
