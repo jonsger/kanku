@@ -236,9 +236,9 @@ sub create_empty_disks  {
   my ($self) = @_;
   my $unit   = 1;
   my $xml    = "";
-  my $fmt    = $disk->{format} || 'qcow2';
 
   for my $disk (@{$self->empty_disks}) {
+    my $fmt    = $disk->{format} || 'qcow2';
     my $img = Kanku::Util::VM::Image->new(
                 vol_name  => $self->domain_name ."-".$disk->{name}.".$fmt",
                 size      => $disk->{size},

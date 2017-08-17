@@ -31,8 +31,17 @@ use XML::XPath;
 use Try::Tiny;
 use File::LibMagic;
 use IO::Uncompress::AnyUncompress qw/$AnyUncompressError/;
+use File::Temp;
+
 has [qw/uri pool_name vol_name source_file size format/ ]  => ( is=>'rw', isa => 'Str');
 has 'final_size'=> => ( is=>'rw', isa => 'Str',default=>0);
+
+has '_total_read'      => ( is=>'rw', isa => 'Int',  default=>0);
+has '_total_sent'      => ( is=>'rw', isa => 'Int',  default=>0);
+has '_nbytes'          => ( is=>'rw', isa => 'Int',  default=>1024);
+
+# TODO: suffix dependent on image format
+has '_temp_source_file' => ( is=>'rw', isa => 'Object', lazy => 1, default => sub { return File::Temp->new(SUFFIX => '.img' ); } );
 
 has '+uri'       => ( default => 'qemu:///system');
 has '+pool_name' => ( default => 'default');
@@ -89,7 +98,7 @@ sub create_volume {
   try {
       my $vol  = $self->pool->create_volume($xml);
 
-      $self->_copy_volume($vol) if $self->source_file;
+      $self->_copy_volume($vol);
 
       return $vol;
   }
@@ -158,111 +167,171 @@ sub get_image_size {
 
 sub _copy_volume {
   my ($self, $vol) = @_;
+
+  $self->_check_source_file();
+
   my $vmm  = $self->vmm();
   my $st   = $self->vmm()->new_stream();
   my $f    = $self->source_file();
 
-  my $total_read  = 0;
-  my $total_sent = 0;
+  $self->_total_read(0);
+  $self->_total_sent(0);
 
   $vol->upload($st, 0, 0);
+
   my $nbytes = 1024;
+
+
   if ( $f =~ /\.(gz|bz2|xz)$/ ) {
-
-    $self->logger->info("-- _copy_volume -- Uncompressing and uploading file");
-
-    my $z = new IO::Uncompress::AnyUncompress $f
-      or die "IO::Uncompress::AnyUncompress failed: $AnyUncompressError\n";
-
-
-    while (1) {
-	my $data;
-	my $rv = $z->read(\$data);
-	if ($rv < 0) {
-	    die "cannot read $f: $!";
-	}
-	last if $rv == 0;
-	$total_read += $rv;
-	while ($rv > 0) {
-	    my $done = $st->send($data, $rv);
-	    if ($done) {
-		$data = substr $data, $done;
-		$rv -= $done;
-	    }
-	    $total_sent += $done;
-	}
-    }
-
-    $z->close;
-
-
+    $self->_extract_and_upload($f, $st);
   } else {
-
-    $self->logger->info("-- _copy_volume -- Uploading file");
-
-    eval {
-      open FILE, "<$f" or die "cannot open $f: $!";
-      while (1) {
-	  my $data;
-	  my $rv = sysread FILE, $data, $nbytes;
-	  if ($rv < 0) {
-	      die "cannot read $f: $!";
-	  }
-	  last if $rv == 0;
-	  $total_read += $rv;
-	  while ($rv > 0) {
-	      my $done = $st->send($data, $rv);
-	      if ($done) {
-		  $data = substr $data, $done;
-		  $rv -= $done;
-	      }
-	      $total_sent += $done;
-	  }
-      }
-    };
-    if ($@) {
-	close FILE;
-	die $@;
-    }
-
-    close FILE or die "cannot save $f: $!";
-
+    $self->_simple_upload($f, $st);
   }
 
-  $self->logger->info("-- total_read: $total_read -- total_sent: $total_sent");
+  $self->logger->info("-- total_read: ".$self->_total_read." -- total_sent: ".$self->_total_sent);
   $self->logger->debug("-- final_size:".$self->final_size);
 
-  if ( $self->format eq 'raw' && $self->final_size > $total_sent ) {
+  $self->_expand_raw_image($st);
+
+  $self->logger->info("-- finally total bytes read/sent: ".$self->_total_read."/".$self->_total_sent);
+
+  $st->finish();
+
+  return;
+}
+
+sub _expand_raw_image {
+  my ($self, $st) = @_;
+
+  if ( $self->format eq 'raw' && $self->final_size > $self->_total_sent ) {
+    my $to_read = $self->final_size - $self->_total_sent;
+    my $nbytes  = $self->_nbytes;
+
+    $self->logger->info("-- Sending another $to_read bytes");
+
     eval {
-      my $to_read = $self->final_size - $total_sent;
-      $self->logger->info("-- Sending another $to_read bytes");
-      $f = "/dev/zero";
-      open FILE, "<$f" or die "cannot open $f: $!";
+      my $f = "/dev/zero";
+      open FILE, "<", $f or die "cannot open $f: $!";
       while (1) {
-	  my $data;
-	  my $length = ( $to_read > $nbytes ) ? $nbytes : $to_read;
-	  my $rv = sysread FILE, $data, $length;
-	  if ($rv < 0) {
+	    my $data;
+	    my $length = ( $to_read > $nbytes ) ? $nbytes : $to_read;
+	    my $rv = sysread FILE, $data, $length;
+	    if ($rv < 0) {
 	      die "cannot read $f: $!";
-	  }
-	  last if $rv == 0;
-	  $total_read += $rv;
-	  while ($rv > 0) {
+	    }
+	    last if $rv == 0;
+	    $self->_total_read($self->_total_read + $rv);
+	    while ($rv > 0) {
 	      my $done = $st->send($data, $rv);
 	      if ($done) {
 		  $data = substr $data, $done;
 		  $rv -= $done;
 		  $to_read -= $done;
 	      }
-	      $total_sent += $done;
-	  }
+	      $self->_total_sent($self->_total_sent + $done);
+	    }
       }
     };
 
   }
-
-  $self->logger->info("-- finally total bytes read/sent: $total_read/$total_sent");
-
-  $st->finish();
 }
+
+sub _simple_upload {
+  my ($self, $f, $st) = @_;
+  my $nbytes = $self->_nbytes;
+  $self->logger->info("-- _copy_volume -- Uploading file");
+
+  open FILE, "<", $f or die "cannot open $f: $!";
+
+  try {
+    while (1) {
+	  my $data;
+	  my $rv = sysread FILE, $data, $nbytes;
+	  if ($rv < 0) {
+	      die "cannot read $f: $!";
+	  }
+	  last if $rv == 0;
+	  $self->_total_read($self->_total_read + $rv);
+	  while ($rv > 0) {
+	      my $done = $st->send($data, $rv);
+	      if ($done) {
+		  $data = substr $data, $done;
+		  $rv -= $done;
+	      }
+	      $self->_total_sent($self->_total_sent + $done);
+	  }
+    }
+  } catch {
+	close FILE;
+	die $_;
+  };
+
+  close FILE or die "cannot save $f: $!";
+}
+
+sub _extract_and_upload {
+  my ($self, $f, $st) = @_;
+
+  $self->logger->info("-- _copy_volume -- Uncompressing and uploading file");
+
+  my $z = new IO::Uncompress::AnyUncompress $f
+    or die "IO::Uncompress::AnyUncompress failed: $AnyUncompressError\n";
+
+
+  while (1) {
+	my $data;
+	my $rv = $z->read(\$data);
+	if ($rv < 0) {
+	    die "cannot read $f: $!";
+	}
+	last if $rv == 0;
+	$self->_total_read($self->_total_read + $rv);
+	while ($rv > 0) {
+	  my $done = $st->send($data, $rv);
+	  if ($done) {
+		$data = substr $data, $done;
+		$rv -= $done;
+	  }
+	  $self->_total_sent($self->_total_sent + $done);
+	}
+  }
+
+  $z->close;
+}
+
+sub _check_source_file {
+  my ($self) = @_;
+
+  if ($self->source_file) {
+    if (-f $self->source_file) {
+       return;
+    } else {
+       die "source_file '".$self->source_file."' does not exist!\n";
+    }
+  }
+
+  my $size = $self->size;
+  my $fmt  = "-f " . $self->format;
+
+  my $tmp_fh = $self->_temp_source_file();
+  my $tmp_fn = $tmp_fh->filename;
+
+  $self->source_file($tmp_fn);
+
+  $self->logger->info("--- creating temporary source_file '$tmp_fn'");
+  my $cmd = "qemu-img create $fmt $tmp_fn $size 2>&1";
+  $self->logger->debug("--- executing command: '$cmd'");
+  my @out = `$cmd`;
+
+  for my $line (@out) { $self->logger->debug("CMD OUTPUT: $line"); }
+
+  my $ec = $? >> 8;
+
+  die "ERROR while creating temporary source_file (exit code: $ec): @out" if $ec;
+
+  $self->logger->info("--- sucessfully created new image '$tmp_fn'");
+
+  return;
+}
+
 1;
