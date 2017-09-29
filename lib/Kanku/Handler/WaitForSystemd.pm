@@ -23,7 +23,8 @@ with 'Kanku::Roles::Handler';
 
 
 has [qw/domain_name login_user login_pass/] => (is=>'rw',isa=>'Str',lazy=>1,default=>'');
-has timeout =>  => (is=>'rw',isa=>'Int',lazy=>1,default=>3600);
+has timeout => (is=>'rw',isa=>'Int',lazy=>1,default=>3600);
+has delay   => (is=>'rw',isa=>'Int',lazy=>1,default=>1);
 
 sub distributable { 1 }
 
@@ -52,6 +53,7 @@ sub execute {
         login_user  => $self->login_user(),
         login_pass  => $self->login_pass(),
         job_id      => $self->job->id,
+        cmd_timeout => $self->timeout,
   );
 
   $con->init();
@@ -62,7 +64,7 @@ sub execute {
     'while [ "$s" != "No jobs running." ];do '.
       's=`systemctl list-jobs`;'.
       'logger "systemctl list-jobs: $s";'.
-      'sleep 1;'.
+      'sleep '.($self->delay || 1).';'.
       '[ $to -lt 0 ] && exit 1;'.
       'to=$(($to-1));'.
     'done'

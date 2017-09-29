@@ -27,10 +27,12 @@ with 'Kanku::Roles::Logger';
 has ['domain_name','short_hostname','log_file','login_user','login_pass'] => (is=>'rw', isa=>'Str');
 has 'prompt' => (is=>'rw', isa=>'Str',default=>'Kanku-prompt: ');
 has 'prompt_regex' => (is=>'rw', isa=>'Object',default=>sub { qr/^Kanku-prompt: / });
-has _expect_object  => (is=>'rw', isa => 'Object' );
-has [qw/grub_seen user_is_logged_in console_connected/] => (is=>'rw', isa => 'Bool' );
-has 'connect_uri' => (is=>'rw', isa=>'Str',default=>'qemu:///system');
+has _expect_object  => (is=>'rw', isa => 'Object');
+has [qw/grub_seen user_is_logged_in console_connected/] => (is=>'rw', isa => 'Bool');
+has 'connect_uri' => (is=>'rw', isa=>'Str', default=>'qemu:///system');
 has ['job_id'] => (is=>'rw', isa=>'Int|Undef');
+
+has ['cmd_timeout'] => (is=>'rw', isa=>'Int', default => 600);
 
 sub init {
   my $self = shift;
@@ -201,9 +203,11 @@ sub cmd {
   foreach my $cmd (@cmds) {
       $exp->clear_accum();
       $exp->send("$cmd\n");
+      my $timeout = $self->cmd_timeout;
 
-      my $timeout = 600;
-      $exp->expect(
+      $logger->debug("EXPECT STARTING COMMAND: '$cmd' (timeout: $timeout)");
+
+      my @result = $exp->expect(
         $timeout,
           [ $self->prompt_regex() =>
             sub {
@@ -212,10 +216,12 @@ sub cmd {
             }
           ],
       );
+      $logger->debug("EXPECT ERROR: $result[1]");
+      die "Error while executing command '$cmd': $result[1]" if $result[1];
 
       $exp->send("echo \$?\n");
 
-      $exp->expect(
+      @result = $exp->expect(
         1,
         [
           $self->prompt_regex() => sub {
@@ -231,6 +237,8 @@ sub cmd {
           }
         ]
       );
+
+      die "Error while getting return value of command '$cmd': ".$result[1] if $result[1];
   }
 
   return $results;
