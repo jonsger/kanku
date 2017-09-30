@@ -216,13 +216,13 @@ sub cmd {
             }
           ],
       );
-      $logger->debug("EXPECT ERROR: $result[1]");
-      die "Error while executing command '$cmd': $result[1]" if $result[1];
+
+      die "Error while executing command '$cmd' (timemout: $timeout): $result[1]" if $result[1];
 
       $exp->send("echo \$?\n");
 
       @result = $exp->expect(
-        1,
+        $timeout,
         [
           $self->prompt_regex() => sub {
             my $exp=shift;
@@ -238,7 +238,7 @@ sub cmd {
         ]
       );
 
-      die "Error while getting return value of command '$cmd': ".$result[1] if $result[1];
+      die "Error while getting return value of command '$cmd' (timeout $timeout): ".$result[1] if $result[1];
   }
 
   return $results;
