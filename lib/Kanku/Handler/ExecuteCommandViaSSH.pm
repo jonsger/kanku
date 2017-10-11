@@ -25,6 +25,8 @@ with 'Kanku::Roles::SSH';
 
 has commands => (is=>'rw',isa=>'ArrayRef',default=>sub { [] });
 
+has timeout => (is=>'rw',isa=>'Int',lazy=>1,default=>60*60*4);
+
 sub distributable { 1 }
 
 sub prepare {
@@ -44,9 +46,17 @@ sub execute {
   my $ssh2    = $self->connect();
   my $ip      = $self->ipaddress;
 
+  $ssh2->timeout(1000*$self->timeout) if ($self->timeout);
+
   foreach my $cmd ( @{$self->commands} ) {
     
       my $out = $self->exec_command($cmd);
+
+      my @err = $ssh2->error();
+      if ($err[0]) {
+        $ssh2->disconnect();
+        die "Error while executing command via ssh '$cmd': $err[2]";
+      }
 
       push @$results, {
         command     => $cmd,
