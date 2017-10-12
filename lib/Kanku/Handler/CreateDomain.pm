@@ -209,7 +209,8 @@ sub execute {
 	my $ipt = Kanku::Util::IPTables->new(
 	  domain_name     => $self->domain_name,
 	  host_interface  => $ctx->{host_interface},
-	  guest_ipaddress => $ip
+	  guest_ipaddress => $ip,
+	  iptables_chain  => $cfg->{'Kanku::Util::IPTables'}->{iptables_chain}
 	);
 
 	$ipt->add_forward_rules_for_domain(
@@ -380,7 +381,7 @@ If configured a port_forward_list, it tries to find the next free port and confi
                             * pool   - name of pool (default: 'default')
 
                             * format - format of new disk (default: 'qcow2')
-
+   
 
 =head1 CONTEXT
 

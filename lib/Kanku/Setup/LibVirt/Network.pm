@@ -44,6 +44,14 @@ has dnsmasq_pid_file => (
 	default => sub { file('/var/run/libvirt/network/',$_[0]->cfg->{libvirt_network}->{name}.".pid") }
 );
 
+has iptables_chain => (
+	is => 'rw',
+	isa => 'Str',
+	lazy => 1,
+	default => sub { $_[0]->cfg->{'Kanku::LibVirt::Network::OpenVSwitch'}->{iptables_chain} || 'KANKU_HOSTS' }
+
+);
+
 sub prepare_ovs {
 	my $self = shift;
 	my $cfg  = $self->cfg;
@@ -210,15 +218,19 @@ sub configure_iptables {
 	$self->logger->debug("prefix: $prefix");
 
 	my $rules = [
+                ["-X",$self->iptables_chain],
+                ["-N",$self->iptables_chain],
+                ["-I",$self->iptables_chain, "-j","RETURN"],
 		["-I","INPUT","1","-i",$ncfg->{bridge},"-p", "tcp","--tcp-flags", "SYN,RST", "SYN", "-j", "TCPMSS", "--set-mss",$mss],
 		["-I","OUTPUT","1","-o",$ncfg->{bridge},"-p", "tcp","--tcp-flags", "SYN,RST", "SYN", "-j", "TCPMSS", "--set-mss",$mss],
 		["-I","FORWARD","1","-i",$ncfg->{bridge},"-j","REJECT","--reject-with","icmp-port-unreachable"],
 		["-I","FORWARD","1","-o",$ncfg->{bridge},"-j","REJECT","--reject-with","icmp-port-unreachable"],
 		["-I","FORWARD","1","-i",$ncfg->{bridge},"-o","$ncfg->{bridge}","-j","ACCEPT"],
 		["-I","FORWARD","1","-s",$prefix,"-i",$ncfg->{bridge},"-j","ACCEPT"],
-		["-I","FORWARD","1","-d",$prefix,"-o",$ncfg->{bridge},"-m","conntrack","--ctstate","RELATED,ESTABLISHED","-j","ACCEPT"],
+		["-I","FORWARD","1","-j",$self->iptables_chain],
 		["-I","FORWARD","1","-i",$ncfg->{bridge},"-p", "tcp","--tcp-flags", "SYN,RST", "SYN", "-j", "TCPMSS", "--set-mss",$mss],
 		["-I","FORWARD","1","-o",$ncfg->{bridge},"-p", "tcp","--tcp-flags", "SYN,RST", "SYN", "-j", "TCPMSS", "--set-mss",$mss],
+		["-I","FORWARD","1","-d",$prefix,"-o",$ncfg->{bridge},"-m","conntrack","--ctstate","RELATED,ESTABLISHED","-j","ACCEPT"],
 		["-t","nat","-I","POSTROUTING","-s",$prefix,"!","-d",$prefix,"-j","MASQUERADE"],
 		["-t","nat","-I","POSTROUTING","-s",$prefix,"!","-d",$prefix,"-p","udp","-j","MASQUERADE","--to-ports","1024-65535"],
 		["-t","nat","-I","POSTROUTING","-s",$prefix,"!","-d",$prefix,"-p","tcp","-j","MASQUERADE","--to-ports","1024-65535"],
@@ -313,6 +325,7 @@ sub cleanup_iptables {
 			|| $args[9] =~ $netreg
 			|| $args[7] =~ /$brreg/
 			|| $args[6] =~ /$brreg/
+                        || $args[3] eq $self->iptables_chain
 		) {
 			# remember line numbers
 			push(@{$rules_to_delete->{filter}->{FORWARD}},$args[0]);
@@ -353,6 +366,9 @@ sub cleanup_iptables {
 
 		}
 	}
+	my $chain = $self->iptables_chain;
+        `iptables -F $chain`;
+        `iptables -X $chain`;
 
 }
 1;

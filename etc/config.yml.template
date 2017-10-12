@@ -33,17 +33,19 @@ Kanku::LibVirt::HostList:
 
 
 Kanku::LibVirt::Network::OpenVSwitch:
-  name:                kanku-ovs
-  bridge:              kanku-br0
-  vlan:                kanku-vlan1
-  host_ip:             192.168.199.1
-  network:             192.168.199.0/24
-  dhcp_range:          192.168.199.66,192.168.199.254
-  start_dhcp:          1
-  is_gateway:          1
+  name:                 kanku-ovs
+  bridge:               kanku-br0
+  vlan:                 kanku-vlan1
+  host_ip:              192.168.199.1
+  network:              192.168.199.0/24
+  dhcp_range:           192.168.199.66,192.168.199.254
+  start_dhcp:           1
+  is_gateway:           1
+  iptables_chain:       KANKU_HOSTS
 
 Kanku::Util::IPTables:
   start_port: 49001
+  iptables_chain:       KANKU_HOSTS
 
 Kanku::Util::VM::Console:
   debug: 0

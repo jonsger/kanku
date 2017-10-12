@@ -24,8 +24,9 @@ with 'Kanku::Roles::Logger';
 # For future use: we could also get the ip from the serial login
 # but therefore we need the domain_name
 has [qw/domain_name/] => (is=>'rw',isa=>'Str');
-has [qw/guest_ipaddress host_ipaddress host_interface forward_port_list/] => (is=>'rw',isa=>'Str');
+has [qw/guest_ipaddress host_ipaddress host_interface forward_port_list iptables_chain/] => (is=>'rw',isa=>'Str');
 has forward_ports => (is=>'rw',isa=>'ArrayRef',default=>sub { [] });
+has '+iptables_chain' => (default => 'KANKU_HOSTS');
 
 has host_ipaddress => (
   is      =>'rw',
@@ -87,7 +88,7 @@ sub get_forwarded_ports_for_domain {
 sub get_active_rules_for_domain {
   my $self        = shift;
   my $domain_name = shift || $self->domain_name;
-  my $result      = { filter => { FORWARD => [] }, nat => { PREROUTING => [] }  };
+  my $result      = { filter => { $self->iptables_chain => [] }, nat => { PREROUTING => [] }  };
   my $sudo        = $self->sudo();
   my $cmd         = "";
 
@@ -108,7 +109,7 @@ sub get_active_rules_for_domain {
   }
 
   # prepare command to read FORWARD chain
-  $cmd = $sudo . "LANG=C iptables -v -L FORWARD -n --line-numbers";
+  $cmd = $sudo . "LANG=C iptables -v -L ".$self->iptables_chain." -n --line-numbers";
 
   # read FORWARD rules
   my @forward_rules = `$cmd`;
@@ -116,7 +117,7 @@ sub get_active_rules_for_domain {
   # check each FORWARD rule if comment matches "/* Kanku:host:<domain_name> */"
   # and push line number to rules ARRAY
   for my $line (@forward_rules) {
-    push (@{$result->{filter}->{FORWARD}},$1) if ( $line =~ $re);
+    push (@{$result->{filter}->{$self->iptables_chain}},$1) if ( $line =~ $re);
   }
 
   return $result;
@@ -189,7 +190,7 @@ sub add_forward_rules_for_domain {
 
     my @cmds = (
       "iptables -t nat -I PREROUTING 1 -d $host_ip -p $proto --dport $host_port -j DNAT --to $guest_ip:$guest_port $comment",
-      "iptables -I FORWARD 1 -d $guest_ip/32 -p $proto -m state --state NEW -m tcp --dport $guest_port -j ACCEPT $comment"
+      "iptables -I ".$self->iptables_chain." 1 -d $guest_ip/32 -p $proto -m state --state NEW -m tcp --dport $guest_port -j ACCEPT $comment"
     );
 
     for my $cmd (@cmds) {
