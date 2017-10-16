@@ -47,6 +47,7 @@ sub init {
   my @parameters = ("-c",$self->connect_uri,"console",$self->domain_name);
  
   my $exp = Expect->new;
+  $exp->restart_timeout_upon_receive(1);
   $exp->debug($cfg->{$pkg}->{debug} || 0);
 
   if ($cfg->{$pkg}->{log_to_file} && $self->job_id) {

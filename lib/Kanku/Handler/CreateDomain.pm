@@ -267,8 +267,8 @@ sub _setup_hostname {
 
   # set hostname unique to avoid problems with duplicate in dhcp
   $con->cmd(
-    "echo $hostname > /etc/hostname",
-    "hostname $hostname",
+    "echo \"$hostname\" > /etc/hostname",
+    "hostname \"$hostname\"",
   );
 
 }
