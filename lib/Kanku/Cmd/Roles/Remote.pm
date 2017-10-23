@@ -104,14 +104,14 @@ has login_url => (
   is        => 'rw',
   isa       => 'Str',
   lazy	    => 1,
-  default   => sub { $_[0]->apiurl . "/rest/login.json" }
+  default   => sub { my $au = $_[0]->apiurl; $au =~ s/\/$//; "$au/rest/login.json" }
 );
 
 has logout_url => (
   is        => 'rw',
   isa       => 'Str',
   lazy	    => 1,
-  default   => sub { $_[0]->apiurl . "/rest/logout.json" }
+  default   => sub { my $au = $_[0]->apiurl; $au =~ s/\/$//; "$au/rest/logout.json" }
 );
 
 has ua => (
@@ -127,7 +127,6 @@ has ua => (
     );
   }
 );
-
 
 sub connect_restapi {
   my $self = shift;
@@ -172,6 +171,7 @@ sub login {
       return 0;
     }
   } else {
+     $self->logger->debug("login_url: ".$self->login_url);
      die $response->status_line;
   }
 
@@ -246,8 +246,9 @@ sub get_json {
   }
 
   my $param_string = join("&",@param_arr);
-
-  my $url = $self->apiurl.'/rest/'. $opts{path} .".json" . ( ($param_string) ? "?$param_string" : '' ) ;
+  my $au  = $self->apiurl;
+  $au =~ s/\/$//;
+  my $url = "$au/rest/$opts{path}.json" . ( ($param_string) ? "?$param_string" : '' ) ;
 
   my $request = HTTP::Request->new(GET => $url);
 
@@ -267,6 +268,7 @@ sub get_json {
     my $result = decode_json($response->decoded_content);
     return $result;
   } else {
+     $self->logger->debug("url: $url");
      die $response->status_line ."\n";
   }
 
