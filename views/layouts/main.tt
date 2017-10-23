@@ -84,7 +84,7 @@ var uri_base = "[% request.uri_base %]";
               </a>
               <div class="dropdown-menu dropdown-menu-right" style="padding: 15px;width: 230px;">
               <form action="[% request.uri_base %]/login" method=POST>
-                    <input type=hidden name=return_url value="[% request.uri %]">
+                    <input type=hidden name=return_url value="[% request.uri_base %][% request.path %]">
                     <label for="username" class=sr-only>Login Name</label>
                     <input style="margin-bottom: 5px" id="username" name=username class="form-control" placeholder="Login Name" value="[% username %]" required autofocus>
 
