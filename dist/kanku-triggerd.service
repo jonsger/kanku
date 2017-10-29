@@ -1,0 +1,13 @@
+[Unit]
+Description=Kanku TriggerD
+#Documentation=http://wiki2.dovecot.org/
+After=local-fs.target network.target
+ 
+[Service]
+Type=forking
+PIDFile=/opt/kanku/var/run/kanku-triggerd.pid
+ExecStart=/opt/kanku/bin/kanku-triggerd
+ExecStop=/opt/kanku/bin/kanku-triggerd --stop
+
+[Install]
+WantedBy=multi-user.target

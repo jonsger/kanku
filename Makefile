@@ -43,6 +43,7 @@ install_dirs:
 install_services: install_dirs
 	install -m 644 ./dist/kanku-worker.service $(DESTDIR)/usr/lib/systemd/system/kanku-worker.service
 	install -m 644 ./dist/kanku-scheduler.service $(DESTDIR)/usr/lib/systemd/system/kanku-scheduler.service
+	install -m 644 ./dist/kanku-triggerd.service $(DESTDIR)/usr/lib/systemd/system/kanku-triggerd.service
 	install -m 644 ./dist/kanku-web.service $(DESTDIR)/usr/lib/systemd/system/kanku-web.service
 	install -m 644 ./dist/kanku-dispatcher.service $(DESTDIR)/usr/lib/systemd/system/kanku-dispatcher.service
 
