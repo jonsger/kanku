@@ -118,7 +118,10 @@ sub prepare_and_run {
 
   $self->logger->info("Starting service ".ref(__PACKAGE__));
 
-  $SIG{'INT'} = $SIG{'TERM'} = sub { $self->initialize_shutdown };
+  $SIG{'INT'} = $SIG{'TERM'} = sub {
+    $self->logger->info("Initializing shutdown");
+    $self->initialize_shutdown 
+  };
 
   # daemonize
   if (! $self->daemon_options->{foreground}) {

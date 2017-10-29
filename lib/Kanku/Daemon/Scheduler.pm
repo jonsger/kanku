@@ -74,7 +74,7 @@ sub create_scheduled_jobs {
 
     my $jl = Kanku::JobList->new(schema=>$schema);
 
-    if ($jl->get_job_activ($job_name) ) {
+    if ($jl->get_job_active($job_name) ) {
       $reschedule = 0;
     } else {
       # check last run

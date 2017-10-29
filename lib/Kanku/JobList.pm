@@ -79,7 +79,7 @@ sub get_last_job {
   return $jobs_list->next();
 }
 
-sub get_job_activ {
+sub get_job_active {
   my $self     = shift;
   my $job_name = shift;
   my $schema   = $self->schema();
