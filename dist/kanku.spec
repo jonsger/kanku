@@ -370,6 +370,7 @@ A simple triggerd for kanku based on RabbitMQ
 
 %files triggerd
 %attr(755,root,root) /opt/kanku/bin/kanku-triggerd
+%dir /opt/kanku/lib/Kanku/Listener
 /opt/kanku/lib/Kanku/Daemon/TriggerD.pm
 /opt/kanku/lib/Kanku/Listener/RabbitMQ.pm
 %{_unitdir}/kanku-triggerd.service
