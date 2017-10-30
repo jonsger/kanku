@@ -34,8 +34,8 @@ sub connect_listener {
   my $routing_key    = $lcfg->{routing_key} || '#';
   my $routing_prefix = $lcfg->{routing_prefix} || "opensuse.obs";
   my $ssl            = exists($lcfg->{ssl}) ? $lcfg->{ssl} : 1;
-  my $ssl_cacert;
-  my $ssl_verify_host;
+  my $ssl_cacert      |= '';
+  my $ssl_verify_host |= 0;
   if ($ssl) {
     $ssl_cacert      = $lcfg->{ssl_cacert} || '/usr/share/pki/trust/DigiCert_High_Assurance_EV_Root_CA.pem';
     $ssl_verify_host = 0;
@@ -55,11 +55,14 @@ sub connect_listener {
        ssl_cacert      => $ssl_cacert
     }
   ];
-  $logger->debug(Dumper($c_opts));
-
+  if ($logger->is_trace) {
+    $logger->trace(" Using the following options (password suppressed for security reasons");
+    $logger->trace("  - c_opts -> $_ : $c_opts->[1]->{$_}") for (grep { $_ ne 'password' } keys(%{$c_opts->[1]}));
+  }
   $mq->connect(@$c_opts);
 
-  $SIG{TERM} = $SIG{KILL} = sub {
+  $SIG{TERM} = $SIG{INT} = sub {
+    $logger->debug("Got signal to exit. Disconnecting from rabbitmq");
     $mq->disconnect;
     exit 0;
   };
@@ -79,7 +82,7 @@ sub connect_listener {
   );
 
   $logger->debug("Declaring queue");
-  my $qname = $mq->queue_declare($channel, undef, { exclusive => 1 });
+  my $qname = $mq->queue_declare($channel, '', { exclusive => 1 });
 
   $logger->debug("Binding queue '$qname'");
   $mq->queue_bind($channel, $qname, $exchange_name, $routing_key);
@@ -125,10 +128,8 @@ sub wait_for_events {
 
   $mq->consume($channel, $qname);
 
-
   while (1) {
-    my $message = $mq->recv(1000);
-    if ($message) {
+    while (my $message = $mq->recv(1000)) {
       if ( $message->{routing_key} eq "$routing_prefix.package.build_success" ) {
 	 my $body = decode_json($message->{body});
 	 my $package_key = $body->{project}.'/'.$body->{package}.'/'.$body->{repository}.'/'.$body->{arch};
@@ -158,7 +159,6 @@ sub wait_for_events {
 	}
       }
     }
-    last if $self->daemon->detect_shutdown;
   }
 }
 
@@ -184,5 +184,7 @@ sub trigger_jobs {
     }
   }
 }
+
+__PACKAGE__->meta->make_immutable();
 
 1;

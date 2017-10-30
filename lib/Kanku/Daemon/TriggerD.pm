@@ -50,7 +50,7 @@ sub run {
     if ($pid) {
       push(@childs, $pid);
     } else {
-      $SIG{TERM} = $SIG{'KILL'}  = 'IGNORE';
+
       my $class = $listener_config->{class};
       my $listener_object = $class->new(config => $listener_config, daemon => $self );
 
@@ -58,14 +58,17 @@ sub run {
 
       $listener_object->wait_for_events($mq, $qname);
 
-      $mq->disconnect();
       exit 0;
     }
   }
 
   while (@childs) {
+    if ($self->detect_shutdown) {
+      $logger->trace("Sending shutdown to childs (@childs)");
+      kill('INT',@childs);
+    }
     @childs = grep { waitpid($_,WNOHANG) == 0 } @childs;
-    $logger->debug("Active Childs: (@childs)");
+    $logger->trace("Active Childs: (@childs)");
     sleep(1);
   }
 
