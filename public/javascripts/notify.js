@@ -8,10 +8,12 @@ if (! window.Notification ) {
 
     Notification.requestPermission(function() {
       var n = new Notification('Kanku Desktop Notification', {
-	body: 'test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test ',
+	body: 'test <a href="/kanku/job_history"> test test test test test test test test test test test test test test test test test test test test test test test test test test test ',
 	icon: './favicon.ico' // optional
       });
+      n.onclick = function() { 
+        window.location.href = 'job_history';
+      };
     });
-    }
-  );
+  });
 }
