@@ -36,6 +36,7 @@ Requires: kanku-web
 Requires: kanku-worker
 Requires: kanku-scheduler
 Requires: kanku-dispatcher
+Requires: kanku-triggerd
 
 %description
 TODO: add some meaningful description
