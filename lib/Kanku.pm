@@ -80,6 +80,11 @@ get '/settings' => requires_role User =>  sub {
 get '/request_roles' => require_login sub {
     template 'request_roles' , { %{ get_defaults_for_views() }, kanku => { module => 'Request Roles' } };
 };
+
+get '/notify' => requires_role User =>  sub {
+    template 'notify' , { %{ get_defaults_for_views() }, kanku => { module => 'Notifications' } };
+};
+
 ### LOGIN / SIGNIN
 
 get '/login' => sub {

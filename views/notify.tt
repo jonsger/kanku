@@ -1,0 +1,6 @@
+<h1>Notifications</h1>
+<div id=notify_settings>
+<a href='#' id=trigger_notify>Trigger Test Notification</a>
+</div>
+<script src="[% request.uri_base %]/javascripts/notify.js"></script>
+<!-- vim: set ft=html -->

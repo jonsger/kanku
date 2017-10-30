@@ -40,6 +40,7 @@ var uri_base = "[% request.uri_base %]";
             <li><a href="[% request.uri_base %]/guest">Guest</a></li>
             [% IF roles.User %]
             <li><a href="[% request.uri_base %]/job">Job</a></li>
+            <li><a href="[% request.uri_base %]/notify">Notify</a></li>
             [% END %]
           </ul>
           <ul class="nav navbar-nav pull-right">
