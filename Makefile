@@ -39,6 +39,7 @@ install_dirs:
 	install -m 755 -d $(DESTDIR)/etc/apache2/conf.d
 	install -m 755 -d $(DESTDIR)/etc/profile.d
 	install -m 755 -d $(DESTDIR)/usr/lib/systemd/system
+	install -m 755 -d $(DESTDIR)/usr/sbin
 
 install_services: install_dirs
 	install -m 644 ./dist/kanku-worker.service $(DESTDIR)/usr/lib/systemd/system/kanku-worker.service
