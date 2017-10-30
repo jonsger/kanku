@@ -348,5 +348,32 @@ A simple scheduler for kanku based on RabbitMQ
 %{_unitdir}/kanku-scheduler.service
 %{_sbindir}/rckanku-scheduler
 
+%package triggerd
+Summary: Trigger daemon for kanku
+Requires: kanku-common
+#Requires: %{?systemd_requires}
+
+%description triggerd
+A simple triggerd for kanku based on RabbitMQ
+
+%pre triggerd
+%service_add_pre kanku-triggerd.service
+
+%post triggerd
+%service_add_post kanku-triggerd.service
+
+%preun triggerd
+%service_del_preun kanku-triggerd.service
+
+%postun triggerd
+%service_del_postun kanku-triggerd.service
+
+%files triggerd
+%attr(755,root,root) /opt/kanku/bin/kanku-triggerd
+/opt/kanku/lib/Kanku/Daemon/TriggerD.pm
+/opt/kanku/lib/Kanku/Listener/RabbitMQ.pm
+%{_unitdir}/kanku-triggerd.service
+%{_sbindir}/rckanku-triggerd
+
 
 %changelog
