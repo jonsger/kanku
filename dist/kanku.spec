@@ -50,6 +50,11 @@ TODO: add some meaningful description
 %install
 make install DESTDIR=%{buildroot}
 %fdupes %{buildroot}/opt/kanku/share
+ln -s /usr/sbin/service %{buildroot}%{_sbindir}/rckanku-web
+ln -s /usr/sbin/service %{buildroot}%{_sbindir}/rckanku-worker
+ln -s /usr/sbin/service %{buildroot}%{_sbindir}/rckanku-dispatcher
+ln -s /usr/sbin/service %{buildroot}%{_sbindir}/rckanku-scheduler
+ln -s /usr/sbin/service %{buildroot}%{_sbindir}/rckanku-triggerd
 
 %files
 %exclude /etc
@@ -231,6 +236,7 @@ TODO:
 %attr(755,root,root) /opt/kanku/bin/kanku-app.psgi
 %dir /opt/kanku/views/
 %{_unitdir}/kanku-web.service
+%{_sbindir}/rckanku-web
 /opt/kanku/views/admin.tt
 /opt/kanku/views/guest.tt
 /opt/kanku/views/index.tt
@@ -282,6 +288,7 @@ A simple remote worker for kanku based on RabbitMQ
 
 %files worker
 %{_unitdir}/kanku-worker.service
+%{_sbindir}/rckanku-worker
 /opt/kanku/bin/kanku-worker
 /opt/kanku/lib/Kanku/Daemon/Worker.pm
 
@@ -310,6 +317,7 @@ A simple dispatcher for kanku based on RabbitMQ
 
 %files dispatcher
 %{_unitdir}/kanku-dispatcher.service
+%{_sbindir}/rckanku-dispatcher
 /opt/kanku/bin/kanku-dispatcher
 /opt/kanku/lib/Kanku/Daemon/Dispatcher.pm
 /opt/kanku/lib/Kanku/Dispatch
@@ -338,6 +346,7 @@ A simple scheduler for kanku based on RabbitMQ
 %attr(755,root,root) /opt/kanku/bin/kanku-scheduler
 /opt/kanku/lib/Kanku/Daemon/Scheduler.pm
 %{_unitdir}/kanku-scheduler.service
+%{_sbindir}/rckanku-scheduler
 
 
 %changelog
