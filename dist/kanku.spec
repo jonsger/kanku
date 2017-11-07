@@ -237,7 +237,6 @@ TODO:
 %service_del_postun kanku-web.service
 
 %files web
-%attr(755,root,root) /opt/kanku/bin/kanku-apache2.psig
 %attr(755,root,root) /opt/kanku/bin/kanku-app.psgi
 %dir /opt/kanku/views/
 %{_unitdir}/kanku-web.service
