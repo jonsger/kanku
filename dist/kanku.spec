@@ -193,6 +193,10 @@ TODO:
 %dir /opt/kanku/lib/Kanku/LibVirt
 /opt/kanku/lib/Kanku/LibVirt/HostList.pm
 
+%dir /opt/kanku/lib/Kanku/Dispatch/
+/opt/kanku/lib/Kanku/Dispatch/Local.pm
+
+
 %package cli
 Summary: Command line client for kanku
 Requires: kanku-common
@@ -242,6 +246,7 @@ TODO:
 /opt/kanku/views/guest.tt
 /opt/kanku/views/index.tt
 /opt/kanku/views/job.tt
+/opt/kanku/views/notify.tt
 /opt/kanku/views/job_history.tt
 /opt/kanku/views/job_result.tt
 %dir /opt/kanku/views/layouts
@@ -321,7 +326,7 @@ A simple dispatcher for kanku based on RabbitMQ
 %{_sbindir}/rckanku-dispatcher
 /opt/kanku/bin/kanku-dispatcher
 /opt/kanku/lib/Kanku/Daemon/Dispatcher.pm
-/opt/kanku/lib/Kanku/Dispatch
+/opt/kanku/lib/Kanku/Dispatch/RabbitMQ.pm
 
 %package scheduler
 Summary: Scheduler daemon for kanku
