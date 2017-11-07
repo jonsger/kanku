@@ -5,7 +5,6 @@
 <meta http-equiv="Content-type" content="text/html; charset=[% settings.charset %]" />
 <title>Kanku [% kanku.module %]</title>
 
-
 <link rel="stylesheet" href="[% request.uri_base %]/bootstrap/css/bootstrap.min.css" />
 <link rel="stylesheet" href="[% request.uri_base %]/css/mystyle.css" />
 
@@ -17,13 +16,12 @@
 <script src="[% request.uri_base %]/javascripts/js.cookie.js"></script>
 <script src="[% request.uri_base %]/bootstrap/js/bootstrap.min.js"></script>
 
-
 <script type="text/javascript">
 // This is used to bring uri_base into js on a
 // centralized place
 var uri_base = "[% request.uri_base %]";
+var ws_url = "[% ws_url %]";
 </script>
-
 
 </head>
 <body>

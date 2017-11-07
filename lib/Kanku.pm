@@ -7,6 +7,7 @@ use Dancer2::Plugin;
 use Dancer2::Plugin::REST;
 use Dancer2::Plugin::DBIC;
 use Dancer2::Plugin::Auth::Extensible;
+use Dancer2::Plugin::WebSocket;
 
 use Data::Dumper;
 use JSON::XS;
@@ -36,6 +37,7 @@ sub get_defaults_for_views {
     roles           => $roles,
     logged_in_user  => $logged_in_user ,
     messagebar      => $messagebar,
+    ws_url          => websocket_url()
   };
 };
 
@@ -267,13 +269,13 @@ post '/rest/job/trigger/:name.:format' => require_any_role [qw/Admin User/] =>  
     name  => $name,
     state => {
       'not in' => [qw/skipped succeed failed/]
-    } 
+    }
   });
   debug("active jobs:\n".Dumper(@active));
 
   if (@active) {
     return {
-      state => 'warning', 
+      state => 'warning',
       msg   => "Skipped triggering job '$name'."
                . " Another job is already running"
     };
@@ -417,6 +419,13 @@ get '/rest/logout.:format' => sub {
     return { authenticated => 0 };
 };
 
+#
+# WebSocket
+
+websocket_on_message sub {
+  my( $conn, $message ) = @_;
+  $conn->send( $message . ' world!' );
+};
 
 __PACKAGE__->meta->make_immutable();
 

@@ -8,4 +8,7 @@ use lib "$FindBin::Bin/../lib";
 
 use Kanku;
 
-builder { mount '/kanku' => Kanku->to_app };
+builder {
+  mount(Kanku->websocket_mount);
+  mount '/kanku' => Kanku->to_app;
+};
