@@ -13,7 +13,9 @@ if (! window.Notification ) {
       });
       n.onclick = function() { 
         window.location.href = 'job_history';
+        n.close();
       };
+      setTimeout(n.close.bind(n), 20000);
     });
   });
 }
