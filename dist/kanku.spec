@@ -222,6 +222,7 @@ TODO:
 Summary: WebUI for kanku
 Requires: kanku-common
 Requires: perl(Dancer2::Plugin::WebSocket)
+Requires: perl(Twiggy)
 #Requires: %{?systemd_requires}
 
 %description web
