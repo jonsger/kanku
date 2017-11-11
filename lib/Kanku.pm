@@ -10,13 +10,14 @@ use Dancer2::Plugin::Auth::Extensible;
 use Dancer2::Plugin::WebSocket;
 
 use Data::Dumper;
-use JSON::XS;
 use Sys::Virt;
+use Try::Tiny;
 
 use Kanku::Config;
 use Kanku::Schema;
 use Kanku::Util::IPTables;
 use Kanku::LibVirt::HostList;
+use Kanku::RabbitMQ;
 
 our $VERSION = '0.0.2';
 
@@ -296,10 +297,16 @@ post '/rest/job/trigger/:name.:format' => require_any_role [qw/Admin User/] =>  
 get '/rest/job/config/:name.:format' => require_any_role [qw/Admin User/] =>  sub {
 
   my $cfg = Kanku::Config->instance();
+  my $rval;
 
-  return {
-    config => $cfg->job_config_plain(param('name'))
+  try {
+    $rval = $cfg->job_config_plain(param('name'));
   }
+  catch {
+    $rval = $_;
+  };
+
+  return { config => $rval }
 };
 
 
@@ -421,10 +428,23 @@ get '/rest/logout.:format' => sub {
 
 #
 # WebSocket
+Log::Log4perl->init("$FindBin::Bin/../etc/console-log.conf");
 
 websocket_on_message sub {
   my( $conn, $message ) = @_;
   $conn->send( $message . ' world!' );
+#  $conn->send("starting connection");
+#  my $cfg = Kanku::Config->instance();
+#  my $config = $cfg->config->{'Kanku::Dispatch::RabbitMQ'};
+#  my $mq = Kanku::RabbitMQ->new(%{$config->{rabbitmq}});
+#  $mq->connect();
+#  my $qn = $mq->queue->queue_declare(1,'');
+#  $mq->queue_name($qn);
+#  $mq->queue->queue_bind(1, $qn, 'kanku.notify', '');
+#  while (my $data = $mq->recv()) {
+ #   debug "Got message: $data";
+#    $conn->send($data);
+#  }
 };
 
 __PACKAGE__->meta->make_immutable();
