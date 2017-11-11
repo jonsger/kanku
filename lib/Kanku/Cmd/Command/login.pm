@@ -101,14 +101,6 @@ sub execute {
     
   } 
 
-  $logger->debug("
-
-Url      : ".$self->apiurl."
-User     : ".$self->user."
-Password : ".$self->password."
-
-");
-
   $self->user($self->user);
   $self->password($self->password);
 
