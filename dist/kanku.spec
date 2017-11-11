@@ -125,6 +125,9 @@ TODO:
 %doc README.md TODO
 
 %dir /opt/kanku
+%dir /opt/kanku/var
+%dir /opt/kanku/var/log
+%dir /opt/kanku/var/cache
 %dir /opt/kanku/lib
 %dir /opt/kanku/lib/Kanku
 %dir /opt/kanku/lib/Kanku/Daemon
