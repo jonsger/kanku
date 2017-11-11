@@ -218,6 +218,7 @@ TODO:
 %package web
 Summary: WebUI for kanku
 Requires: kanku-common
+Requires: perl(Dancer2::Plugin::WebSocket)
 #Requires: %{?systemd_requires}
 
 %description web
