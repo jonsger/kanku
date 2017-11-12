@@ -49,40 +49,6 @@ requires "run_job";
 
 =cut
 
-has notify_queue => (
-  is      => 'rw', 
-  isa     => 'Object',
-  lazy    => 1,
-  default => sub {
-    my ($self) = @_;
-    my $cfg = Kanku::Config->instance();
-    my $config = $cfg->config()->{'Kanku::RabbitMQ'};
-    $self->logger->debug(Dumper($config));
-    my $kmq    = Kanku::RabbitMQ->new(%{ $config || {}});
-
-    $kmq->shutdown_file($self->shutdown_file);
-    $kmq->connect() or die "Could not connect to rabbitmq\n";
-    $kmq->queue->exchange_declare(
-      $kmq->channel,
-      'kanku.notify',
-      { exchange_type => 'fanout' }
-    );
-
-    $kmq->queue->queue_declare(
-      $kmq->channel,
-      'kanku.notifications',
-    );
-
-    $kmq->queue->queue_bind(
-      $kmq->channel,
-      'kanku.notifications',
-      'kanku.notify',
-      ''
-    );
-    return $kmq;
-  }
-);
-
 sub run {
   my ($self) = @_;
   my $logger = $self->logger;
@@ -98,8 +64,6 @@ sub run {
   } catch {
     $logger->warn($_);
   };
-
-  $self->notify_queue->publish('', "{'notification_type': 'daemon_change', 'event':'start', 'daemon':'dispatcher', #message': 'dispatcher started with pid $$'}", {exchange => 'kanku.notify'});
 
   while (1) {
     my $job_list = $self->get_todo_list();

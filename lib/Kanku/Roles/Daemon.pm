@@ -24,6 +24,8 @@ use POSIX ":sys_wait_h";
 use FindBin;
 use Log::Log4perl;
 use Data::Dumper;
+use JSON::XS;
+
 use Kanku::Config;
 use Kanku::Airbrake;
 
@@ -95,6 +97,39 @@ has airbrake => (
   default => sub  { Kanku::Airbrake->instance() }
 );
 
+has notify_queue => (
+  is      => 'rw',
+  isa     => 'Object',
+  lazy    => 1,
+  default => sub {
+    my ($self) = @_;
+    my $cfg = Kanku::Config->instance();
+    my $config = $cfg->config()->{'Kanku::RabbitMQ'};
+    my $kmq    = Kanku::RabbitMQ->new(%{ $config || {}});
+
+    $kmq->shutdown_file($self->shutdown_file);
+    $kmq->connect();
+    $kmq->queue->exchange_declare(
+      $kmq->channel,
+      'kanku.notify',
+      { exchange_type => 'fanout' }
+    );
+
+    $kmq->queue->queue_declare(
+      $kmq->channel,
+      'kanku.notifications',
+    );
+
+    $kmq->queue->queue_bind(
+      $kmq->channel,
+      'kanku.notifications',
+      'kanku.notify',
+      ''
+    );
+    return $kmq;
+  }
+);
+
 sub print_usage {
   my ($self) = @_;
   my $basename = $self->daemon_basename;
@@ -117,6 +152,15 @@ sub prepare_and_run {
   $self->check_pid if ( -f $self->pid_file );
 
   $self->logger->info("Starting service ".ref(__PACKAGE__));
+
+  my $ref = ref($self);
+  my $notification = {
+    type    => 'daemon_change',
+    event   => 'start',
+    daemon  => $ref,
+    message => "$ref starting with pid $$",
+  };
+  $self->notify_queue->publish('',encode_json($notification),{exchange=>'kanku.notify'});
 
   $SIG{'INT'} = $SIG{'TERM'} = sub {
     $self->logger->info("Initializing shutdown");
@@ -181,6 +225,16 @@ sub finalize_shutdown {
       $self->logger->error('Unable to remove \''.$self->pid_file."': $!");
 
   $self->logger->info("Shutting down service ".ref(__PACKAGE__));
+
+  my $ref = ref($self);
+  my $notification = {
+    type    => 'daemon_change',
+    event   => 'stop',
+    daemon  => $ref,
+    message => "$ref stopping (pid $$)",
+  };
+
+  $self->notify_queue->publish('',encode_json($notification),{exchange=>'kanku.notify'});
 
   return;
 }
