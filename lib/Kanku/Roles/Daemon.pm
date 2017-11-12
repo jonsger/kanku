@@ -28,6 +28,7 @@ use JSON::XS;
 
 use Kanku::Config;
 use Kanku::Airbrake;
+use Kanku::NotifyQueue;
 
 with 'Kanku::Roles::Logger';
 
@@ -102,31 +103,9 @@ has notify_queue => (
   isa     => 'Object',
   lazy    => 1,
   default => sub {
-    my ($self) = @_;
-    my $cfg = Kanku::Config->instance();
-    my $config = $cfg->config()->{'Kanku::RabbitMQ'};
-    my $kmq    = Kanku::RabbitMQ->new(%{ $config || {}});
-
-    $kmq->shutdown_file($self->shutdown_file);
-    $kmq->connect();
-    $kmq->queue->exchange_declare(
-      $kmq->channel,
-      'kanku.notify',
-      { exchange_type => 'fanout' }
-    );
-
-    $kmq->queue->queue_declare(
-      $kmq->channel,
-      'kanku.notifications',
-    );
-
-    $kmq->queue->queue_bind(
-      $kmq->channel,
-      'kanku.notifications',
-      'kanku.notify',
-      ''
-    );
-    return $kmq;
+    my $q = Kanku::NotifyQueue->new(shutdown_file=>$_[0]->shutdown_file);
+    $q->prepare;
+    return $q;
   }
 );
 
@@ -160,7 +139,7 @@ sub prepare_and_run {
     daemon  => $ref,
     message => "$ref starting with pid $$",
   };
-  $self->notify_queue->publish('',encode_json($notification),{exchange=>'kanku.notify'});
+  $self->notify_queue->send($notification);
 
   $SIG{'INT'} = $SIG{'TERM'} = sub {
     $self->logger->info("Initializing shutdown");
@@ -234,7 +213,7 @@ sub finalize_shutdown {
     message => "$ref stopping (pid $$)",
   };
 
-  $self->notify_queue->publish('',encode_json($notification),{exchange=>'kanku.notify'});
+  $self->notify_queue->send($notification);
 
   return;
 }

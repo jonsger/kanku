@@ -1,0 +1,108 @@
+# Copyright (c) 2017 SUSE LLC
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program (see the file COPYING); if not, write to the
+# Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
+#
+package Kanku::NotifyQueue;
+
+=head1 NAME
+
+ Kanku::NotifyQueue - A class to send notifications from daemons to rabbitmq
+
+=head1 SYNOPSIS
+
+  my $notification = {
+    type    => ...,
+    message => '...'
+  };
+
+  my $nq = Kanku::NotifyQueue->new();
+  $nq->prepare();
+  $nq->send($notification);
+
+=cut
+
+use Moose;
+use FindBin;
+use Log::Log4perl;
+use Data::Dumper;
+use JSON::XS;
+
+use Kanku::Config;
+use Kanku::RabbitMQ;
+
+=head1 ATTRIBUTES
+
+=over
+
+=item shutdown_file -
+
+=item queue -
+
+=back
+
+=cut
+
+has shutdown_file => (
+  is      => 'rw',
+  isa     => 'Object',
+);
+
+has queue => (
+  is      => 'rw',
+  isa     => 'Object',
+);
+
+=head1 METHODS
+
+=head2 prepare - create Kanku::RabbitMQ object and declare exchange if needed
+
+ $nq->prepare();
+
+=cut
+
+sub prepare {
+    my ($self) = @_;
+    my $cfg = Kanku::Config->instance();
+    my $config = $cfg->config()->{'Kanku::RabbitMQ'};
+    my $kmq    = Kanku::RabbitMQ->new(%{ $config || {}});
+
+    $kmq->shutdown_file($self->shutdown_file);
+    $kmq->connect();
+    $kmq->queue->exchange_declare(
+      $kmq->channel,
+      'kanku.notify',
+      { exchange_type => 'fanout' }
+    );
+
+    $self->queue($kmq);
+    return $kmq;
+}
+=head2 send - send a notification to the notify exchange
+
+$notification can be a json string or a reference
+
+ $nq->send($notification);
+
+=cut
+
+sub send {
+  my ($self, $msg) = @_;
+  $msg = encode_json($msg) if ref($msg);
+  $self->queue->publish('',$msg,{exchange=>'kanku.notify'});
+}
+
+__PACKAGE__->meta->make_immutable();
+
+1;
