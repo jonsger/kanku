@@ -476,7 +476,14 @@ sub setup_mq {
 	my $data = $mq->recv(1000);
 	if ($data) {
 	  $log->debug("Got message: $data->{body}");
-	  $conn->send($data->{body});
+          my $body;
+          try {
+            $body = decode_json($data->{body});
+	    $conn->send($body->{message});
+          } catch {
+            error $_;
+            debug $data->{body};
+	  };
 	} else {
 	  die "No connection any longer\n" if ! $mq->queue->is_connected();
 	}
