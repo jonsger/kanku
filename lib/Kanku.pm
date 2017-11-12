@@ -450,7 +450,7 @@ sub setup_mq {
 
     $conn->on(
       'close' => sub {
-	if ($pid) {
+	if (!$pid) {
 	  $log->debug("Cleaning  queue $qn and exiting $pid");
 	  $mq->queue->queue_unbind(1, $qn, 'kanku.notify', '');
 	  $mq->queue->queue_delete(1, $qn);
@@ -461,7 +461,8 @@ sub setup_mq {
       message => sub {
 	my ($conn, $msg) = @_;
 	$log->debug("Server got message on WebSocket connection: $msg");
-	# $conn->send("Server got message: $msg");
+        # Simply bounce the message back
+	$conn->send($msg);
       }
     );
 

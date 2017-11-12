@@ -17,29 +17,28 @@ mySocket.onmessage = function (evt) {
 
 mySocket.onopen = function(evt) {
   console.log("opening Socket");
+
+  setTimeout(
+    function() {
+      mySocket.send('Opening WebSocket');
+    },
+    2000
+  );
+};
+
+mySocket.onclose = function(evt) {
   Notification.requestPermission(function() {
     var n = new Notification('Kanku Desktop Notification', {
-	body: 'Opened websocket successfully',
+	body: 'Closed socket - no more messages will be displayed',
 	icon: './favicon.ico' // optional
     });
     n.onclick = function() {
-        window.location.href = 'job_history';
+        window.location.href = 'notify';
         n.close();
     };
     setTimeout(n.close.bind(n), 20000);
   });
-/* TODO: send filters initially
-
-  setTimeout(
-    function() {
-      mySocket.send('hello');
-    },
-    2000
-  );
-*/
-
 };
-
 
 if (! window.Notification ) {
   alert("Notifications not availible in your browser!");
