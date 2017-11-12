@@ -16,10 +16,10 @@ mySocket.onmessage = function (evt) {
 };
 
 mySocket.onopen = function(evt) {
-  console.log("opening");
+  console.log("opening Socket");
   Notification.requestPermission(function() {
     var n = new Notification('Kanku Desktop Notification', {
-	body: 'opening websocket',
+	body: 'Opened websocket successfully',
 	icon: './favicon.ico' // optional
     });
     n.onclick = function() {
@@ -28,12 +28,16 @@ mySocket.onopen = function(evt) {
     };
     setTimeout(n.close.bind(n), 20000);
   });
+/* TODO: send filters initially
+
   setTimeout(
     function() {
       mySocket.send('hello');
     },
     2000
   );
+*/
+
 };
 
 

@@ -42,7 +42,6 @@ with 'Kanku::Roles::Logger';
 
 use Data::Dumper;
 use JSON::XS;
-use Kanku::MQ;
 use Try::Tiny;
 use MIME::Base64;
 

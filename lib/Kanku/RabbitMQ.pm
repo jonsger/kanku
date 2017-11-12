@@ -15,6 +15,22 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 #
 package Kanku::RabbitMQ;
+=head1 NAME
+
+Kanku::RabbitMQ - A helper class for Net::AMQP::RabbitMQ
+
+=head1 SYNOPSIS
+
+    my $kmq = Kanku::RabbitMQ->new(%{ $config || {}});
+    $kmq->shutdown_file($self->shutdown_file);
+    $kmq->connect() or die "Could not connect to rabbitmq\n";
+    $kmq->setup_worker();
+    $kmq->create_queue(
+      queue_name    => $self->worker_id,
+      exchange_name =>'kanku.to_all_workers'
+    );
+
+=cut
 
 use Moose;
 
@@ -25,6 +41,20 @@ use Try::Tiny;
 
 with 'Kanku::Roles::Logger';
 with 'Kanku::Roles::Helpers';
+
+=head1 ATTRIBUTES
+
+=over
+
+=item channel
+
+=item port
+
+=item ssl
+
+=back
+
+=cut
 
 has 'channel' => (is=>'rw',isa=>'Int',default => 1);
 has 'port'	  => (is=>'rw',isa=>'Int',default => 5671);
@@ -46,6 +76,7 @@ has '+user'	          => ( default => 'kanku');
 has '+password'	      => ( default => 'guest');
 has '+exchange_name'  => ( default => 'amq.direct');
 has '+routing_key'    => ( default => '');
+has '+ssl_cacert'    => ( default => '');
 
 has queue => (
 	  is	  => 'rw',
@@ -57,12 +88,20 @@ has shutdown_file => (
 	  isa	  => 'Object',
 );
 
-sub connect {
-  my ($self) = @_;
+=head1 METHODS
 
+=head2 connect - connect to a rabbitmq server
+
+=cut
+
+sub connect {
+  my $self = shift;
+  my %opts = @_;
+
+  $self->logger->debug(__PACKAGE__."->connect to opts:".$self->dump_it(\%opts));
   $self->queue(Net::AMQP::RabbitMQ->new());
 
-  my @opts = (
+  my @connect_opts = (
     $self->host,
     {
       vhost           => $self->vhost,
@@ -76,25 +115,33 @@ sub connect {
     }
   );
 
-  $self->logger->trace("Trying to connect to rabbitmq with the folloing options: ".$self->dump_it(\@opts));
+  $self->logger->debug("Trying to connect to rabbitmq with the folloing options: ".$self->dump_it(\@connect_opts));
+
   my $connect_success = 0;
   while (! $connect_success ) {
     try {
-      $self->queue->connect(@opts);
+      $self->queue->connect(@connect_opts);
       $connect_success = 1;
     } catch {
       if ( $self->shutdown_file ) {
-        $self->logger->trace("shutdown_file: ".$self->shutdown_file->stringify);
-        return if ( -f $self->shutdown_file);
+        die "shutdown while trying to connect to rabbitmq" if ( -f $self->shutdown_file);
       }
+      die "Could not connect to RabbitMQ: $_" if $opts{no_retry};
       sleep 1;
     };
+
   }
+
+  $self->logger->info("Connection rabbitmq on ".$self->host." established successfully");
 
   $self->queue->channel_open($self->channel);
 
   return 1;
 }
+
+=head2 connect_info - return a hash ref containing config for connect
+
+=cut
 
 sub connect_info {
   my ($self) = @_;
@@ -111,6 +158,10 @@ sub connect_info {
   };
 }
 #
+=head2 setup_worker -
+
+=cut
+
 sub setup_worker {
   my ($self,$mq)=@_;
 
@@ -126,6 +177,9 @@ sub setup_worker {
     { exchange_type => 'fanout' }
   );
 }
+=head2 recv - wait and read new incomming messages
+
+=cut
 
 sub recv {
   my $self = shift;
@@ -138,6 +192,12 @@ sub recv {
 
   return $self->queue->recv(@_);
 }
+
+=head2 publish - send a message
+
+   $kmq->publish($routing_key, $data, $opts);
+
+=cut
 
 sub publish {
   my ($self, $rk, $data, $opts) = @_;
@@ -153,6 +213,9 @@ sub publish {
   return $self->queue->publish($self->channel, $rk, $data, $opts);
 }
 
+=head2 create_queue -
+
+=cut
 sub create_queue {
   my $self = shift;
   my %opts = @_;
@@ -191,4 +254,3 @@ sub create_queue {
 }
 
 1;
-

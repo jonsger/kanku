@@ -205,8 +205,6 @@ any '/rest/jobs/list.:format' => sub {
 	$search->{name}= { like => $jn }
   }
 
-  debug("search: ".Dumper($search));
-
   my $rs = schema('default')->resultset('JobHistory')->search(
 		  $search,
                   {
@@ -272,7 +270,6 @@ post '/rest/job/trigger/:name.:format' => require_any_role [qw/Admin User/] =>  
       'not in' => [qw/skipped succeed failed/]
     }
   });
-  debug("active jobs:\n".Dumper(@active));
 
   if (@active) {
     return {
@@ -288,7 +285,7 @@ post '/rest/job/trigger/:name.:format' => require_any_role [qw/Admin User/] =>  
     creation_time => time(),
     args => param("args")
   };
-  debug(Dumper($jd));
+
   my $job = schema('default')->resultset('JobHistory')->create($jd);
 
   return {state => 'success', msg => "Successfully triggered job with id ".$job->id};
@@ -319,10 +316,9 @@ get '/rest/gui_config/job.:format' => sub {
     my $job_config = { job_name => $job_name, sub_tasks => []};
     push @config , $job_config;
     my $job_cfg = $cfg->job_config($job_name);
-	debug(Dumper($job_cfg));
-    if (ref($job_cfg) ne 'ARRAY') {
-	next;
-    }
+
+    next if (ref($job_cfg) ne 'ARRAY');
+
     foreach my $sub_tasks ( @{$job_cfg}) {
         my $mod = $sub_tasks->{use_module};
         my $defaults = {};
@@ -428,24 +424,68 @@ get '/rest/logout.:format' => sub {
 
 #
 # WebSocket
-Log::Log4perl->init("$FindBin::Bin/../etc/console-log.conf");
+Log::Log4perl->init("$FindBin::Bin/../etc/log4perl.conf");
 
-websocket_on_message sub {
-  my( $conn, $message ) = @_;
-  $conn->send( $message . ' world!' );
-#  $conn->send("starting connection");
-#  my $cfg = Kanku::Config->instance();
-#  my $config = $cfg->config->{'Kanku::Dispatch::RabbitMQ'};
-#  my $mq = Kanku::RabbitMQ->new(%{$config->{rabbitmq}});
-#  $mq->connect();
-#  my $qn = $mq->queue->queue_declare(1,'');
-#  $mq->queue_name($qn);
-#  $mq->queue->queue_bind(1, $qn, 'kanku.notify', '');
-#  while (my $data = $mq->recv()) {
- #   debug "Got message: $data";
-#    $conn->send($data);
-#  }
+websocket_on_open sub {
+  my ($conn, $env) = @_;
+  setup_mq($conn);
 };
+
+sub setup_mq {
+  my ($conn) = @_;
+  my $pid;
+  my $cfg = Kanku::Config->instance();
+  my $config = $cfg->config->{'Kanku::RabbitMQ'};
+
+  try {
+    my $mq = Kanku::RabbitMQ->new(%{$config});
+    $mq->connect(no_retry=>1);
+
+    my $log = $mq->logger;
+
+    my $qn = $mq->queue->queue_declare(1,'');
+    $mq->queue_name($qn);
+    $mq->queue->queue_bind(1, $qn, 'kanku.notify', '');
+    $mq->queue->consume(1, $qn);
+
+    $conn->on(
+      'close' => sub {
+	if ($pid) {
+	  $log->debug("Cleaning  queue $qn and exiting $pid");
+	  $mq->queue->queue_unbind(1, $qn, 'kanku.notify', '');
+	  $mq->queue->queue_delete(1, $qn);
+	  $mq->queue->disconnect();
+	  exit 0;
+	}
+      },
+      message => sub {
+	my ($conn, $msg) = @_;
+	$log->debug("Server got message on WebSocket connection: $msg");
+	# $conn->send("Server got message: $msg");
+      }
+    );
+
+
+    $pid = fork();
+    defined $pid or die "Error while forking\n";
+
+    if (!$pid) {
+      $log->debug("starting delayed");
+
+      while (1) {
+	my $data = $mq->recv(1000);
+	if ($data) {
+	  $log->debug("Got message: $data->{body}");
+	  $conn->send($data->{body});
+	} else {
+	  die "No connection any longer\n" if ! $mq->queue->is_connected();
+	}
+      }
+    }
+  } catch {
+    error $_;
+  };
+}
 
 __PACKAGE__->meta->make_immutable();
 

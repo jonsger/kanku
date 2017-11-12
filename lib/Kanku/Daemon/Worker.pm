@@ -17,7 +17,6 @@ use Net::Domain qw/hostfqdn/;
 use UUID qw/uuid/;
 use MIME::Base64;
 
-use Kanku::MQ;
 use Kanku::RabbitMQ;
 use Kanku::Config;
 use Kanku::Task::Local;
@@ -41,10 +40,10 @@ has remote_job_queue_name => (is=>'rw', isa => 'Str');
 has local_job_queue_name  => (is=>'rw', isa => 'Str');
 
 sub run {
-  my $self   = shift;
-  my $config = Kanku::Config->instance->config->{ref($self)};
+  my $self          = shift;
+  my $rabbit_config = Kanku::Config->instance->config->{'Kanku::RabbitMQ')};
   $self->airbrake()->notify_with_backtrace("Starting worker ($$)");
-  my $logger = $self->logger();
+  my $logger        = $self->logger();
 
   my @childs=();
 
@@ -54,7 +53,7 @@ sub run {
   $pid = fork();
 
   if (! $pid ) {
-    my $kmq = Kanku::RabbitMQ->new(%{ $config->{rabbitmq} || {}});
+    my $kmq = Kanku::RabbitMQ->new(%{ $rabbit_config || {}});
     $kmq->shutdown_file($self->shutdown_file);
     $kmq->connect() or die "Could not connect to rabbitmq\n";
     $kmq->setup_worker();
@@ -116,16 +115,16 @@ sub run {
   $pid = fork();
 
   if (! $pid ) {
+    my $kmq = Kanku::RabbitMQ->new(%{ $rabbit_config || {}});
+    $kmq->shutdown_file($self->shutdown_file);
+    $kmq->connect() or die "Could not connect to rabbitmq\n";
+    $kmq->setup_worker();
+    $kmq->create_queue(
+      queue_name    => $self->worker_id,
+      exchange_name =>'kanku.to_all_workers'
+    );
     while (1) {
       try {
-        my $kmq = Kanku::RabbitMQ->new(%{ $config->{rabbitmq} || {}});
-        $kmq->shutdown_file($self->shutdown_file);
-        $kmq->connect() or die "Could not connect to rabbitmq\n";
-	$kmq->setup_worker();
-	$kmq->create_queue(
-	  queue_name    => $self->worker_id,
-	  exchange_name =>'kanku.to_all_workers'
-	);
 	$self->logger->debug("Waiting for message (1000) ms");
 	my $msg  = $kmq->recv(1000);
 	if ( $msg ) {
@@ -142,13 +141,13 @@ sub run {
 	    $self->handle_advertisement($data, $kmq);
 	  }
 
-	  $kmq->queue->disconnect();
 	}
       } catch {
         $logger->error($_);
       };
       if ($self->detect_shutdown) {
         $logger->info("Worker process '$$' detected shutdown - exiting");
+	$kmq->queue->disconnect();
         exit 0;
       }
     }

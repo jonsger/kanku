@@ -165,7 +165,10 @@ has auth_config => (
 );
 sub download {
   my $self  = shift;
-  my $ua    = Net::OBS::Client->new(use_oscrc=>1,apiurl=>$self->api_url)->user_agent();
+  my $ua    = Net::OBS::Client->new(
+                use_oscrc=>$self->auth_config->{use_oscrc},
+                apiurl=>$self->api_url)->user_agent();
+
   my $fn    = $self->get_image_file_from_url()->{filename};
   my $url   = $self->download_url . $fn;
   my $file  = $self->images_dir() . "/" . $fn;

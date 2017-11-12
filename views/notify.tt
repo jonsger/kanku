@@ -1,6 +1,13 @@
 <h1>Notifications</h1>
 <div id=notify_settings>
 <a href='#' id=trigger_notify>Trigger Test Notification</a>
+
 </div>
+<h2>Select states for notifications</h2>
+<input type=checkbox id=ev_succeed name=ev_state value=succeed checked="checked">     Succeed   <br>
+<input type=checkbox id=ev_failed name=ev_state value=failed checked="checked">       Failed    <br>
+<input type=checkbox id=ev_skipped name=ev_state value=skipped checked="checked">     Skipped   <br>
+<input type=checkbox id=ev_scheduled name=ev_state value=scheduled checked="checked"> Scheduled <br>
+<input type=checkbox id=ev_triggerd name=ev_state value=triggered checked="checked">  Triggered <br>   
 <script src="[% request.uri_base %]/javascripts/notify.js"></script>
 <!-- vim: set ft=html -->

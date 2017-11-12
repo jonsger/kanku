@@ -18,15 +18,15 @@ package Kanku::Task::RemoteAll;
 
 =head1 NAME
 
-Kanku::Dispatch::RabbitMQ - TODO: comment
+Kanku::Task::RemoteAll - TODO: comment
 
 =head1 SYNOPSIS
 
-|scheduler.pl <required-options> [optional options]
+ TODO: comment
 
 =head1 DESCRIPTION
 
-FIXME: add a useful description
+TODO: add a useful description
 
 =head1 AUTHORS
 
@@ -42,7 +42,6 @@ with 'Kanku::Roles::Logger';
 
 use Data::Dumper;
 use JSON::XS;
-use Kanku::MQ;
 use Try::Tiny;
 use MIME::Base64;
 
@@ -96,12 +95,12 @@ sub run {
 
   sleep($self->wait_for_workers);
 
-  # Getting response from workers
+  # Getting response from workers, wait 10 sec to answer
   while ( my $msg = $self->kmq->recv(10000) ) {
-	if ($msg ) {
+    if ($msg ) {
       $logger->debug("Incomming message while waiting for confirmations");
       $self->_inspect_msg($msg);
-	}
+    }
   }
 
   # Wait for task results from workers

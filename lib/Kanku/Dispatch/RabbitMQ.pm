@@ -1,7 +1,7 @@
 package Kanku::Dispatch::RabbitMQ;
 
 
-=head1 NAME 
+=head1 NAME
 
 Kanku::Dispatch::RabbitMQ - TODO: comment
 
@@ -30,7 +30,6 @@ our $VERSION = "0.0.1";
 
 use Data::Dumper;
 use JSON::XS;
-use Kanku::MQ;
 use Kanku::RabbitMQ;
 use Kanku::Task;
 use Kanku::Task::Local;
@@ -61,9 +60,17 @@ has job_queue => (is=>'rw',isa=>'Object');
 has wait_for_workers => (is=>'ro',isa=>'Int',default=>1);
 
 has config => (
-  is=>'rw',
-  isa => 'HashRef', 
+  is      => 'rw',
+  isa     => 'HashRef',
+  lazy    => 1,
   default => sub { Kanku::Config->instance->config->{ref($_[0])}; }
+);
+
+has rabbit_config => (
+  is      => 'rw',
+  isa     => 'HashRef',
+  lazy    => 1,
+  default => sub { Kanku::Config->instance->config->{"Kanku::RabbitMQ"} || {}; }
 );
 
 sub run_job {
@@ -83,7 +90,7 @@ sub run_job {
   my $job_definition = $self->load_job_definition($job);
   my $args           = $self->prepare_job_args($job);
 
-  my $rmq = Kanku::RabbitMQ->new(%{ $self->config->{rabbitmq} || {}});
+  my $rmq = Kanku::RabbitMQ->new(%{$self->rabbit_config});
   $rmq->shutdown_file($self->shutdown_file);
   $rmq->connect() || die "Could not connect to rabbitmq\n";
   $rmq->queue_name($queue);
@@ -220,10 +227,10 @@ sub check_task {
 
 sub decline_applications {
   my ($self, $declined_applications) = @_;
-  my $rmq = Kanku::RabbitMQ->new(%{ $self->config->{rabbitmq} || {}});
+  my $rmq = Kanku::RabbitMQ->new(%{$self->rabbit_config});
   $rmq->shutdown_file($self->shutdown_file);
   $rmq->connect() || die "Could not connect to rabbitmq\n";
-  
+
   foreach my $queue( keys(%$declined_applications) ) {
     $rmq->queue_name($queue);
     $rmq->publish(
@@ -282,7 +289,7 @@ sub score_applications {
   $self->logger->debug("Keys of applications: '@keys'");
 
   my $key = shift(@keys);
-  
+
   my $ret = $applications->{$key};
   delete $applications->{$key};
 
@@ -306,7 +313,7 @@ sub advertise_job {
 
     $rmq->publish(
       '',
-      $data, 
+      $data,
       { exchange => 'kanku.to_all_workers' }
     );
 
@@ -318,7 +325,7 @@ sub advertise_job {
           $logger->debug("Incomming application");
           $logger->trace(Dumper($msg));
           my $body = $msg->{body};
-          try { 
+          try {
             $data = decode_json($body);
             $all_applications->{$data->{answer_queue}} = $data;
           } catch {
@@ -341,7 +348,7 @@ sub cleanup_on_startup {
 
 sub cleanup_on_exit {
   my ($self) = @_;
-  my $rmq = Kanku::RabbitMQ->new(%{$self->config->{rabbitmq} || {}});
+  my $rmq = Kanku::RabbitMQ->new(%{$self->rabbit_config});
   $rmq->shutdown_file($self->shutdown_file);
   $rmq->connect() || die "Could not connect to rabbitmq\n";
 
@@ -357,7 +364,7 @@ sub cleanup_on_exit {
 
 sub initialize {
   my ($self) = @_;
-  my $rmq = Kanku::RabbitMQ->new(%{$self->config->{rabbitmq} || {}});
+  my $rmq = Kanku::RabbitMQ->new(%{$self->rabbit_config});
   $rmq->shutdown_file($self->shutdown_file);
   $rmq->connect() || die "Could not connect to rabbitmq\n";
 
