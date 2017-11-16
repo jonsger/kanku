@@ -1,0 +1,65 @@
+=head1 dbic-migration cheat sheet
+
+=head2 Preparation
+
+ PLEASE BE AWARE: Your PERL5LIB ENV variable might result in unexpected results while testing.
+
+ export PERL5LIB=./lib
+
+ to avoid confusion
+
+=head2 Create a database for production
+
+ cd /opt/kanku 
+
+ dbic-migration install --schema_class Kanku::Schema --dsn dbi:SQLite:/opt/kanku/share/kanku-schema.db
+
+=head2 Create a database migration
+
+=head3 Create a test database
+
+ dbic-migration -Ilib install --schema_class Kanku::Schema --dsn dbi:SQLite:tmp/test.db
+
+=head3 Populate database
+
+ dbic-migration -Ilib populate --schema_class Kanku::Schema --dsn dbi:SQLite:tmp/test.db --fixture_set install
+
+=head3 Make you changes in Schema
+
+ vi lib/Kanku/Schema/Result/*.pm
+
+=head3 Increase $VERSION in schema
+
+ vi lib/Kanku/Schema.pm
+
+=head3 Create migration files
+
+ dbic-migration -Ilib prepare --schema_class Kanku::Schema --dsn dbi:SQLite:tmp/test.db --database SQLite --dir share
+
+ or overwrite if already exists
+
+ dbic-migration -Ilib prepare -O --schema_class Kanku::Schema --dsn dbi:SQLite:tmp/test.db --database SQLite --dir share
+
+=head3 Create install fixtures set
+
+ dbic-migration -Ilib dump_named_sets -S Kanku::Schema --dsn dbi:SQLite:tmp/test.db --fixture_set install
+
+=head3 Create fixtures setsi
+
+ dbic-migration -Ilib dump_all_sets --schema_class Kanku::Schema --dsn dbi:SQLite:tmp/test.db
+
+=head2 Upgrade your production database
+
+=head3 - in developer mode
+
+ dbic-migration -Ilib upgrade --schema_class Kanku::Schema --dsn dbi:SQLite:$HOME/.kanku/kanku-schema.db --database SQLite --dir share
+
+=head3 - in server mode
+
+ dbic-migration -Ilib upgrade --schema_class Kanku::Schema --dsn dbi:SQLite:/opt/kanku/share/kanku-schema.db --database SQLite --dir share
+
+=head2 Recreate classes from changed database
+
+ dbicdump -o dump_directory=./lib -o skip_load_external=1 -o debug=1 Kanku::Schema dbi:SQLite:./tmp/test.db
+
+=cut
