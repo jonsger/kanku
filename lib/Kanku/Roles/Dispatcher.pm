@@ -53,7 +53,6 @@ sub run {
   my ($self) = @_;
   my $logger = $self->logger;
   my @child_pids;
-  my $shutdown = 0;
 
   $self->initialize();
 
@@ -72,6 +71,7 @@ sub run {
       my $pid = fork();
 
       if (! $pid ) {
+        $SIG{'INT'} = $SIG{'TERM'} = sub { exit 0 };
         $logger->debug("Child starting with pid $$ -- $self");
         try {
           my $res = $self->run_job($job);
@@ -87,7 +87,7 @@ sub run {
         exit 0;
       } else {
         push (@child_pids,$pid);
-       
+
         # wait for childs to exit
         while ( @child_pids >= $self->max_processes ) {
           @child_pids = grep { waitpid($_,WNOHANG) == 0 } @child_pids;
@@ -103,13 +103,13 @@ sub run {
   }
 
   kill('TERM',@child_pids);
- 
-  my $wcnt = 0; 
+
+  my $wcnt = 0;
 
   while ( @child_pids ) {
     # log only every minute
     $self->logger->debug("Waiting for childs to exit: (@child_pids)") if (! $wcnt % 60);
-    $wcnt++; 
+    $wcnt++;
     @child_pids = grep { waitpid($_,WNOHANG) == 0 } @child_pids;
     sleep(1);
   }
@@ -118,8 +118,6 @@ sub run {
 
   $self->cleanup_dead_jobs();
 
-  #$self->finalize_shutdown();
- 
   return;
 }
 
@@ -151,12 +149,12 @@ sub run_notifiers {
   my ($self, $job, $last_task) = @_;
   my $logger    = $self->logger();
   my $notifiers = Kanku::Config->instance()->notifiers_config($job->name());
-  
+
   foreach my $notifier (@{$notifiers}) {
     try {
     $self->execute_notifier($notifier,$job,$last_task);
     }
-    catch { 
+    catch {
       my $e = $_;
       $logger->error("Error while sending notification");
       $logger->error($e);
@@ -207,13 +205,13 @@ sub load_job_definition {
     $job->exit_with_error($_);
   };
   return $job_definition;
-} 
+}
 
 sub prepare_job_args  {
   my ($self, $job)      = @_;
   my $args              = [];
   my $parse_args_failed = 0;
-  
+
   try {
     my $args_string = $job->db_object->args();
 
@@ -222,7 +220,7 @@ sub prepare_job_args  {
     }
     die "args not containting a ArrayRef" if (ref($args) ne "ARRAY" );
   }
-  catch { 
+  catch {
     $job->exit_with_error($_);
   };
 
@@ -259,7 +257,7 @@ sub start_job {
   my ($self,$job) = @_;
 
   $self->logger->debug("Starting job: ".$job->name." (".$job->id.")");
-  
+
   $job->start_time(time());
   $job->state("running");
   $job->update_db();

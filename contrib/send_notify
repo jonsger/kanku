@@ -1,0 +1,48 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use Net::AMQP::RabbitMQ;
+use JSON::XS;
+use Data::Dumper;
+
+my $host = '192.168.122.122';
+my $vhost = "/kanku";
+my $user = "kanku";
+my $password = "kanku";
+
+my $channel = 1;
+my $exchange = "kanku.notify";  # This exchange must exist already
+
+my $messages= { 
+  1 => {
+    #rkey => 'opensuse.obs.package.build_success',
+    msg  =>  encode_json(
+	{
+          type       => 'task_change',
+          event      => 'started',
+          job_id     => 1,
+          id         => 1
+	}
+    ),
+  },
+}; 
+my $mq = Net::AMQP::RabbitMQ->new();
+print "Connecting to host $host with username $user and password $password\n";
+$mq->connect($host, { vhost => $vhost, user => $user, password => $password, ssl=>0 });
+$mq->channel_open($channel);
+
+print "Please enter a number to send an event:\n";
+print Dumper($messages);
+
+while (1) {
+  my $in = <STDIN>;
+  chomp($in);
+  if ( $messages->{$in} ) {
+    my $data = $messages->{$in};
+    print "Publishing message: $data->{msg}\n";
+    $mq->publish($channel, '#', $data->{msg}, { exchange => $exchange });
+  }
+}
+$mq->disconnect();

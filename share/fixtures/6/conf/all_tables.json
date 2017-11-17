@@ -1,0 +1,49 @@
+{
+   "sets" : [
+      {
+         "quantity" : "all",
+         "class" : "WsSession"
+      },
+      {
+         "class" : "ImageDownloadHistory",
+         "quantity" : "all"
+      },
+      {
+         "class" : "WsToken",
+         "quantity" : "all"
+      },
+      {
+         "class" : "JobHistory",
+         "quantity" : "all"
+      },
+      {
+         "class" : "Role",
+         "quantity" : "all"
+      },
+      {
+         "class" : "UserRole",
+         "quantity" : "all"
+      },
+      {
+         "class" : "User",
+         "quantity" : "all"
+      },
+      {
+         "class" : "JobHistorySub",
+         "quantity" : "all"
+      },
+      {
+         "class" : "ObsCheckHistory",
+         "quantity" : "all"
+      }
+   ],
+   "might_have" : {
+      "fetch" : 0
+   },
+   "has_many" : {
+      "fetch" : 0
+   },
+   "belongs_to" : {
+      "fetch" : 0
+   }
+}

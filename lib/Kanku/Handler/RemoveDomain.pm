@@ -53,12 +53,18 @@ sub distributable { 2 };
 sub execute {
 
   my $self = shift;
+  my $ctx  = $self->job()->context();
 
-  if ( $self->job()->context()->{domain_name} ) {
-    $self->domain_name($self->job()->context()->{domain_name});
+  $self->logger->trace("Domain name in context: $ctx->{domain_name}");
+
+  if ( $ctx->{domain_name} ) {
+    $self->logger->debug("Using domain name from context: $ctx->{domain_name}");
+    $self->domain_name($ctx->{domain_name});
   }
 
   confess "No domain_name given!\n" if (! $self->domain_name );
+
+  $self->logger->info("Removing domain: ".$self->domain_name);
 
   if ( $self->disabled ) {
       return {

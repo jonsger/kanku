@@ -190,7 +190,11 @@ sub recv {
   $logger->trace("                       queue:       '".$self->queue_name."'");
   $logger->trace("                       routing_key: '".$self->routing_key."'");
 
-  return $self->queue->recv(@_);
+  my $msg = $self->queue->recv(@_);
+  if ($msg) {
+    $logger->trace("Recieved data:".$self->dump_it($msg));
+  }
+  return $msg;
 }
 
 =head2 publish - send a message
@@ -220,7 +224,7 @@ sub create_queue {
   my $self = shift;
   my %opts = @_;
 
-  for my $key (keys(%opts)) { $self->$key($opts{$key}) }
+  while ( my ($key, $value) = each(%opts)) { $self->$key($opts{$key}) if defined($value) }
 
   $self->logger->debug(
     "Creating new queue ('".
@@ -230,10 +234,13 @@ sub create_queue {
 
   my $mq = $self->queue;
 
-  $mq->queue_declare(
+  my $qn = $mq->queue_declare(
     $self->channel,
     $self->queue_name
   );
+
+  $self->queue_name($qn);
+
   $mq->queue_bind(
     $self->channel,
     $self->queue_name,
@@ -250,7 +257,7 @@ sub create_queue {
 
   $self->logger->debug("Started consuming ".$self->queue_name."' as consumer_id ".$self->consumer_id);
 
-  return $mq;
+  return $qn;
 }
 
 1;

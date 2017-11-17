@@ -137,6 +137,7 @@ sub prepare_and_run {
     type    => 'daemon_change',
     event   => 'start',
     daemon  => $ref,
+    pid     => $$,
     message => "$ref starting with pid $$",
   };
   $self->notify_queue->send($notification);
@@ -210,6 +211,7 @@ sub finalize_shutdown {
     type    => 'daemon_change',
     event   => 'stop',
     daemon  => $ref,
+    pid     => $$,
     message => "$ref stopping (pid $$)",
   };
 

@@ -182,7 +182,7 @@ sub add_forward_rules_for_domain {
     scalar(@{$portlist->{$proto}}),
     $proto
   );
-
+  $self->_check_chain;
   foreach my $guest_port ( @{$portlist->{$proto}} ) {
     my $host_port = shift(@fw_ports);
 
@@ -204,6 +204,20 @@ sub add_forward_rules_for_domain {
 
 };
 
+sub _check_chain {
+  my ($self) = @_;
+
+  my $sudo = $self->sudo();
+  my $cmd  = "LANG=C iptables -L ".$self->iptables_chain." -n";
+  my $out  = `$sudo$cmd 2>&1`;
+  if ($out =~ /iptables: No chain\/target\/match by that name./ ) {
+    $cmd = "LANG=C iptables -N ".$self->iptables_chain;
+    $out  = `$sudo$cmd 2>&1`;
+    if ($?) {
+      die "Error while creating iptables chain($?):\n\t$cmd\n\n$out\n";
+    }
+  }
+}
 sub _find_free_ports {
   my $self        = shift;
   my $start_port  = shift;

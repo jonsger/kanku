@@ -23,6 +23,7 @@ behind_proxy : 1
 #template: "simple"
 
 template: "template_toolkit"
+session: "YAML"
 engines:
   template:
     template_toolkit:
@@ -39,6 +40,10 @@ plugins:
         users:
             provider: 'DBIC'
             encryption_algorithm: SHA-512
+            users_resultset: 'User'
+            roles_resultset: Role
+            user_roles_resultset: UserRole
+
 
     no_default_pages: 1
     no_login_handler: 1

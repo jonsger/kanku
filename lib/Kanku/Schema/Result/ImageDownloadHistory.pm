@@ -62,8 +62,9 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("vm_image_url");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-04-24 21:23:15
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:0D17tc59TX1syq6uCfJxSA
+# Created by DBIx::Class::Schema::Loader v0.07047 @ 2017-11-16 13:40:30
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:fgDMJNvwgjKd0t6rRX0jPw
+
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;

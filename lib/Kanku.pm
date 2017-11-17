@@ -12,12 +12,19 @@ use Dancer2::Plugin::WebSocket;
 use Data::Dumper;
 use Sys::Virt;
 use Try::Tiny;
+use Session::Token;
+use Carp qw/longmess/;
+use POSIX ":sys_wait_h";
 
 use Kanku::Config;
 use Kanku::Schema;
 use Kanku::Util::IPTables;
 use Kanku::LibVirt::HostList;
 use Kanku::RabbitMQ;
+use Kanku::WebSocket::Session;
+use Kanku::WebSocket::Notification;
+
+
 
 our $VERSION = '0.0.2';
 
@@ -29,7 +36,7 @@ sub get_defaults_for_views {
   my $messagebar = session "messagebar";
   session  messagebar => undef;
   my $logged_in_user = logged_in_user();
-  my $roles = {};
+  my $roles = {Guest=>1};
   if ($logged_in_user)  {
     map { $roles->{$_} = 1 } @{user_roles()};
   }
@@ -82,10 +89,6 @@ get '/settings' => requires_role User =>  sub {
 
 get '/request_roles' => require_login sub {
     template 'request_roles' , { %{ get_defaults_for_views() }, kanku => { module => 'Request Roles' } };
-};
-
-get '/notify' => requires_role User =>  sub {
-    template 'notify' , { %{ get_defaults_for_views() }, kanku => { module => 'Notifications' } };
 };
 
 ### LOGIN / SIGNIN
@@ -147,33 +150,18 @@ post '/signup' => sub {
   if ( create_user username => params->{username},
               name          => params->{name},
               email         => params->{email},
+              password      => params->{password},
               email_welcome => 1,
               deleted       => 1
   ) {
 
-    user_password
-          username      => params->{username},
-          password      => '',
-          new_password  => params->{password};
-
-    my ($success, $realm) = authenticate_user(
-        params->{username}, params->{password}
-    );
-    if ($success) {
-        session logged_in_user => params->{username};
-        session logged_in_user_realm => $realm;
-        session messagebar => messagebar('success',"Your account has been created successfully. Please be aware to request some roles!");
-        redirect('/request_roles');
-    }
-    session messagebar => messagebar('danger',"Your account creation failed!");
-    redirect ( params->{return_url} || '/' );
+        session messagebar => messagebar('success',"Your account has been created successfully. Please check your emails and activate the account. Finally <a href=request_roles>request some roles!</a>");
+        redirect('/');
   }
-
   template 'signup' , {
       messagebar => messagebar('danger',"Could not create user for unkown reason!"),
       %{ params() }
   };
-
 };
 
 get '/signup' => sub {
@@ -424,76 +412,155 @@ get '/rest/logout.:format' => sub {
 
 #
 # WebSocket
+
+get '/notify' => requires_any_role [qw(Admin User Guest)] => sub {
+  my $self = shift;
+    my $user = logged_in_user;
+    my $ws_session = Kanku::WebSocket::Session->new(
+       user_id => $user->{id},
+       schema  => schema,
+    );
+    cookie 'kanku_notify_session' => $ws_session->auth_token, http_only => 0, path => $self->app->request->uri;
+    template 'notify' , { %{ get_defaults_for_views() }, kanku => { module => 'Request Roles' } };
+};
+
 Log::Log4perl->init("$FindBin::Bin/../etc/log4perl.conf");
 
 websocket_on_open sub {
   my ($conn, $env) = @_;
-  setup_mq($conn);
-};
 
-sub setup_mq {
-  my ($conn) = @_;
+  debug "Opening websocket";
+
+  my $notify = Kanku::WebSocket::Notification->new(conn=>$conn);
+  my $ws_session;
   my $pid;
+  my $qn;
   my $cfg = Kanku::Config->instance();
   my $config = $cfg->config->{'Kanku::RabbitMQ'};
 
-  try {
-    my $mq = Kanku::RabbitMQ->new(%{$config});
-    $mq->connect(no_retry=>1);
+  my $ev_to_role = {
+   test_denied   => 99,
+   user_change   => 29,
+   daemon_change => 19,
+   job_change    => 9,
+   task_change   => 9 
+  };
 
-    my $log = $mq->logger;
+  debug "Creating new session";
+  $ws_session = Kanku::WebSocket::Session->new(
+    schema => schema()
+  );
 
-    my $qn = $mq->queue->queue_declare(1,'');
-    $mq->queue_name($qn);
-    $mq->queue->queue_bind(1, $qn, 'kanku.notify', '');
-    $mq->queue->consume(1, $qn);
+  debug "Setting up WebSocket Connection callbacks";
+  $conn->on(
+    'close' => sub {
+      debug "closing websocket\n".longmess();
+      if ($ws_session) {
+        debug "closing session ".$ws_session->session_token;
+        $ws_session->close_session();
+      };
+    },
+    message => sub {
+      my ($conn, $msg) = @_;
+      $notify->unblock();
+      debug "Server got message on WebSocket connection: $msg";
+      my $data = decode_json($msg);
 
-    $conn->on(
-      'close' => sub {
-	if (!$pid) {
-	  $log->debug("Cleaning  queue $qn and exiting $pid");
-	  $mq->queue->queue_unbind(1, $qn, 'kanku.notify', '');
-	  $mq->queue->queue_delete(1, $qn);
-	  $mq->queue->disconnect();
-	  exit 0;
-	}
-      },
-      message => sub {
-	my ($conn, $msg) = @_;
-	$log->debug("Server got message on WebSocket connection: $msg");
-        # Simply bounce the message back
-	$conn->send($msg);
+      # Proceed with data sent from client, eg.:
+      # * authentication request 
+      # * filter update
+      if ($data->{token}) {
+	debug "Got Token $data->{token}";
+	$ws_session->auth_token($data->{token});
+	my $perms = $ws_session->authenticate;
+        my $msg;
+        if ($perms == -1) {
+          $msg = "Authentication failed!";
+        } else {
+          $msg="Authentication succeed!";
+        }
+	debug "$msg ($perms)";
+        $notify->send($msg);
+      } elsif ($data->{bounce}) {
+        $notify->send($data->{bounce});
       }
-    );
+      debug "Returning from message";
+    }
+  );
 
+  # method session_token must be called before fork to grant a 
+  # shared token between parent and child
+  debug "Creating session token";
+  my $session_token = $ws_session->session_token;
 
-    $pid = fork();
-    defined $pid or die "Error while forking\n";
+  debug "Forking away listner for rabbitmq";
+  $pid = fork();
+  defined $pid or die "Error while forking\n";
+     
 
-    if (!$pid) {
-      $log->debug("starting delayed");
-
+  if (!$pid) {
+      # prepare rabbitmq
+      my $mq = Kanku::RabbitMQ->new(%{$config});
+      my $log = $mq->logger;
+      $mq->connect(no_retry=>1);
+      $qn = $mq->queue->queue_declare(1,'');
+      $mq->queue_name($qn);
+      $mq->queue->queue_bind(1, $qn, 'kanku.notify', '');
+      $mq->queue->consume(1, $qn);
+      $log->debug("Starting child($$) and waiting for notifications on queue $qn");
+      my $oldperms=10000;
       while (1) {
+        my $perms = $ws_session->get_permissions;
+        $log->debug("permission change $oldperms -> $perms detected");
+        if ($perms != $oldperms) {
+          $oldperms = $perms;
+        }
+        if ($perms < 0) {
+          $log->debug("Authentication failed ($perms)") if ($perms == -1);
+          $log->debug("Detected connection closed ($perms)") if ($perms == -2);
+	  $ws_session->cleanup_session();
+          if ($mq->queue->is_connected) {
+            $log->debug("Unbinding queue");
+	    $mq->queue->queue_unbind(1, $qn, 'kanku.notify', '');
+            #$log->debug("Deleting queue");
+	    #$mq->queue->queue_delete(1, $qn);
+            $log->debug("Disconnecting queue");
+	    $mq->queue->disconnect();
+          }
+          $log->debug("Cleanup and exiting child($$)");
+          $mq->queue->disconnect if $mq->queue->is_connected();
+          exit 0;
+        }
 	my $data = $mq->recv(1000);
 	if ($data) {
 	  $log->debug("Got message: $data->{body}");
           my $body;
           try {
             $body = decode_json($data->{body});
-	    $conn->send($body->{message});
+            my $ev_type = $body->{type};
+            $log->debug("recieved event of type: '$ev_type'");
+
+            if (! $ev_to_role->{$ev_type} ) {
+              $log->warning("recieved unknown event type: '$ev_type'");
+            } elsif( $perms < $ev_to_role->{$ev_type}) {
+              $log->debug("User not authorized to get this type of notification");
+            } else {
+              $notify->send($body);
+            }
           } catch {
-            error $_;
-            debug $data->{body};
+            $log->error($_);
+            $log->debug($data->{body});
 	  };
 	} else {
-	  die "No connection any longer\n" if ! $mq->queue->is_connected();
+	  if (! $mq->queue->is_connected()) {
+            my $msg = "No longer connected";
+            $log->debug($msg);
+            die $msg;
+          }
 	}
       }
     }
-  } catch {
-    error $_;
-  };
-}
+};
 
 __PACKAGE__->meta->make_immutable();
 

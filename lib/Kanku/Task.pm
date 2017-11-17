@@ -80,7 +80,17 @@ has 'args'       => (is=>'rw',isa=>'HashRef',default=>sub {{}} );
 
 has 'result'       => (is=>'rw',isa=>'Str',default=> '' );
 
+=head2 state - TODO: add documentation
+
+=cut
+
 has 'state'       => (is=>'rw',isa=>'Str',default=> '' );
+
+=head2 notify_queue - Kanku::NotifyQueue Object
+
+=cut
+
+has 'notify_queue'  => (is=>'rw',isa=>'Object' );
 
 =head1 METHODS
 
@@ -114,6 +124,14 @@ sub run {
   
   my $state  = undef;
   my $result = undef;
+
+  $self->notify_queue->send({
+    type          => 'task_change',
+    event         => 'starting',
+    message       => "Starting task (".$task->id.") from job (".$job->name."/".$job->id.")",
+    id            => $task->id,
+    job_id        => $job->id,
+  });
 
   # execute subtask
   try {
@@ -163,6 +181,14 @@ sub run {
 
   $self->result($result);
   $self->state($state);
+
+  $self->notify_queue->send({
+    type          => 'task_change',
+    event         => 'finished',
+    id            => $task->id,
+    job_id        => $job->id,
+    message       => "Finished task (".$task->id.") with state '$state'",
+  });
 
   return $self;
 

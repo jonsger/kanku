@@ -8,21 +8,40 @@
 
  to avoid confusion
 
-=head2 Create a database for production
+=head3 For production environment
+
+ # In server mode
+ export KANKU_DSN=dbi:SQLite:/opt/kanku/share/kanku-schema.db
+ # In developer mode
+ # export KANKU_DSN=dbi:SQLite:$HOME/.kanku/kanku-schema.db
+ export KANKU_PATH=/opt/kanku
+ export PERL5LIB=$KANKU_PATH/lib
+
+=head3 For development environment
+
+ export KANKU_DSN=dbi:SQLite:./tmp/test.db
+ export KANKU_PATH=.
+ export PERL5LIB=./lib
+
+=head2 Create a database
 
  cd /opt/kanku 
 
- dbic-migration install --schema_class Kanku::Schema --dsn dbi:SQLite:/opt/kanku/share/kanku-schema.db
+ dbic-migration install -S Kanku::Schema --dsn $KANKU_DSN
+
+=head2 Upgrade database
+
+ dbic-migration upgrade -S Kanku::Schema --dsn $KANKU_DSN --database SQLite --dir share
 
 =head2 Create a database migration
 
 =head3 Create a test database
 
- dbic-migration -Ilib install --schema_class Kanku::Schema --dsn dbi:SQLite:tmp/test.db
+ dbic-migration install -S Kanku::Schema --dsn $KANKU_DSN
 
 =head3 Populate database
 
- dbic-migration -Ilib populate --schema_class Kanku::Schema --dsn dbi:SQLite:tmp/test.db --fixture_set install
+ dbic-migration populate -S Kanku::Schema --dsn $KANKU_DSN --fixture_set install
 
 =head3 Make you changes in Schema
 
@@ -34,32 +53,22 @@
 
 =head3 Create migration files
 
- dbic-migration -Ilib prepare --schema_class Kanku::Schema --dsn dbi:SQLite:tmp/test.db --database SQLite --dir share
+ dbic-migration prepare -S Kanku::Schema --dsn $KANKU_DSN --database SQLite --dir share
 
  or overwrite if already exists
 
- dbic-migration -Ilib prepare -O --schema_class Kanku::Schema --dsn dbi:SQLite:tmp/test.db --database SQLite --dir share
+ dbic-migration prepare -S Kanku::Schema --dsn $KANKU_DSN --database SQLite --dir share -O
 
 =head3 Create install fixtures set
 
- dbic-migration -Ilib dump_named_sets -S Kanku::Schema --dsn dbi:SQLite:tmp/test.db --fixture_set install
+ dbic-migration dump_named_sets -S Kanku::Schema --dsn $KANKU_DSN --fixture_set install
 
-=head3 Create fixtures setsi
+=head3 Create fixtures sets
 
- dbic-migration -Ilib dump_all_sets --schema_class Kanku::Schema --dsn dbi:SQLite:tmp/test.db
-
-=head2 Upgrade your production database
-
-=head3 - in developer mode
-
- dbic-migration -Ilib upgrade --schema_class Kanku::Schema --dsn dbi:SQLite:$HOME/.kanku/kanku-schema.db --database SQLite --dir share
-
-=head3 - in server mode
-
- dbic-migration -Ilib upgrade --schema_class Kanku::Schema --dsn dbi:SQLite:/opt/kanku/share/kanku-schema.db --database SQLite --dir share
+ dbic-migration -Ilib dump_all_sets --schema_class Kanku::Schema --dsn $KANKU_DSN
 
 =head2 Recreate classes from changed database
 
- dbicdump -o dump_directory=./lib -o skip_load_external=1 -o debug=1 Kanku::Schema dbi:SQLite:./tmp/test.db
+ dbicdump -o dump_directory=./lib -o skip_load_external=1 -o debug=1 Kanku::Schema $KANKU_DSN
 
 =cut

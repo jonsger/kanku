@@ -41,7 +41,7 @@ has local_job_queue_name  => (is=>'rw', isa => 'Str');
 
 sub run {
   my $self          = shift;
-  my $rabbit_config = Kanku::Config->instance->config->{'Kanku::RabbitMQ')};
+  my $rabbit_config = Kanku::Config->instance->config->{'Kanku::RabbitMQ'};
   $self->airbrake()->notify_with_backtrace("Starting worker ($$)");
   my $logger        = $self->logger();
 
@@ -53,15 +53,24 @@ sub run {
   $pid = fork();
 
   if (! $pid ) {
-    my $kmq = Kanku::RabbitMQ->new(%{ $rabbit_config || {}});
-    $kmq->shutdown_file($self->shutdown_file);
-    $kmq->connect() or die "Could not connect to rabbitmq\n";
-    $kmq->setup_worker();
-    $self->local_job_queue_name(hostfqdn());
-    $kmq->create_queue(
-      queue_name=>$self->local_job_queue_name,
-      exchange_name=>'kanku.to_all_hosts'
-    );
+
+    my $kmq;
+    try {
+      $kmq = Kanku::RabbitMQ->new(%{$rabbit_config});
+      $kmq->shutdown_file($self->shutdown_file);
+      $kmq->connect();
+      $kmq->setup_worker();
+      my $hn = hostfqdn();
+      $self->local_job_queue_name($hn) if ($hn);
+      my $qn = $kmq->create_queue(
+        queue_name=>$self->local_job_queue_name,
+        exchange_name=>'kanku.to_all_hosts'
+      );
+      $self->local_job_queue_name($qn);
+    } catch {
+      $logger->error("Could not create queue for exchange kanku.to_all_hosts: $_");
+    };
+
     while(1) {
       try {
         my $msg = $kmq->recv(1000);
@@ -99,8 +108,9 @@ sub run {
       } catch {
         $logger->error($_);
       };
+
       $self->remote_job_queue_name('');
-      $self->local_job_queue_name('');
+
       if ($self->detect_shutdown) {
 	$logger->info("AllWorker process detected shutdown - exiting");
 	exit 0;
@@ -125,7 +135,7 @@ sub run {
     );
     while (1) {
       try {
-	$self->logger->debug("Waiting for message (1000) ms");
+	$self->logger->trace("Waiting for message (1000) ms");
 	my $msg  = $kmq->recv(1000);
 	if ( $msg ) {
 	  my $body = $msg->{body};
@@ -260,6 +270,22 @@ sub handle_job {
   try  {
     while (1){
       my $task_msg = $job_kmq->recv(10000);
+      if ( $self->detect_shutdown ) {
+	my $answer = {
+	    action        => 'aborted_job',
+	    error_message => "Aborted job because of daemon shutdown",
+	};
+
+	$self->logger->trace("Sending answer to '".$self->remote_job_queue_name."': ".$self->dump_it($answer));
+
+	$job_kmq->publish(
+	  $self->remote_job_queue_name,
+	  encode_json($answer),
+	  { exchange => 'kanku.to_dispatcher'}
+	);
+
+	exit 0;
+      }
       if ( $task_msg ) {
         my $task_body = decode_json($task_msg->{body});
         $logger->debug("Got new message while waiting for tasks");
@@ -277,24 +303,6 @@ sub handle_job {
           last;
         }
         $logger->debug("Waiting for next task");
-      } else {
-
-        if ( $self->detect_shutdown ) {
-          my $answer = {
-              action        => 'aborted_job',
-              error_message => "Aborted job because of daemon shutdown",
-          };
-
-          $self->logger->trace("Sending answer to '".$self->remote_job_queue_name."': ".$self->dump_it($answer));
-
-          $job_kmq->publish(
-            $self->remote_job_queue_name,
-            encode_json($answer),
-            { exchange => 'kanku.to_dispatcher'}
-          );
-
-          exit 0;
-        }
       }
     }
   } catch {

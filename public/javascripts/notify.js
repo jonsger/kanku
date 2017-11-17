@@ -1,14 +1,16 @@
 var mySocket = new WebSocket(ws_url);
+var token = Cookies.get("kanku_notify_session");
 
 mySocket.onmessage = function (evt) {
   console.log( "Got message " + evt.data );
+  data = JSON.parse(evt.data);
   Notification.requestPermission(function() {
-    var n = new Notification('Kanku Desktop Notification', {
-	body: evt.data,
+    var n = new Notification(data.title, {
+	body: data.body,
 	icon: './favicon.ico' // optional
     });
     n.onclick = function() {
-        window.location.href = 'job_history';
+        window.open(data.link, 'newwindow', "menubar=no");
         n.close();
     };
     setTimeout(n.close.bind(n), 20000);
@@ -17,10 +19,18 @@ mySocket.onmessage = function (evt) {
 
 mySocket.onopen = function(evt) {
   console.log("opening Socket");
-
   setTimeout(
     function() {
-      mySocket.send('Opening WebSocket');
+      var msg = '{"token":"'+ token +'"}';
+      console.log("sending token " + msg);
+      console.log(msg)
+      mySocket.send(msg);
+    },
+    2000
+  );
+  setTimeout(
+    function() {
+      mySocket.send('{"bounce":"Opened WebSocket successfully!"}');
     },
     2000
   );
@@ -28,10 +38,12 @@ mySocket.onopen = function(evt) {
 
 mySocket.onclose = function(evt) {
   Notification.requestPermission(function() {
+    var m = 'Closed WebSocket - no more messages will be displayed';
     var n = new Notification('Kanku Desktop Notification', {
-	body: 'Closed socket - no more messages will be displayed',
+	body: m,
 	icon: './favicon.ico' // optional
     });
+    $("#content").text(m);
     n.onclick = function() {
         window.location.href = 'notify';
         n.close();
@@ -49,8 +61,8 @@ if (! window.Notification ) {
     function(){
 
     Notification.requestPermission(function() {
-      var n = new Notification('Kanku Desktop Notification', {
-	body: 'test <a href="/kanku/job_history"> test test test test test test test test test test test test test test test test test test test test test test test test test test test ',
+      var n = new Notification('Kanku Test Notification', {
+	body: 'Test notification',
 	icon: './favicon.ico' // optional
       });
       n.onclick = function() {

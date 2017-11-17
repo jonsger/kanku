@@ -73,6 +73,16 @@ __PACKAGE__->table("job_history");
   default_value: 0
   is_nullable: 1
 
+=head2 workerinfo
+
+  data_type: 'text'
+  is_nullable: 1
+
+=head2 masterinfo
+
+  data_type: 'text'
+  is_nullable: 1
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -130,8 +140,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-01-14 15:14:19
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:F8SGqcNymWr6zqRwI1aXIg
+# Created by DBIx::Class::Schema::Loader v0.07047 @ 2017-11-16 13:40:30
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:dOiKpTLA7PciDbF7AtbIHw
 
 sub TO_JSON {
   my $self = shift;
@@ -142,5 +152,4 @@ sub TO_JSON {
   
   return $rv
 }
-# You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;

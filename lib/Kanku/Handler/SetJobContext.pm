@@ -40,6 +40,7 @@ has [qw/
   skip_check_project
   skip_check_package
   skip_download
+  offline
 
 /] => (is => 'ro', isa => 'Bool',default => 0 );
 
@@ -89,6 +90,11 @@ has gui_config => (
           param => 'os_instance_name',
           type  => 'text',
           label => 'Name for OpenStack instance'
+        },
+        {
+          param => 'offline',
+          type  => 'checkbox',
+          label => 'Offline Mode'
         },
       ];
   }

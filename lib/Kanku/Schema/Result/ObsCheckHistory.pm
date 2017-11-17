@@ -83,24 +83,31 @@ __PACKAGE__->add_columns(
 
 __PACKAGE__->set_primary_key("id");
 
+=head1 UNIQUE CONSTRAINTS
 
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-04-24 00:28:51
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:nuC6cRD2M1Qy4Bd2OUXeWQ
-# These lines were loaded from 'lib/Kanku/Schema/Result/ObsCheckHistory.pm' found in @INC.
-# They are now part of the custom portion of this file
-# for you to hand-edit.  If you do not either delete
-# this section or remove that file from @INC, this section
-# will be repeated redundantly when you re-create this
-# file again via Loader!  See skip_load_external to disable
-# this feature.
+=head2 C<api_url_project_package_unique>
 
-__PACKAGE__->might_have(
-  image => 'Kanku::Schema::Result::ImageDownloadHistory',
-  'vm_image_url'
-);
-  # For UNIQUE (column1, column2)
+=over 4
+
+=item * L</api_url>
+
+=item * L</project>
+
+=item * L</package>
+
+=back
+
+=cut
+
 __PACKAGE__->add_unique_constraint(
-  unique_obscheck => [ qw/api_url project package/ ],
+  "api_url_project_package_unique",
+  ["api_url", "project", "package"],
 );
+
+
+# Created by DBIx::Class::Schema::Loader v0.07047 @ 2017-11-16 13:40:30
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:u5NQFtMJvzrZ2B0Kj1KufA
+
+
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;

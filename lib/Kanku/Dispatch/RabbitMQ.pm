@@ -63,7 +63,7 @@ has config => (
   is      => 'rw',
   isa     => 'HashRef',
   lazy    => 1,
-  default => sub { Kanku::Config->instance->config->{ref($_[0])}; }
+  default => sub { Kanku::Config->instance->config->{ref($_[0])} || {}; }
 );
 
 has rabbit_config => (
@@ -81,6 +81,14 @@ sub run_job {
   $job->masterinfo($$);
   $job->state('dispatching');
   $job->update_db();
+
+  $self->notify_queue->send({
+    type           => 'job_change',
+    event          => 'dispatching',
+    message        => "Dispatching job (".$job->name."/".$job->id.")",
+    name           => $job->name,
+    id             => $job->id
+  });
 
   my $logger       = $self->logger();
   my $queue        = "job-queue-".$job->id;
@@ -108,6 +116,7 @@ sub run_job {
 	 job_id	  	  => $job->id,
       }
     );
+    die "shutdown detected while waiting for applications" if ($self->detect_shutdown);
     sleep 1;
   }
 
@@ -119,6 +128,14 @@ sub run_job {
   $self->decline_applications($declined_applications);
 
   my $result = $self->send_job_offer($rmq,$pa);
+
+  $self->notify_queue->send({
+    type          => 'job_change',
+    event         => 'sending',
+    message       => "Sending job (".$job->name."/".$job->id.") to worker ($pa->{worker_fqhn},$pa->{worker_pid})",
+    name           => $job->name,
+    id             => $job->id
+  });
 
   my $aq = $pa->{answer_queue};
 
@@ -151,6 +168,14 @@ sub run_job {
     $job->result(encode_json({error_message=>$_}));
   };
 
+  $self->notify_queue->send({
+    type          => 'job_change',
+    event         => 'finished',
+    message       => "Finished job (".$job->name."/".$job->id.") with result: ".$job->state,
+    name           => $job->name,
+    id             => $job->id
+  });
+
   $self->send_finished_job($aq,$job->id);
 
   $self->end_job($job,$last_task);
@@ -169,6 +194,7 @@ sub run_task {
   my $distributable = $self->check_task($mod);
 
   $self->logger->debug("Starting with new task");
+
   $self->logger->trace(Dumper(\%opts));
 
   my %defaults = (
@@ -179,10 +205,11 @@ sub run_task {
 
   my $task = Kanku::Task->new(
     %defaults,
-    options   => $opts{options} || {},
-    schema    => $self->schema,
-    scheduler => $opts{scheduler},
-    args      => $opts{args},
+    options      => $opts{options} || {},
+    schema       => $self->schema,
+    scheduler    => $opts{scheduler},
+    args         => $opts{args},
+    notify_queue => $self->notify_queue
   );
 
   my $tr;
