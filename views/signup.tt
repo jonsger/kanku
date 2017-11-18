@@ -1,4 +1,4 @@
-<form class="form-signin" method=POST action="/signup">
+<form class="form-signin" method=POST action="[% request.uri %]">
   <input type=hidden name=return_url value="[% return_url %]">
   <h2 class="form-signin-heading">Please sign up</h2>
   <label for="username" class="sr-only">Your Name</label>
