@@ -201,13 +201,16 @@ sub cmd {
   my $results = [];
   my $logger  = $self->logger;
 
+  my $timeout = $self->cmd_timeout;
+
   foreach my $cmd (@cmds) {
       $exp->clear_accum();
-      $exp->send("$cmd\n");
-      my $timeout = $self->cmd_timeout;
-
       $logger->debug("EXPECT STARTING COMMAND: '$cmd' (timeout: $timeout)");
-
+      $exp->send("$cmd\n");
+      if ($timeout < 0) {
+        $logger->debug("Timeout less then 0 - fire and forget mode");
+        next;
+      }
       my @result = $exp->expect(
         $timeout,
           [ $self->prompt_regex() =>

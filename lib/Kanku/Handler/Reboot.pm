@@ -29,8 +29,9 @@ has [qw/
       login_user
       login_pass
 /] => (is => 'rw',isa=>'Str');
+# TODO: implement wait_for_*
 has [qw/wait_for_network wait_for_console/] => (is => 'rw',isa=>'Bool',lazy=>1,default=>1);
-has [qw/timeout/] => (is => 'rw',isa=>'Int',lazy=>1,default=>600);
+#has [qw/timeout/] => (is => 'rw',isa=>'Int',lazy=>1,default=>600);
 
 has gui_config => (
   is => 'ro',
@@ -38,11 +39,21 @@ has gui_config => (
   lazy => 1,
   default => sub {
       [
+#        {
+#          param => 'wait_for_network',
+#          type  => 'checkbox',
+#          label => 'Wait for network'
+#        },
         {
-          param => 'forward_port_list',
-          type  => 'text',
-          label => 'List of Forwarded Ports'
+          param => 'wait_for_console',
+          type  => 'checkbox',
+          label => 'Wait for console'
         },
+#        {
+#          param => 'timout',
+#          type  => 'text',
+#          label => 'Timeout'
+#        },
       ];
   }
 );
@@ -76,15 +87,14 @@ sub execute {
   );
 
   my $con = $vm->console();
-
   $con->login();
-
-  $con->cmd(
-      "reboot",
-  );
-
-  $con->logout();
-
+  $con->cmd_timeout(-1);
+  $con->cmd("reboot");
+  if ($self->wait_for_console) {
+    # Wait for reboot to complete
+    $con->login();
+    $con->logout();
+  }
   return {
     code    => 0,
     message => "Rebooted domain " . $self->domain_name ." successfully"
