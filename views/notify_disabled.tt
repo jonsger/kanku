@@ -1,0 +1,4 @@
+<h1>Notifications - disabled by configuration</h1>
+<strong>
+To use Kanku Desktop Notifcations, you have to configure the Kanku::RabbitMQ section in your kanku config.yml
+</strong>

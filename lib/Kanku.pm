@@ -453,13 +453,20 @@ get '/rest/logout.:format' => sub {
 
 get '/notify' => requires_any_role [qw(Admin User Guest)] => sub {
   my $self = shift;
+  my $cfg = Kanku::Config->instance();
+  my $config = $cfg->config->{'Kanku::RabbitMQ'};
+
+  if ($config) {
     my $user = logged_in_user;
     my $ws_session = Kanku::WebSocket::Session->new(
-       user_id => $user->{id},
-       schema  => schema,
+      user_id => $user->{id},
+      schema  => schema,
     );
     cookie 'kanku_notify_session' => $ws_session->auth_token, http_only => 0, path => $self->app->request->uri;
     template 'notify' , { %{ get_defaults_for_views() }, kanku => { module => 'Desktop Notifications' } };
+  } else {
+    template 'notify_disabled' , { %{ get_defaults_for_views() }, kanku => { module => 'Desktop Notifications' } };
+  }
 };
 
 Log::Log4perl->init("$FindBin::Bin/../etc/log4perl.conf");
