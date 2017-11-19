@@ -211,8 +211,8 @@ Summary: Command line client for kanku
 Requires: kanku-common
 
 %description cli
-TODO:
- add a useful description
+Command line client for kanku, mainly used for setup tasks
+and in developer mode
 
 %files cli
 %dir /opt/kanku/views/cli/
