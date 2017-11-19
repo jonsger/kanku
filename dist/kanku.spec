@@ -190,6 +190,11 @@ TODO:
 /opt/kanku/lib/Kanku/Task.pm
 /opt/kanku/lib/Kanku/Airbrake.pm
 /opt/kanku/lib/Kanku/NotifyQueue.pm
+
+%dir /opt/kanku/lib/Kanku/WebSocket
+/opt/kanku/lib/Kanku/WebSocket/Notification.pm
+/opt/kanku/lib/Kanku/WebSocket/Session.pm
+
 %dir /opt/kanku/lib/Kanku/Airbrake
 /opt/kanku/lib/Kanku/Airbrake/Dummy.pm
 
@@ -261,6 +266,8 @@ TODO:
 /opt/kanku/views/request_roles.tt
 /opt/kanku/views/settings.tt
 /opt/kanku/views/signup.tt
+/opt/kanku/views/pwreset.tt
+/opt/kanku/views/reset_password.tt
 
 %dir /etc/apache2
 %dir /etc/apache2/conf.d
