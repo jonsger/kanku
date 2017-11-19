@@ -184,7 +184,6 @@ TODO:
 /opt/kanku/lib/Kanku/Handler.pod
 /opt/kanku/lib/Kanku/Notifier
 /opt/kanku/lib/Kanku/Job.pm
-/opt/kanku/lib/Kanku/MQ.pm
 /opt/kanku/lib/Kanku/RabbitMQ.pm
 /opt/kanku/lib/Kanku/Schema.pm
 /opt/kanku/lib/Kanku/JobList.pm
