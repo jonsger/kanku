@@ -168,7 +168,7 @@ TODO:
 %dir /etc/sudoers.d
 %config (noreplace)  /etc/sudoers.d/kanku
 
-%dir /etc/profile.d/
+%exclude /etc/profile.d/
 %config /etc/profile.d/kanku.sh
 
 %dir /etc/logrotate.d/
