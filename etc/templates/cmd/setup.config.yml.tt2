@@ -20,7 +20,11 @@ charset: "UTF-8"
 
 behind_proxy : 1
 
+#log: debug
+#traces: 1
+
 #template: "simple"
+session: "YAML"
 
 template: "template_toolkit"
 session: "YAML"
@@ -43,7 +47,8 @@ plugins:
             users_resultset: 'User'
             roles_resultset: Role
             user_roles_resultset: UserRole
-
+            roles_key: role_id
+            reset_password_handler: 1
 
     no_default_pages: 1
     no_login_handler: 1
