@@ -112,6 +112,7 @@ Requires: perl-DBD-SQLite
 Requires: perl(LWP::Protocol::https)
 Requires: perl(Mail::Sendmail)
 Requires: perl(Archive::Cpio)
+Requires: logrotate
 
 Conflicts: perl-DBD-SQLite-Amalgamation
 
@@ -171,7 +172,7 @@ TODO:
 %config /etc/profile.d/kanku.sh
 
 %dir /etc/logrotate.d/
-%config /etc/logrotate.d/kanku
+%config /etc/logrotate.d/kanku-common
 
 /opt/kanku/lib/Kanku/Handler/
 /opt/kanku/lib/Kanku/Roles/

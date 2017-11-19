@@ -10,7 +10,7 @@ all:
 
 install: install_dirs install_full_dirs install_services
 	install -m 644 ./dist/sudoers.d.kanku $(DESTDIR)/etc/sudoers.d/kanku
-	install -m 644 ./dist/kanku.logrotate $(DESTDIR)/etc/logrotate.d/kanku
+	install -m 644 ./dist/kanku.logrotate $(DESTDIR)/etc/logrotate.d/kanku-common
 	install -m 644 dist/kanku.conf.mod_proxy $(DESTDIR)/etc/apache2/conf.d/kanku.conf
 	install -m 644 dist/profile.d-kanku.sh $(DESTDIR)/etc/profile.d/kanku.sh
 	#
