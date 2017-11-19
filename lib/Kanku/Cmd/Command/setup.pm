@@ -40,6 +40,14 @@ has server => (
     documentation => 'Run setup in server mode',
 );
 
+has distributed => (
+    traits        => [qw(Getopt)],
+    isa           => 'Bool',
+    is            => 'rw',
+    #cmd_aliases   => 'X',
+    documentation => 'Run setup in distributed server mode',
+);
+
 has devel => (
     traits        => [qw(Getopt)],
     isa           => 'Bool',
@@ -169,6 +177,7 @@ sub execute {
 
   ### Get information
   # ask for mode
+  $self->server(1) if ($self->distributed);
   $self->_ask_for_install_mode() if ( ! $self->devel and ! $self->server );
 
   ### Running selected mode
@@ -209,6 +218,8 @@ sub _execute_server_setup {
   $cfg->spew($config);
 
   $self->_setup_database();
+
+  $self->_execute_distributed_setup if $self->distributed;
 
   $logger->info("Server mode setup successfully finished!");
   $logger->info("Please reboot to make sure, libvirtd is coming up properly");  
@@ -411,7 +422,7 @@ sub _setup_database {
 
   # setup database if needed
   $migration->install_if_needed(
-    default_fixture_sets => ['all_tables']
+    default_fixture_sets => ['install']
   );
 
   $self->_chown($self->_dbfile);
