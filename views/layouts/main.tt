@@ -38,6 +38,8 @@ var ws_url = "[% ws_url %]";
             <li><a href="[% request.uri_base %]/guest">Guest</a></li>
             [% IF roles.User %]
             <li><a href="[% request.uri_base %]/job">Job</a></li>
+            [% END %]
+            [% IF roles %]
             <li><a href="[% request.uri_base %]/notify">Notify</a></li>
             [% END %]
           </ul>
@@ -82,7 +84,7 @@ var ws_url = "[% ws_url %]";
                   <span class="caret"></span>
               </a>
               <div class="dropdown-menu dropdown-menu-right" style="padding: 15px;width: 230px;">
-              <form action="[% request.uri_base %]/login" method=POST>
+              <form action="[% request.uri_base %]/login/" method=POST>
                     <input type=hidden name=return_url value="[% request.uri_base %][% request.path %]">
                     <label for="username" class=sr-only>Login Name</label>
                     <input style="margin-bottom: 5px" id="username" name=username class="form-control" placeholder="Login Name" value="[% username %]" required autofocus>
@@ -94,6 +96,8 @@ var ws_url = "[% ws_url %]";
 
                     <hr/>
                     <a class="btn btn-primary btn-block"  href="[% request.uri_base %]/signup">Sign Up</a>
+                    <hr/>
+                    <a href="[% request.uri_base %]/pwreset">Forgot password?</a>
               </form>
               </div>
             </li>

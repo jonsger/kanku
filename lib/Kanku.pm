@@ -36,8 +36,9 @@ sub get_defaults_for_views {
   my $messagebar = session "messagebar";
   session  messagebar => undef;
   my $logged_in_user = logged_in_user();
-  my $roles = {Guest=>1};
+  my $roles;
   if ($logged_in_user)  {
+    $roles = {Guest=>1};
     map { $roles->{$_} = 1 } @{user_roles()};
   }
 
@@ -93,28 +94,62 @@ get '/request_roles' => require_login sub {
 
 ### LOGIN / SIGNIN
 
-get '/login' => sub {
-    template 'login' , { return_url => params->{return_url} , kanku => { module => 'Login' } };
+get '/pwreset' => sub {
+  template 'pwreset' , { return_url => params->{return_url} , kanku => { module => 'Request Password Reset' } };
 };
 
-post '/login' => sub {
+post '/pwreset' => sub {
+  password_reset_send username => params->{username};
+  redirect params->{return_url};
+};
 
-    my ($success, $realm) = authenticate_user(
-        params->{username}, params->{password}
-    );
-    if ($success) {
-        session logged_in_user => params->{username};
-        session logged_in_user_realm => $realm;
-        params->{username}="";
-        params->{password}="";
-        redirect params->{return_url};
-    } else {
+get qr{/login(/[\w]{32})?} => sub {
+  my $code = splat;
+  $code =~ s#/## if ($code);
+  debug "code $code";
+  if ($code) {
+    template 'reset_password' , 
+      { return_url => params->{return_url} ,  
+        pw_reset_token => $code,
+        kanku => { module => 'Reset Password' }
+      };
+  } else {
+    template 'login' , { return_url => params->{return_url} , kanku => { module => 'Login' } };
+  }
+};
 
-      session messagebar => messagebar('danger',"Authentication failed!");
-
+post qr{/login(/[\w]{32})?} => sub {
+  my $username;
+  my $password = params->{password};
+  my ($code) = splat;
+  $code =~ s#/## if ($code);
+  $code = $code || params->{pw_reset_token};
+  if ($code) {
+    debug "using code to reset password $code";
+    $username = user_password code => $code, new_password => $password;
+    debug "setting password for $username";
+    if (! $username) {
+      session messagebar => messagebar('danger',"Password reset failed!");
       redirect params->{return_url};
-      # authentication failed
+    } else {
+      session messagebar => messagebar('success',"Password reset succeed!");
     }
+  } else {
+      $username = params->{username};
+  }
+
+  my ($success, $realm) = authenticate_user($username, $password);
+  if ($success) {
+    session logged_in_user => $username;
+    session logged_in_user_realm => $realm;
+    params->{username} = "";
+    params->{password} = "";
+    redirect params->{return_url};
+  } else {
+    session messagebar => messagebar('danger',"Authentication failed!");
+    redirect params->{return_url};
+    # authentication failed
+  }
 };
 
 get '/logout' => sub {
@@ -147,12 +182,15 @@ post '/signup' => sub {
     });
   }
 
+debug "signup password: '".params->{password}."'";
+
   if ( create_user username => params->{username},
               name          => params->{name},
               email         => params->{email},
               password      => params->{password},
               email_welcome => 1,
-              deleted       => 1
+              deleted       => 1,
+              role_id    => { Guest => 1 }
   ) {
 
         session messagebar => messagebar('success',"Your account has been created successfully. Please check your emails and activate the account. Finally <a href=request_roles>request some roles!</a>");
@@ -421,7 +459,7 @@ get '/notify' => requires_any_role [qw(Admin User Guest)] => sub {
        schema  => schema,
     );
     cookie 'kanku_notify_session' => $ws_session->auth_token, http_only => 0, path => $self->app->request->uri;
-    template 'notify' , { %{ get_defaults_for_views() }, kanku => { module => 'Request Roles' } };
+    template 'notify' , { %{ get_defaults_for_views() }, kanku => { module => 'Desktop Notifications' } };
 };
 
 Log::Log4perl->init("$FindBin::Bin/../etc/log4perl.conf");
