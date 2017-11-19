@@ -257,6 +257,7 @@ TODO:
 /opt/kanku/views/index.tt
 /opt/kanku/views/job.tt
 /opt/kanku/views/notify.tt
+/opt/kanku/views/notify_disabled.tt
 /opt/kanku/views/job_history.tt
 /opt/kanku/views/job_result.tt
 %dir /opt/kanku/views/layouts
