@@ -8,3 +8,6 @@ ProxyPassReverse "/kanku" "http://localhost:5000/kanku"
 
 RequestHeader set X_FORWARDED_PROTO "https"
 RequestHeader set X_FORWARDED_HOST "[% kanku_host %]"
+
+ProxyPass /ws ws://127.0.0.1:5000/ws
+ProxyPassReverse /ws ws://ws://127.0.0.1:5000/ws
