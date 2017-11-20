@@ -475,7 +475,8 @@ sub _configure_libvirtd_access {
 
   $dconf->spew(\@lines);
 
-  system("service libvirtd restart");
+  system("systemctl enable libvirtd");
+  system("systemctl restart libvirtd");
 
   return undef;
 }
