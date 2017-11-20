@@ -280,6 +280,7 @@ TODO:
 # public contains css/js/bootstrap/jquery etc
 /opt/kanku/public/
 /opt/kanku/lib/Kanku.pm
+/opt/kanku/lib/Kanku/REST.pm
 
 %package worker
 Summary: Worker daemon for kanku
