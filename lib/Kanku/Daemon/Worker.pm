@@ -308,9 +308,12 @@ sub handle_job {
   } catch {
     my $e = $_;
     $logger->debug("EXCEPTION REFERENCE: ".ref($e));
-    if (ref($e) =~ /^Moose::Exception::/ ) {
+    if ((ref($e) || '') =~ /^Moose::Exception::/ ) {
       $logger->debug("Converting exeption to string");
       $e = $e->trace->as_string;
+    } elsif (( ref($e) || '') eq 'Sys::Virt::Error' ) {
+      $logger->debug("Converting exeption 'Sys::Virt::Error' to string");
+      $e = $e->message;
     }
 
     $logger->error($e);
