@@ -125,13 +125,17 @@ sub run {
   my $state  = undef;
   my $result = undef;
 
-  $self->notify_queue->send({
-    type          => 'task_change',
-    event         => 'starting',
-    message       => "Starting task (".$task->id.") from job (".$job->name."/".$job->id.")",
-    id            => $task->id,
-    job_id        => $job->id,
-  });
+  # use only if rabbitmq is configured
+  # not the case in devel mode
+  if ( $self->notify_queue ) {
+    $self->notify_queue->send({
+      type          => 'task_change',
+      event         => 'starting',
+      message       => "Starting task (".$task->id.") from job (".$job->name."/".$job->id.")",
+      id            => $task->id,
+      job_id        => $job->id,
+    });
+  }
 
   # execute subtask
   try {
@@ -182,14 +186,17 @@ sub run {
   $self->result($result);
   $self->state($state);
 
-  $self->notify_queue->send({
-    type          => 'task_change',
-    event         => 'finished',
-    id            => $task->id,
-    job_id        => $job->id,
-    message       => "Finished task (".$task->id.") with state '$state'",
-  });
-
+  # use only if rabbitmq is configured
+  # not the case in devel mode
+  if ( $self->notify_queue ) {
+    $self->notify_queue->send({
+      type          => 'task_change',
+      event         => 'finished',
+      id            => $task->id,
+      job_id        => $job->id,
+      message       => "Finished task (".$task->id.") with state '$state'",
+    });
+  }
   return $self;
 
 }
