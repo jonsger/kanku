@@ -200,7 +200,7 @@ sub handle_advertisement {
         answer_queue  => $self->local_job_queue_name,
         resources	  => collect_resources(),
       };
-      $logger->debug("Sending apllication for job_id $job_id on queue ".$self->remote_job_queue_name);
+      $logger->debug("Sending application for job_id $job_id on queue ".$self->remote_job_queue_name);
       $logger->trace($self->dump_it($application));
 
       my $json    = encode_json($application);
@@ -234,7 +234,7 @@ sub handle_advertisement {
         }
       } else {
           $logger->error("Got no answer for application (job_id: $job_id)");
-          $self->airbrake->notifiy_with_backtrace(
+          $self->airbrake->notify_with_backtrace(
             "Got no answer for application (job_id: $job_id)"
           );
       }
