@@ -7,9 +7,7 @@ use Dancer2::Plugin;
 use Dancer2::Plugin::REST;
 use Dancer2::Plugin::DBIC;
 use Dancer2::Plugin::Auth::Extensible;
-use Dancer2::Plugin::WebSocket;
 
-use Data::Dumper;
 use Sys::Virt;
 use Try::Tiny;
 use Session::Token;
@@ -19,9 +17,6 @@ use Kanku::Config;
 use Kanku::Schema;
 use Kanku::Util::IPTables;
 use Kanku::LibVirt::HostList;
-use Kanku::RabbitMQ;
-use Kanku::WebSocket::Session;
-use Kanku::WebSocket::Notification;
 
 our $VERSION = '0.0.2';
 
