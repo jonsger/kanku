@@ -9,26 +9,15 @@ use Dancer2::Plugin::DBIC;
 use Dancer2::Plugin::Auth::Extensible;
 use Dancer2::Plugin::WebSocket;
 
-use Data::Dumper;
-use Sys::Virt;
 use Try::Tiny;
-use Session::Token;
-use Carp qw/longmess/;
-use POSIX ":sys_wait_h";
 
 use Kanku::Config;
 use Kanku::Schema;
-use Kanku::Util::IPTables;
-use Kanku::LibVirt::HostList;
 use Kanku::RabbitMQ;
 use Kanku::WebSocket::Session;
 use Kanku::WebSocket::Notification;
 
-
-
 our $VERSION = '0.0.2';
-
-prepare_serializer_for_format;
 
 Kanku::Config->initialize();
 
@@ -285,7 +274,7 @@ websocket_on_open sub {
   debug "Setting up WebSocket Connection callbacks";
   $conn->on(
     'close' => sub {
-      debug "closing websocket\n".longmess();
+      debug "closing websocket\n";
       if ($ws_session) {
         debug "closing session ".$ws_session->session_token;
         $ws_session->close_session();
