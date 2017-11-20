@@ -152,6 +152,9 @@ sub process_template {
     #RELATIVE     => 1
   };
 
+  my $host_feature = $self->_get_hw_virtualization;
+  die "Hardware doesn't support kvm" if ! $host_feature;
+  $self->logger->debug("Found hardware virtualization: '$host_feature'");
   # create Template object
   my $template  = Template->new($config);
 
@@ -166,8 +169,9 @@ sub process_template {
       network_name    => $self->network_name  ,
       network_bridge  => $self->network_bridge  ,
       hostshare       => "",
-      disk_xml        => $disk_xml
-    }
+      disk_xml        => $disk_xml,
+    },
+    host_feature    => $host_feature
   };
 
   $self->logger->debug(" --- use_9p:".$self->use_9p);
@@ -194,9 +198,13 @@ sub process_template {
     $input = $self->domain_name . '.tt2';
   }
 
-  if ( ! -f $template_path.$input ) {
-    $self->logger->warn("Template file $template_path$input not found");
-    $self->logger->warn("Using internal template");
+  my $template_file;
+  $template_file = "$template_path/default-vm.tt2" if (-f "$template_path/default-vm.tt2");
+  $template_file = $template_path.$input if (-f $template_path.$input);
+
+  if ( ! $template_file ) {
+    $self->logger->warn("No template file found!");
+    $self->logger->warn("Using internal template!");
     my $template;
     my $start = tell DATA;
     while ( <DATA> ) { $template .= $_ };
@@ -204,15 +212,13 @@ sub process_template {
     $input = \$template;
     $self->logger->trace("template:\n${$input}");
   } else {
-    $self->logger->info("Using template file '$template_path$input'");
+    $self->logger->info("Using template file '$template_file'");
   }
   my $output = '';
   # process input template, substituting variables
   $template->process($input, $vars, \$output)
                || die $template->error()->as_string();
-
   return $output;
-
 }
 
 sub _generate_disk_xml {
@@ -231,6 +237,12 @@ sub _generate_disk_xml {
 ";
 
 }
+
+sub _get_hw_virtualization {
+  my $proc = open(my $fh,"<","/proc/cpuinfo") || die "Cannot open /proc/cpuinfo: $!";
+  while (<$fh>) { return $1 if /(vmx|svm)/ } 
+}
+
 
 sub create_empty_disks  {
   my ($self) = @_;
@@ -523,6 +535,10 @@ __DATA__
   <memory unit='KiB'>[% domain.memory %]</memory>
   <currentMemory unit='KiB'>[% domain.memory %]</currentMemory>
   <vcpu placement='static'>[% domain.vcpu %]</vcpu>
+  <cpu mode='host-passthrough' check='none'>
+    <cache mode='passthrough'/>
+    <feature policy='require' name='[% host_feature %]'/>
+  </cpu>
   <os>
     <type arch='x86_64' machine='pc-i440fx-2.3'>hvm</type>
     <boot dev='hd'/>
