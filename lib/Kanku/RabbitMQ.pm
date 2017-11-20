@@ -228,7 +228,7 @@ sub create_queue {
 
   $self->logger->debug(
     "Creating new queue ('".
-    join("','",$self->channel,$self->queue_name,$self->exchange_name,$self->queue_name).
+    join("','",$self->channel,($self->queue_name ||''),$self->exchange_name,($self->queue_name||'')).
     "')"
   );
 
@@ -236,7 +236,7 @@ sub create_queue {
 
   my $qn = $mq->queue_declare(
     $self->channel,
-    $self->queue_name
+    ($self->queue_name || '')
   );
 
   $self->queue_name($qn);
