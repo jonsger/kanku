@@ -58,21 +58,14 @@ Kanku::Daemon::Scheduler:
     delay: 86400
     #delay: 600
 
-Kanku::Daemon::Worker:
-  rabbitmq:
-    vhost: /kanku
-    host: <YOUR_HOST>
-    user: <YOUR_USERNAME>
-    password: <YOUR_PASSWORD>
-
-Kanku::Dispatch::RabbitMQ:
-  rabbitmq:
-    vhost: /kanku
-    host: <YOUR_HOST>
-    user: <YOUR_USERNAME>
-    password: <YOUR_PASSWORD>
+Kanku::RabbitMQ:
+  vhost: /kanku
+  host: __YOUR_RABBITMQ_HOST__
+  user: __YOUR_RABBITMQ_USERNAME__
+  password: __YOUR_RABBITMQ_PASSWORD__
 
 Jobs:
-    obs-server:
-    obs-server-26:
-    sles11sp3:
+  kanku-vm:
+  obs-server:
+  obs-server-26:
+  sles11sp3:
