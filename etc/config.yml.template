@@ -49,6 +49,8 @@ Kanku::Util::IPTables:
 
 Kanku::Util::VM::Console:
   debug: 0
+  log_dir: /srv/www/htdocs/kanku-console-logs/
+  log_to_file: 1
 
 Kanku::Daemon::Scheduler:
   -
