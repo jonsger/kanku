@@ -584,8 +584,8 @@ websocket_on_open sub {
       my $oldperms=10000;
       while (1) {
         my $perms = $ws_session->get_permissions;
-        $log->debug("permission change $oldperms -> $perms detected");
         if ($perms != $oldperms) {
+          $log->debug("permission change $oldperms -> $perms detected");
           $oldperms = $perms;
         }
         if ($perms < 0) {
