@@ -92,7 +92,35 @@ get '/request_roles' => require_login sub {
     template 'request_roles' , { %{ get_defaults_for_views() }, kanku => { module => 'Request Roles' } };
 };
 
-### LOGIN / SIGNIN
+### LOGIN / SIGNIN / SIGNUP
+
+sub email_welcome_send {
+    my ( $plugin, %options ) = @_;
+
+    my %message;
+    if ( my $welcome_text = $plugin->welcome_text ) {
+        no strict 'refs';
+        %message = &{$welcome_text}( $plugin, %options );
+    }
+    else {
+        my $site       = $plugin->app->request->base;
+        my $host       = $site->host;
+        my $appname    = $plugin->app->config->{appname} || '[unknown]';
+        my $reset_link = $site . "/login/$options{code}";
+        $reset_link =~ s#([^:])//+#$1/#;
+        $message{subject} = "Welcome to $host";
+        $message{from}    = $plugin->mail_from;
+        $message{plain}   = <<__EMAIL;
+An account has been created for you at $host. If you would like
+to accept this, please follow the link below to set a password:
+
+$reset_link
+__EMAIL
+    }
+
+    $plugin->_send_email( to => $options{email}, %message );
+}
+
 
 get '/pwreset' => sub {
   template 'pwreset' , { return_url => params->{return_url} , kanku => { module => 'Request Password Reset' } };
