@@ -45,6 +45,7 @@ sub prepare {
   }
 
   $result->{body} = $msg->{message};
+  $result->{result} = $msg->{result};
 
   return encode_json($result);
 }

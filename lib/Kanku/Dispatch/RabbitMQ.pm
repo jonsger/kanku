@@ -171,9 +171,10 @@ sub run_job {
   $self->notify_queue->send({
     type          => 'job_change',
     event         => 'finished',
+    result        => $job->state,
     message       => "Finished job (".$job->name."/".$job->id.") with result: ".$job->state,
-    name           => $job->name,
-    id             => $job->id
+    name          => $job->name,
+    id            => $job->id
   });
 
   $self->send_finished_job($aq,$job->id);

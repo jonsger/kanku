@@ -192,6 +192,7 @@ sub run {
     $self->notify_queue->send({
       type          => 'task_change',
       event         => 'finished',
+      result        => $state,
       id            => $task->id,
       job_id        => $job->id,
       message       => "Finished task (".$task->id.") with state '$state'",
