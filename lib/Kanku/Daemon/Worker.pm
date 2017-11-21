@@ -154,6 +154,8 @@ sub run {
 	}
       } catch {
         $logger->error($_);
+        $self->airbrake->notify_with_backtrace($_);
+        die $_ if ( $_ =~ /unexpected protocol state/);
       };
       if ($self->detect_shutdown) {
         $logger->info("Worker process '$$' detected shutdown - exiting");
