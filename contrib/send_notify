@@ -7,7 +7,7 @@ use Net::AMQP::RabbitMQ;
 use JSON::XS;
 use Data::Dumper;
 
-my $host = '192.168.122.122';
+my $host = '127.0.0.1';
 my $vhost = "/kanku";
 my $user = "kanku";
 my $password = "kanku";
@@ -22,8 +22,10 @@ my $messages= {
 	{
           type       => 'task_change',
           event      => 'started',
+          result     => 'failed',
           job_id     => 1,
-          id         => 1
+          id         => 1,
+          message    => 'Just for fun!'
 	}
     ),
   },
