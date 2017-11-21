@@ -1,13 +1,24 @@
 # a2enmod proxy
+# a2enmod proxy_http
+# a2enmod proxy_wstunnel
 # a2enmod rewrite
 # a2enmod headers
-
 
 ProxyPass "/kanku" "http://localhost:5000/kanku"
 ProxyPassReverse "/kanku" "http://localhost:5000/kanku"
 
+ProxyPass "/ws" "ws://127.0.0.1:5000/ws"
+ProxyPassReverse "/ws" "ws://ws://127.0.0.1:5000/ws"
+
+# Please be aware that this configuration does not work
+# correctly ATM.
+# You will not see any exchanges/queues/connections etc.
+# due to 404 (api calls include a '//'
+AllowEncodedSlashes On
+ProxyPass "/rabbitmq/api" "http://localhost:15672/api" nocanon
+ProxyPass "/rabbitmq" "http://localhost:15672"
+ProxyPassReverse "/rabbitmq" "http://localhost:15672"
+
+
 RequestHeader set X_FORWARDED_PROTO "https"
 RequestHeader set X_FORWARDED_HOST "[% kanku_host %]"
-
-ProxyPass /ws ws://127.0.0.1:5000/ws
-ProxyPassReverse /ws ws://ws://127.0.0.1:5000/ws
