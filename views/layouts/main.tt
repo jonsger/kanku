@@ -10,7 +10,7 @@
 
 <link rel="stylesheet" href="[% request.uri_base %]/font-awesome/css/font-awesome.min.css">
 <link href="[% request.uri_base %]/css/signin.css" rel="stylesheet">
-<link id="favicon" rel="shortcut icon" type="image/jpg" href="[% request.uri_base %]/images/kanku-danger_big.jpg" />
+<link id="favicon" rel="shortcut icon" type="image/jpg" href="[% request.uri_base %]/images/32/kanku.png" />
 
 <script src="[% request.uri_base %]/javascripts/jquery.js"></script>
 <script src="[% request.uri_base %]/javascripts/mustache.min.js"></script>
