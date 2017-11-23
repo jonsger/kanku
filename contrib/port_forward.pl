@@ -1,28 +1,4 @@
 #!/usr/bin/env perl
-
-=head1 NAME 
-
-port_forward.pl - FIXME: comment your tool
-
-=head1 SYNOPSIS
-
-|port_forward.pl <required-options> [optional options]
-
-=head1 DESCRIPTION
-
-FIXME: add a useful description
-
-=head1 AUTHORS
-
-Frank Schreiner (M0ses), m0ses@samaxi.de
-
-=head1 COPYRIGHT
-
-This library is free software. You can redistribute it and/or modify
-it under the same terms as Perl itself.
-
-=cut
-
 use strict;
 use warnings;
 use FindBin;
@@ -47,7 +23,6 @@ Example:
 # $basename obs-server eth0 tcp:443 tcp:22
 
 ";
-
   exit 0;
 }
 
@@ -70,8 +45,4 @@ $ipt->add_forward_rules_for_domain(
     forward_rules => \@ARGV
 );
 
-
-
 exit 0;
-
-

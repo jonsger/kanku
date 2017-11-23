@@ -1,5 +1,4 @@
 #!/usr/bin/env perl
-
 use strict;
 use warnings;
 use Kanku::Config;
@@ -14,7 +13,6 @@ BEGIN {
   Kanku::Config->initialize();
   Kanku::Airbrake->initialize();
 };
-
 
 my $ab = Kanku::Airbrake->instance();
 

@@ -17,7 +17,6 @@ my $exchange = "kanku.notify";  # This exchange must exist already
 
 my $messages= { 
   1 => {
-    #rkey => 'opensuse.obs.package.build_success',
     msg  =>  encode_json(
 	{
           type       => 'task_change',
@@ -35,10 +34,9 @@ print "Connecting to host $host with username $user and password $password\n";
 $mq->connect($host, { vhost => $vhost, user => $user, password => $password, ssl=>0 });
 $mq->channel_open($channel);
 
-print "Please enter a number to send an event:\n";
-print Dumper($messages);
-
 while (1) {
+  print "Please enter a number to send an event:\n";
+  print Dumper($messages);
   my $in = <STDIN>;
   chomp($in);
   if ( $messages->{$in} ) {
