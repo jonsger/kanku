@@ -159,7 +159,7 @@ sub get_image_size {
              t => 1024*1024*1024*1024, p => 1024*1024*1024*1024*1024
            };
   if ($self->size =~ /^(\d+)([bkmgtp]m?)?/i ) {
-    return $1 * $sh->{lc($2)}
+    return $1 * ($sh->{lc($2)} || 1)
   }
 
   die "Size of volume '".$self->vol_name."' could not be determined\n";
