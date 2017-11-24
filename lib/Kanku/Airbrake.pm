@@ -32,12 +32,14 @@ sub send      { my $s = shift; return $s->_ab_object->send(@_);      }
 sub notify    { my $s = shift; return $s->_ab_object->notify(@_);    }
 
 sub notify_with_backtrace {
-  my ($self, $msg, $index) = @_;
+  my ($self, $msg, $index, $options) = @_;
   $self->notify({
-    type      => 'Core::die',
-    message   => $msg,
-    backtrace => $self->backtrace($index)
-  });
+      type      => 'Core::die',
+      message   => $msg,
+      backtrace => $self->backtrace($index)
+    },
+    $options
+  );
 }
 
 sub backtrace {

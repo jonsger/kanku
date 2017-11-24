@@ -42,7 +42,7 @@ has local_job_queue_name  => (is=>'rw', isa => 'Str');
 sub run {
   my $self          = shift;
   my $rabbit_config = Kanku::Config->instance->config->{'Kanku::RabbitMQ'};
-  $self->airbrake()->notify_with_backtrace("Starting worker ($$)");
+  $self->airbrake()->notify_with_backtrace("Starting worker", {context=>{pid=>$$}});
   my $logger        = $self->logger();
 
   my @childs=();
@@ -107,6 +107,19 @@ sub run {
         }
       } catch {
         $logger->error($_);
+        $self->airbrake->notify_with_backtrace($_, {context=>{pid=>$$,worker_id=>$self->worker_id}});
+        if ( $_ =~ /(unexpected protocol state|Publish failed, a SSL error occurred)/) {
+          if (!$kmq->disconnect()){
+            $self->airbrake->notify_with_backtrace("Could not disconnect to rabbitmq", {context=>{pid=>$$}});
+            die "Could not disconnect to rabbitmq\n";
+          }
+          $kmq->connect() or die "Could not connect to rabbitmq\n";
+          $kmq->setup_worker();
+          $kmq->create_queue(
+            queue_name    => $self->worker_id,
+            exchange_name =>'kanku.to_all_workers'
+          );
+        }
       };
 
       $self->remote_job_queue_name('');
@@ -154,8 +167,19 @@ sub run {
 	}
       } catch {
         $logger->error($_);
-        $self->airbrake->notify_with_backtrace($_);
-        die $_ if ( $_ =~ /unexpected protocol state/);
+        $self->airbrake->notify_with_backtrace($_, {context=>{pid=>$$,worker_id=>$self->worker_id}});
+        if ( $_ =~ /(unexpected protocol state|Publish failed, a SSL error occurred)/) {
+          if (!$kmq->disconnect()){
+            $self->airbrake->notify_with_backtrace("Could not disconnect to rabbitmq", {context=>{pid=>$$}});
+            die "Could not disconnect to rabbitmq\n";
+          }
+          $kmq->connect() or die "Could not connect to rabbitmq\n";
+          $kmq->setup_worker();
+          $kmq->create_queue(
+            queue_name    => $self->worker_id,
+            exchange_name =>'kanku.to_all_workers'
+          );
+        }
       };
       if ($self->detect_shutdown) {
         $logger->info("Worker process '$$' detected shutdown - exiting");
