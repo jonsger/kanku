@@ -81,6 +81,7 @@ BuildRequires: perl(Dancer2::Plugin::REST)
 BuildRequires: perl(Dancer2::Plugin::DBIC)
 BuildRequires: perl(Dancer2::Plugin::WebSocket)
 BuildRequires: perl(Dancer2::Plugin::Auth::Extensible)
+BuildRequires: perl(Net::AMQP::RabbitMQ)
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
