@@ -29,6 +29,54 @@ BuildArch:      noarch
 BuildRequires:  perl-macros
 BuildRequires:  fdupes
 BuildRequires:  systemd-rpm-macros
+
+# perl requires for %check
+BuildRequires: perl(DBIx::Class::Fixtures)
+BuildRequires: perl(Test::Simple)
+BuildRequires: perl(YAML)
+BuildRequires: perl(Config::Tiny)
+BuildRequires: perl(Path::Class)
+BuildRequires: perl(Sys::Virt)
+BuildRequires: perl(Moose)
+BuildRequires: perl(Log::Log4perl)
+BuildRequires: perl(MooseX::App::Cmd)
+BuildRequires: perl(Dancer2::Plugin::REST)
+BuildRequires: perl(MooseX::Singleton)
+BuildRequires: perl(Expect)
+BuildRequires: perl(Net::SSH2)
+BuildRequires: perl(Net::IP)
+BuildRequires: perl(Net::OBS::Client)
+BuildRequires: perl(XML::Structured)
+BuildRequires: perl(DBIx::Class::Migration)
+BuildRequires: perl(Template)
+BuildRequires: perl(Log::Log4perl)
+BuildRequires: perl(Config::Tiny)
+BuildRequires: perl(Dancer2::Plugin::DBIC)
+BuildRequires: perl(Dancer2::Plugin::Auth::Extensible)
+BuildRequires: perl(Dancer2::Plugin::Auth::Extensible::Provider::DBIC)
+BuildRequires: perl(File::HomeDir)
+BuildRequires: perl(Template::Plugin::Filter::ANSIColor)
+BuildRequires: perl(JSON::XS)
+BuildRequires: perl(DBIx::Class)
+BuildRequires: perl(DBIx::Class::Migration)
+BuildRequires: perl(Template::Plugin::Filter::ANSIColor)
+BuildRequires: perl(File::LibMagic)
+BuildRequires: perl(IO::Uncompress::UnXz)
+BuildRequires: perl(Plack)
+BuildRequires: perl(Dancer2)
+BuildRequires: perl(Dancer2::Plugin::REST)
+BuildRequires: perl(XML::XPath)
+BuildRequires: perl(Term::ReadKey)
+BuildRequires: perl(IPC::Run)
+# DBD::SQLite is also provided by perl-DBD-SQLite-Amalgamation
+# but perl-DBD-SQLite-Amalgamation is breaks with SQL syntax errors
+# at job_histroy_sub table
+BuildRequires: perl-DBD-SQLite
+BuildRequires: perl(LWP::Protocol::https)
+BuildRequires: perl(Mail::Sendmail)
+BuildRequires: perl(Archive::Cpio)
+
+
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
 Requires: kanku-cli
