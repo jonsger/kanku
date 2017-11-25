@@ -3,8 +3,6 @@ package Kanku;
 use Moose;
 
 use Dancer2;
-use Dancer2::Plugin;
-use Dancer2::Plugin::REST;
 use Dancer2::Plugin::DBIC;
 use Dancer2::Plugin::Auth::Extensible;
 use Dancer2::Plugin::WebSocket;

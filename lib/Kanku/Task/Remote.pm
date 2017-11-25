@@ -57,6 +57,14 @@ has final_args => (is=>'rw',isa=>'HashRef');
 
 has queue => (is=>'rw',isa=>'Str');
 
+has rabbit_config => (
+  is      => 'rw',
+  isa     => 'HashRef',
+  lazy    => 1,
+  default => sub { Kanku::Config->instance->config->{"Kanku::RabbitMQ"} || {}; }
+);
+
+
 sub run {
   my ($self)      = @_;
   my $kmq         = $self->job_queue;
@@ -138,6 +146,17 @@ sub run {
 	  $self->job->context(${job}->{context});
 	  last;
 	}
+      } elsif ($data->{action} eq 'apply_for_job') {
+        $logger->warn("Got application from $data->{worker_fqhn} for already running job($data->{job_id}). Declining!");
+        my $rmq = Kanku::RabbitMQ->new(%{$self->rabbit_config});
+        $rmq->connect(no_retry=>1) ||
+            $logger->error("Could not connect to rabbitmq");
+        my $queue = $data->{answer_queue};
+        $rmq->queue_name($queue);
+        $rmq->publish(
+          $queue,
+          encode_json({action => 'decline_application'}),
+        );
       }
     } else {
       if ($self->daemon->detect_shutdown) {

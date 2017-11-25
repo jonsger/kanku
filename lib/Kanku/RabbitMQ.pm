@@ -92,6 +92,8 @@ has shutdown_file => (
 
 =head2 connect - connect to a rabbitmq server
 
+ $kmq->connect(no_retry=>1);
+
 =cut
 
 sub connect {

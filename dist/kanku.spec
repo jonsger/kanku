@@ -57,6 +57,9 @@ ln -s /usr/sbin/service %{buildroot}%{_sbindir}/rckanku-dispatcher
 ln -s /usr/sbin/service %{buildroot}%{_sbindir}/rckanku-scheduler
 ln -s /usr/sbin/service %{buildroot}%{_sbindir}/rckanku-triggerd
 
+%check
+prove -Ilib t/000_use.t
+
 %files
 %exclude /etc
 %exclude /usr

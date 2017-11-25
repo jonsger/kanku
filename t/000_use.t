@@ -7,7 +7,7 @@ echo $BASEDIR
 
 ALL_MODULES=( `find $BASEDIR/lib -name *.pm` )
 
-ALL_BINS=(kanku kanku-apache2.psig kanku-app.psgi kanku-scheduler)
+ALL_BINS=(kanku kanku-app.psgi kanku-scheduler kanku-triggerd kanku-dispatcher kanku-worker)
 TEST_COUNTER=0
 
 echo "1.."$(( ${#ALL_MODULES[@]}  + ${#ALL_BINS[@]}))

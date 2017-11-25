@@ -219,12 +219,13 @@ sub handle_advertisement {
       $job_kmq->create_queue();
 
       my $application = {
-        job_id		  => $job_id,
-        message		  => $answer ,
+        job_id	      => $job_id,
+        message	      => $answer ,
         worker_fqhn   => hostfqdn(),
-        worker_pid	  => $$,
+        worker_pid    => $$,
         answer_queue  => $self->local_job_queue_name,
-        resources	  => collect_resources(),
+        resources     => collect_resources(),
+        action        => 'apply_for_job'
       };
       $logger->debug("Sending application for job_id $job_id on queue ".$self->remote_job_queue_name);
       $logger->trace($self->dump_it($application));
