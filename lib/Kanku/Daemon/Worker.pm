@@ -117,7 +117,7 @@ sub run {
           $kmq->setup_worker();
           $kmq->create_queue(
             queue_name    => $self->worker_id,
-            exchange_name =>'kanku.to_all_workers'
+            exchange_name=>'kanku.to_all_hosts'
           );
         }
       };
