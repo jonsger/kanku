@@ -113,7 +113,7 @@ sub run {
             $self->airbrake->notify_with_backtrace("Could not disconnect to rabbitmq", {context=>{pid=>$$}});
             die "Could not disconnect to rabbitmq\n";
           }
-          $kmq->connect() or die "Could not connect to rabbitmq\n";
+          $kmq->connect(no_retry=>1) or die "Could not connect to rabbitmq\n";
           $kmq->setup_worker();
           $kmq->create_queue(
             queue_name    => $self->worker_id,
@@ -173,7 +173,7 @@ sub run {
             $self->airbrake->notify_with_backtrace("Could not disconnect to rabbitmq", {context=>{pid=>$$}});
             die "Could not disconnect to rabbitmq\n";
           }
-          $kmq->connect() or die "Could not connect to rabbitmq\n";
+          $kmq->connect(no_retry=>1) or die "Could not connect to rabbitmq\n";
           $kmq->setup_worker();
           $kmq->create_queue(
             queue_name    => $self->worker_id,
