@@ -268,6 +268,7 @@ TODO:
 %package cli
 Summary: Command line client for kanku
 Requires: kanku-common
+Requires: libvirt-client
 
 %description cli
 Command line client for kanku, mainly used for setup tasks
