@@ -109,6 +109,7 @@ sub listen_on_queue {
 	# Extra try/catch to get better debugging output
 	# like adding body to log message
 	try {
+          $logger->trace("Got message: $body");
 	  $data = decode_json($body);
 	} catch {
 	  die("Error in JSON:\n$_\n$body\n");
@@ -130,6 +131,7 @@ sub listen_on_queue {
 	  );
 
 	  $self->handle_task($data,$kmq);
+          $self->remote_job_queue_name('');
 	} elsif ( $data->{action} eq 'advertise_job' ) {
 	  $self->handle_advertisement($data, $kmq);
 	} else {
@@ -141,7 +143,6 @@ sub listen_on_queue {
       $self->airbrake->notify_with_backtrace($_, {context=>{pid=>$$,worker_id=>$self->worker_id}});
     };
 
-    $self->remote_job_queue_name('');
 
     if ($self->detect_shutdown) {
       $logger->info("AllWorker process detected shutdown - exiting");
@@ -183,11 +184,12 @@ sub handle_advertisement {
       $kmq->publish(
         $self->remote_job_queue_name,
         $json,
-        { exchange => 'kanku.to_dispatcher', mandatory => 1 }
+        { exchange => 'kanku.to_dispatcher' }
       );
 
       # TODO: Need timeout
       my $timeout = 1 * 60 * 1000;
+      $logger->debug("Waiting $timeout for offer_job");
       my $msg = $job_kmq->recv($timeout);
       if ( $msg ) {
         my $body = decode_json($msg->{body});
