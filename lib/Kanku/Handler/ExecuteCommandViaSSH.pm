@@ -23,17 +23,46 @@ use namespace::autoclean;
 with 'Kanku::Roles::Handler';
 with 'Kanku::Roles::SSH';
 
-has commands => (is=>'rw',isa=>'ArrayRef',default=>sub { [] });
-
+has commands => (is=>'rw', isa=>'ArrayRef', default => sub {[]});
 has timeout => (is=>'rw',isa=>'Int',lazy=>1,default=>60*60*4);
+
+has environment => (is=>'rw', isa=>'HashRef', default => sub {{}});
+has context2env => (is=>'rw', isa=>'HashRef', default => sub {{}});
+has _env_backup => (is=>'rw', isa=>'HashRef', default => sub {{}});
 
 sub distributable { 1 }
 
 sub prepare {
-  my $self = shift;
+  my ($self) = @_;
+  my %vars;
+  my $ctx = $self->job()->context();
+  for my $env_var (keys(%{$self->environment})) {
+    $self->logger->debug(
+      "Setting from config(environment) \$ENV{$env_var} = ".
+      $self->environment->{$env_var}.
+      " (Backup: '".$ENV{$env_var}."')"
+    );
+    $self->_env_backup->{$env_var} = $ENV{$env_var};
+    $ENV{$env_var} = $self->environment->{$env_var};
+    $vars{$env_var}=1;
+  }
+
+  for my $env_var (keys(%{$self->context2env})) {
+    # upper case environment variables are more shell
+    # style
+    my $n_env_var = uc($env_var);
+    $self->logger->debug(
+      "Setting from job context \$ENV{$n_env_var} = ".
+      $ctx->{$env_var}.
+      " (Backup: '".$ENV{$n_env_var}."')"
+    );
+    $self->_env_backup->{$n_env_var} = $ENV{$n_env_var};
+    $ENV{$n_env_var} = $ctx->{$env_var};
+    $vars{$n_env_var}=1;
+  }
+
 
   $self->get_defaults();
-
   return {
     code => 0,
     message => "Preparation successful"
@@ -73,6 +102,21 @@ sub execute {
   };
 }
 
+sub finalize {
+  my ($self) = @_;
+  my @vars;
+  for my $env_var (keys(%{$self->_env_backup})) {
+    $self->logger->debug(
+      "Restoring \$ENV{$env_var} = '".($self->_env_backup->{$env_var}||'')."'"
+    );
+    $ENV{$env_var} = $self->_env_backup->{$env_var};
+  }
+
+  return {
+    code => 0,
+    message => "Finalization successful. Restored the following ENV Vars:".join(", ", @vars).")"
+  };
+}
 __PACKAGE__->meta->make_immutable;
 1;
 

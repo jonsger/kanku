@@ -26,13 +26,13 @@ use URI;
 
 with 'Kanku::Roles::Handler';
 
-sub distributable { 1 }
+has commands => (is=>'rw', isa=>'ArrayRef', default => sub {[]});
 
 has environment => (is=>'rw', isa=>'HashRef', default => sub {{}});
-has commands => (is=>'rw', isa=>'ArrayRef', default => sub {[]});
 has context2env => (is=>'rw', isa=>'HashRef', default => sub {{}});
-
 has _env_backup => (is=>'rw', isa=>'HashRef', default => sub {{}});
+
+sub distributable { 1 }
 
 sub prepare {
   my ($self) = @_;

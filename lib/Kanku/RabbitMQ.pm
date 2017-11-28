@@ -262,4 +262,37 @@ sub create_queue {
   return $qn;
 }
 
+=head2 destroy_queue - unbind and delete queue (if_unused=>0,if_empty=>0)
+
+   $kmq->destroy_queue;
+
+=cut
+
+sub destroy_queue {
+  my $self = shift;
+  my $mq = $self->queue;
+  my %opts = @_;
+
+  while ( my ($key, $value) = each(%opts)) { $self->$key($opts{$key}) if defined($value) }
+
+  $self->logger->debug(
+    "Destroying queue ('".
+    join("','",$self->channel,($self->queue_name ||''),$self->exchange_name,($self->queue_name||'')).
+    "')"
+  );
+
+  $mq->queue_unbind(
+    $self->channel,
+    $self->queue_name,
+    $self->exchange_name,
+    $self->queue_name,
+    {}
+  );
+
+  $mq->queue_delete(
+    $self->channel,
+    $self->queue_name,
+    {if_empty => 0, if_unused => 0}
+  );
+}
 1;

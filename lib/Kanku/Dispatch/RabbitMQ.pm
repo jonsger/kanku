@@ -183,6 +183,7 @@ sub run_job {
 
   $self->run_notifiers($job,$last_task);
 
+  $rmq->destroy_queue;
   $rmq->queue->disconnect;
 
   return $job->state;

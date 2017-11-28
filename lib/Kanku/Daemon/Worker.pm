@@ -164,7 +164,10 @@ sub handle_advertisement {
       $self->local_job_queue_name("job-$job_id-".$self->worker_id);
       my $answer = "Process '$$' is applying for job '$job_id'";
 
-      my $job_kmq = Kanku::RabbitMQ->new(%{$kmq->connect_info},queue_name =>$self->local_job_queue_name);
+      my $job_kmq = Kanku::RabbitMQ->new(
+        %{$kmq->connect_info},
+        queue_name =>$self->local_job_queue_name
+      );
       $job_kmq->connect();
       $job_kmq->create_queue();
 
@@ -189,7 +192,7 @@ sub handle_advertisement {
 
       # TODO: Need timeout
       my $timeout = 1 * 60 * 1000;
-      $logger->debug("Waiting $timeout for offer_job");
+      $logger->debug("Waiting $timeout for offer_job (job_id: $job_id)");
       my $msg = $job_kmq->recv($timeout);
       if ( $msg ) {
         my $body = decode_json($msg->{body});
@@ -214,7 +217,7 @@ sub handle_advertisement {
             "Got no answer for application (job_id: $job_id)"
           );
       }
-
+      $job_kmq->destroy_queue();
   } else {
     $logger->error("No answer queue found. Ignoring advertisement");
   }
