@@ -224,7 +224,7 @@ sub _find_free_ports {
   my $count       = shift;
   my $proto       = shift;
   # TODO: make usable for tcp and udp
-  my $port2check  = $start_port;
+  my $port2check  = $start_port || 49000;
   my @result      = ();
   my $used_ports  = $self->_used_ports;
 
