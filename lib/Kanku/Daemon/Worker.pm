@@ -99,7 +99,7 @@ sub listen_on_queue {
   } catch {
     $logger->error("Could not create queue for exchange $opts{exchange_name}: $_");
   };
-
+  my $last_job_id;
   while(1) {
     try {
       my $msg = $kmq->recv(1000);
@@ -133,7 +133,13 @@ sub listen_on_queue {
 	  $self->handle_task($data,$kmq);
           $self->remote_job_queue_name('');
 	} elsif ( $data->{action} eq 'advertise_job' ) {
-	  $self->handle_advertisement($data, $kmq);
+          
+          if ($last_job_id != $data->{job_id}) {
+            $self->handle_advertisement($data, $kmq);
+          } else {
+	    $logger->debug("Duplicate job advertisment detected (job_id: $data->{job_id})");
+          }
+          $last_job_id = $data->{job_id};
 	} else {
 	  $logger->warn("Unknown action: ". $data->{action});
 	}
