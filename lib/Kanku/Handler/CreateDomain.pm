@@ -59,6 +59,8 @@ has ['cache_dir']     => (is=>'rw',isa=>'Str');
 
 has ['mnt_dir_9p']    => (is => 'rw', isa => 'Str', default => '/tmp/kanku');
 
+has ['host_dir_9p']    => (is => 'rw', isa => 'Str');
+
 has [qw/
   noauto_9p
   wait_for_systemd
@@ -159,6 +161,8 @@ sub execute {
       job_id                => $self->job->id,
       network_name          => $self->network_name,
   );
+
+  $vm->host_dir_9p($self->host_dir_9p) if ($self->host_dir_9p);
 
   my $final_file = $ctx->{vm_image_file};
 

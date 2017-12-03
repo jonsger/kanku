@@ -138,6 +138,13 @@ has network_name => (
   default => 'default'
 );
 
+has host_dir_9p => (
+  is      => 'rw',
+  isa     => 'Str',
+  lazy    => 1,
+  default => sub { getcwd() }
+);
+
 sub process_template {
   my ($self,$disk_xml) = @_;
 
@@ -180,7 +187,7 @@ sub process_template {
 
     $vars->{domain}->{hostshare} = "
     <filesystem type='mount' accessmode='passthrough'>
-      <source dir='".getcwd()."'/>
+      <source dir='".$self->host_dir_9p."'/>
       <target dir='kankushare'/>
       <alias name='fs0'/>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x06' function='0x0'/>
