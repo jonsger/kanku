@@ -3,6 +3,13 @@
 * startvm
 * stopvm (like "virsh shutdown <domain>)
 ** --force (like "virsh destroy <domain>)
+* console
+* destroy
+* ip
+* ssh
+* up
+* status
+* pfwd - apply new portfwarding rules for VM
 
 # Local commands
 
@@ -22,3 +29,13 @@
 * rguest
 ** --list     | -l 
 ** --details  | -d guest_name
+* rtrigger
+
+# Admin commands
+* dbmigrate
+* setup
+
+# Developer commands
+* init - create a new KankuFile
+* startui - start local webui in developer mode
+* stopui  - stop local webui in developer mode
