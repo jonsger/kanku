@@ -3,7 +3,7 @@ var token = Cookies.get("kanku_notify_session");
 
 // Preloading images
 $.each(['32', '64'], function(index, size) {
-  $.each(['', '-danger'], function(index, ext) {
+  $.each(['', '-danger', '-success', '-warning'], function(index, ext) {
     image = new Image();
     image.src = uri_base + '/images/' + size + '/kanku' + ext + '.png';
   });
@@ -33,7 +33,7 @@ mySocket.onmessage = function (evt) {
 
 mySocket.onopen = function(evt) {
   console.log("opening Socket");
-  var ico = uri_base + '/images/32/kanku.png';
+  var ico = uri_base + '/images/32/kanku-success.png';
   Notification.requestPermission(function() {
     $("#favicon").attr("href",ico);
     setTimeout(
@@ -82,9 +82,9 @@ if (! window.Notification ) {
   $('#trigger_notify_succeed').click(
     function(){
     Notification.requestPermission(function() {
-      var n = new Notification('Kanku Test Notification', {
+      var n = new Notification('Kanku Test Notification - succeed', {
 	body: 'Test notification - succeed',
-	icon: 'images/64/kanku.png' // optional
+	icon: 'images/64/kanku-success.png' // optional
       });
       n.onclick = function() {
         window.location.href = 'job_history';
@@ -97,9 +97,24 @@ if (! window.Notification ) {
     function(){
 
     Notification.requestPermission(function() {
-      var n = new Notification('Kanku Test Notification', {
+      var n = new Notification('Kanku Test Notification - failed', {
 	body: 'Test notification - failed',
 	icon: 'images/64/kanku-danger.png' // optional
+      });
+      n.onclick = function() {
+        window.location.href = 'job_history';
+        n.close();
+      };
+      setTimeout(n.close.bind(n), 20000);
+    });
+  });
+  $('#trigger_notify_warning').click(
+    function(){
+
+    Notification.requestPermission(function() {
+      var n = new Notification('Kanku Test Notification - warning', {
+	body: 'Test notification - warning',
+	icon: 'images/64/kanku-warning.png' // optional
       });
       n.onclick = function() {
         window.location.href = 'job_history';

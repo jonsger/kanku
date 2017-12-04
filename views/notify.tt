@@ -1,7 +1,9 @@
 <h1>Notifications</h1>
-<div class=jumbotron>
+<div class="jumbotron text-center">
  <div id=notify_settings>
+  <h2>Test Notifications</h2>
   <a href="#" class="btn btn-success btn-lg active" role="button" aria-pressed="true" id=trigger_notify_succeed>Success Notify</a>
+  <a href="#" class="btn btn-warning  btn-lg active" role="button" aria-pressed="true" id=trigger_notify_warning>Warning Notify</a>
   <a href="#" class="btn btn-danger  btn-lg active" role="button" aria-pressed="true" id=trigger_notify_failed>Failed Notify</a>
  </div>
 </div>
