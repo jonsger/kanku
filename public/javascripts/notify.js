@@ -79,13 +79,27 @@ if (! window.Notification ) {
 } else if (Notification.permission !== "granted") {
    Notification.requestPermission(function() {});
 } else {
-  $('#trigger_notify').click(
+  $('#trigger_notify_succeed').click(
+    function(){
+    Notification.requestPermission(function() {
+      var n = new Notification('Kanku Test Notification', {
+	body: 'Test notification - succeed',
+	icon: 'images/64/kanku.png' // optional
+      });
+      n.onclick = function() {
+        window.location.href = 'job_history';
+        n.close();
+      };
+      setTimeout(n.close.bind(n), 20000);
+    });
+  });
+  $('#trigger_notify_failed').click(
     function(){
 
     Notification.requestPermission(function() {
       var n = new Notification('Kanku Test Notification', {
-	body: 'Test notification',
-	icon: './favicon.ico' // optional
+	body: 'Test notification - failed',
+	icon: 'images/64/kanku-danger.png' // optional
       });
       n.onclick = function() {
         window.location.href = 'job_history';

@@ -19,3 +19,20 @@
 .result_toggler {
     cursor: pointer;
 }
+
+.state-row {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.result-row {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.event-card {
+  padding-bottom: 50px;
+  border-bottom: 1px solid grey;
+}
