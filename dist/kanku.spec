@@ -276,10 +276,8 @@ and in developer mode
 
 %files cli
 %dir /opt/kanku/views/cli/
-/opt/kanku/views/cli/guests.tt
-/opt/kanku/views/cli/job.tt
-/opt/kanku/views/cli/jobs.tt
 %dir /opt/kanku/views/cli/rjob
+/opt/kanku/views/cli/*.tt
 /opt/kanku/views/cli/rjob/*.tt
 /opt/kanku/lib/Kanku/Cmd/
 /opt/kanku/lib/Kanku/Cmd.pm
