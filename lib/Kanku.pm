@@ -244,6 +244,39 @@ get '/notify' => requires_any_role [qw(Admin User Guest)] => sub {
 
 Log::Log4perl->init("$FindBin::Bin/../etc/log4perl.conf");
 
+sub check_filters {
+  my ($filters, $data, $log) = @_;
+  my $fd;
+  my $dd;
+  try {
+    $fd = decode_json($filters);
+  } catch {
+    $log->error($_);
+    $log->debug($filters);
+  };
+
+  try {
+    $dd = decode_json($data);
+  } catch {
+    $log->error($_);
+    $log->debug($data);
+  };
+  return 1 if ! $fd; 
+
+  my $key;
+  $key = $dd->{'type'}.'-enable'; 
+  $log->trace("Step 0 $key: $fd->{$key}");
+  return 0 if ! $fd->{$key};
+  $key = $dd->{'type'}."-".$dd->{'event'};
+  $log->trace("Step 1 $key $fd->{$key}");
+  return 0 if ! $fd->{$key};
+  $key = $dd->{'type'}."-".$dd->{'event'}."-".$dd->{'result'};
+  $log->trace("Step 3 $key");
+  return 0 if ($dd->{'result'} && ! $fd->{$key});
+
+  return 1;
+}
+
 websocket_on_open sub {
   my ($conn, $env) = @_;
 
@@ -283,7 +316,6 @@ websocket_on_open sub {
       $notify->unblock();
       debug "Server got message on WebSocket connection: $msg";
       my $data = decode_json($msg);
-
       # Proceed with data sent from client, eg.:
       # * authentication request 
       # * filter update
@@ -299,6 +331,9 @@ websocket_on_open sub {
         }
 	debug "$msg ($perms)";
         $notify->send($msg);
+      } elsif ($data->{filters}) {
+        debug("Got filters");
+        $ws_session->filters(encode_json($data->{filters}));
       } elsif ($data->{bounce}) {
         $notify->send($data->{bounce});
       }
@@ -351,6 +386,7 @@ websocket_on_open sub {
         }
 	my $data = $mq->recv(1000);
 	if ($data) {
+          my $filters = $ws_session->filters;
 	  $log->debug("Got message: $data->{body}");
           my $body;
           try {
@@ -363,7 +399,7 @@ websocket_on_open sub {
             } elsif( $perms < $ev_to_role->{$ev_type}) {
               $log->debug("User not authorized to get this type of notification");
             } else {
-              $notify->send($body);
+              check_filters($filters, $data->{body}, $log) && $notify->send($body);
             }
           } catch {
             $log->error($_);

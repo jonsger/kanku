@@ -1,4 +1,3 @@
-<h1>Notifications</h1>
 <div class="jumbotron text-center">
  <div id=notify_settings>
   <h2>Test Notifications</h2>
@@ -7,10 +6,11 @@
   <a href="#" class="btn btn-danger  btn-lg active" role="button" aria-pressed="true" id=trigger_notify_failed>Failed Notify</a>
  </div>
 </div>
+<form id=filters>
 <h2>Filters</h2>
 [% IF roles.Admin %]
-<div class="card event-card">
-  <h3 class=card-header><input type=checkbox id=enable_user_events value=1> User Events</h3>
+<div class="card event-card" id="admin_events">
+  <h3 class=card-header><input type=checkbox id="user_change-enable" value=1> User Events</h3>
   <div class="card-body">
     <div>
       <h4>Event Types:</h4>
@@ -18,7 +18,7 @@
         <div class="col-lg-6">
           <div class="input-group">
             <span class="input-group-addon">
-              <input type="checkbox" aria-label="Checkbox for following text input">
+              <input type="checkbox" aria-label="Checkbox for following text input" id="user_change-created">
             </span>
             <span class="form-control"><strong>User Created</strong></span>
           </div>
@@ -26,7 +26,7 @@
         <div class="col-lg-6">
           <div class="input-group">
             <span class="input-group-addon">
-              <input type="checkbox" aria-label="Checkbox for following text input">
+              <input type="checkbox" aria-label="Checkbox for following text input" id="user_change-requested_roles">
             </span>
             <span class="form-control"><strong>User requested a role</strong></span>
           </div>
@@ -37,34 +37,26 @@
 </div>
 [% END %]
 [% IF roles.User || roles.Admin %]
-<div class="card event-card">
-  <h3 class=card-header><input type=checkbox id=enable_user_events value=1> Daemon Events</h3>
+<div class="card event-card" id=daemon_events>
+  <h3 class=card-header><input type=checkbox id="daemon_change-enable" value=1> Daemon Events</h3>
   <div class="card-body">
     <div>
       <h4>Event Types:</h4>
       <div class="row">
-        <div class="col-lg-4">
+        <div class="col-lg-6">
           <div class="input-group">
             <span class="input-group-addon">
-              <input type="checkbox" aria-label="Checkbox for following text input">
+              <input type="checkbox" aria-label="Daemon Start" id="daemon_change-start">
             </span>
-            <span class="form-control"><strong>Daemon started</strong></span>
+            <span class="form-control"><strong>Daemon Start</strong></span>
           </div>
         </div>
-        <div class="col-lg-4">
+        <div class="col-lg-6">
           <div class="input-group">
             <span class="input-group-addon">
-              <input type="checkbox" aria-label="Checkbox for following text input">
+              <input type="checkbox" aria-label="Daemon Stop" id="daemon_change-stop">
             </span>
-            <span class="form-control"><strong>Daemon restarted</strong></span>
-          </div>
-        </div>
-        <div class="col-lg-4">
-          <div class="input-group">
-            <span class="input-group-addon">
-              <input type="checkbox" aria-label="Checkbox for following text input">
-            </span>
-            <span class="form-control"><strong>Daemon stopped</strong></span>
+            <span class="form-control"><strong>Daemon Stop</strong></span>
           </div>
         </div>
       </div>
@@ -73,8 +65,8 @@
 </div>
 [% END %]
 [% IF roles.Guest || roles.User || roles.Admin %]
-<div class="card event-card">
-  <h3 class=card-header><input type=checkbox id=enable_user_events value=1> Job Events</h3>
+<div class="card event-card" id=job_events>
+  <h3 class=card-header><input type=checkbox id=user_change value=1> Job Events</h3>
   <div class="card-body">
     <div>
       <h4>Event Types: </h4>
@@ -82,7 +74,7 @@
         <div class="col-lg-6">
           <div class="input-group">
             <span class="input-group-addon">
-              <input type="checkbox" aria-label="Checkbox for following text input">
+              <input type="checkbox" aria-label="Job started" id="job_change-starting">
             </span>
             <span class="form-control"><strong>Job started</strong></span>
           </div>
@@ -90,39 +82,44 @@
         <div class="col-lg-6">
           <div class="input-group">
             <span class="input-group-addon">
-              <input type="checkbox" aria-label="Checkbox for following text input">
+              <input type="checkbox" aria-label="Job finished" id="job_change-finished">
             </span>
             <span class="form-control"><strong>Job finished</strong></span>
           </div>
         </div>
       </div>
+      <h4>Result states</h4>
       <div class="row state-row">
-        <div class="col-lg-2">
-          <strong>Finished with state:</strong>
+        <div class="col-lg-4">
+          <div class="input-group">
+            <span class="input-group-addon">
+              <input type="checkbox" aria-label="Job finished" id="job_change-finished-succeed">
+            </span>
+            <span class="form-control alert-success"><strong>Succeed</strong></span>
+          </div>
         </div>
-        <div class="col-lg-2">
-          <input type=checkbox id=ev_succeed   name=ev_state value=succeed checked="checked">Succeed
+        <div class="col-lg-4">
+          <div class="input-group">
+            <span class="input-group-addon">
+              <input type="checkbox" aria-label="Job finished - failed" id="job_change-finished-failed">
+            </span>
+            <span class="form-control alert-danger"><strong>Failed</strong></span>
+          </div>
         </div>
-        <div class="col-lg-2">
-          <input type=checkbox id=ev_failed    name=ev_state value=failed checked="checked">Failed
-        </div>
-        <div class="col-lg-2">
-          <input type=checkbox id=ev_skipped   name=ev_state value=skipped checked="checked">Skipped
-        </div>
-        <div class="col-lg-2">
-          <input type=checkbox id=ev_scheduled name=ev_state value=scheduled checked="checked">Scheduled
-        </div>
-        <div class="col-lg-2">
-          <input type=checkbox id=ev_triggerd  name=ev_state value=triggered checked="checked">Triggered
-        </div>
-        <div class="col-lg-2">
+        <div class="col-lg-4">
+          <div class="input-group">
+            <span class="input-group-addon">
+              <input type="checkbox" aria-label="Job finished - skipped" id="job_change-finished-skipped">
+            </span>
+            <span class="form-control alert-warning"><strong>Skipped</strong></span>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
-<div class="card event-card">
-  <h3 class=card-header><input type=checkbox id=enable_user_events value=1> Task Events</h3>
+<div class="card event-card" id=task_events>
+  <h3 class=card-header><input type=checkbox id=task_change value=1> Task Events</h3>
   <div class="card-body">
     <div>
       <h4>Event Types: </h4>
@@ -130,7 +127,7 @@
         <div class="col-lg-6">
           <div class="input-group">
             <span class="input-group-addon">
-              <input type="checkbox" aria-label="Checkbox for following text input">
+              <input type="checkbox" aria-label="" id="task_change-starting">
             </span>
             <span class="form-control"><strong>Task started</strong></span>
           </div>
@@ -138,32 +135,43 @@
         <div class="col-lg-6">
           <div class="input-group">
             <span class="input-group-addon">
-              <input type="checkbox" aria-label="Checkbox for following text input">
+              <input type="checkbox" aria-label="" id="task_change-finished">
             </span>
             <span class="form-control"><strong>Task finished</strong></span>
           </div>
         </div>
       </div>
-      <div class="row result-row">
-        <div class="col-lg-2">
-          <strong>Result:</strong>
-        </div>
-        <div class="col-lg-2">
-          <input type=checkbox id=ev_succeed   name=ev_state value=succeed checked="checked">Succeed
-        </div>
-        <div class="col-lg-2">
-          <input type=checkbox id=ev_failed    name=ev_state value=failed checked="checked">Failed
-        </div>
-        <div class="col-lg-2">
-          <input type=checkbox id=ev_skipped   name=ev_state value=skipped checked="checked">Skipped
+      <h4>Result states</h4>
+      <div class="row state-row">
+        <div class="col-lg-4">
+          <div class="input-group">
+            <span class="input-group-addon">
+              <input type="checkbox" aria-label="Job finished" id="task_change-finished-succeed">
+            </span>
+            <span class="form-control alert-success"><strong>Succeed</strong></span>
+          </div>
         </div>
         <div class="col-lg-4">
+          <div class="input-group">
+            <span class="input-group-addon">
+              <input type="checkbox" aria-label="Job finished - failed" id="task_change-finished-failed">
+            </span>
+            <span class="form-control alert-danger"><strong>Failed</strong></span>
+          </div>
         </div>
+        <div class="col-lg-4">
+          <div class="input-group">
+            <span class="input-group-addon">
+              <input type="checkbox" aria-label="Job finished - skipped" id="task_change-finished-skipped">
+            </span>
+            <span class="form-control alert-warning"><strong>Skipped</strong></span>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
 [% END %]
+</form>
 <script src="[% request.uri_base %]/javascripts/notify.js"></script>
 <!-- vim: set ft=html -->

@@ -48,6 +48,7 @@ mySocket.onopen = function(evt) {
     setTimeout(
       function() {
 	mySocket.send('{"bounce":"Opened WebSocket successfully!"}');
+        update_filters();
       },
       2000
     );
@@ -81,6 +82,8 @@ if (! window.Notification ) {
 } else {
   $('#trigger_notify_succeed').click(
     function(){
+    mySocket.send('{"bounce":"Kanku Test Notification - succeed"}');
+/*
     Notification.requestPermission(function() {
       var n = new Notification('Kanku Test Notification - succeed', {
 	body: 'Test notification - succeed',
@@ -92,6 +95,7 @@ if (! window.Notification ) {
       };
       setTimeout(n.close.bind(n), 20000);
     });
+*/
   });
   $('#trigger_notify_failed').click(
     function(){
@@ -124,3 +128,51 @@ if (! window.Notification ) {
     });
   });
 }
+
+function update_filters() {
+  var filters = {};
+  $("form input:checkbox").each(function(idx, elem) {
+    var id = $(elem).attr('id');
+    filters[id] = $(elem).is(':checked')
+    console.log("id: "+id+" - "+$(elem).is(':checked'));
+  });
+  var j_string = JSON.stringify(filters);
+  console.log("update_filters: filters = "+j_string);
+  Cookies.set(
+    "kanku.filters",
+    j_string,
+  );
+  var msg = JSON.stringify({"filters" : filters});
+  mySocket.send(msg);
+}
+
+function set_filters_on_page(filters) {
+  $("form input:checkbox").each(function(idx, elem) {
+    id = $(elem).attr('id');
+    $(elem).attr('checked', filters[id]);
+  });
+}
+
+function set_filters_from_cookie() {
+  var j_string = Cookies.get("kanku.filters");
+  var filters;
+  if (j_string == undefined) {
+    console.log("Filters undefined - creating new array");
+    filters = {};
+    $("form input:checkbox").each(function (idx, elem) {
+      var id = $(elem).attr('id');
+      console.log("id: "+id);
+      filters[id] = true;
+    });
+    console.log(filters);
+  } else {
+    filters = jQuery.parseJSON(j_string);
+  }
+
+  set_filters_on_page(filters);
+}
+
+$(document).ready(function() {
+  $("form input:checkbox").on("change", update_filters);
+  set_filters_from_cookie();
+});

@@ -114,5 +114,17 @@ sub authenticate {
   return $session->permissions;
 }
 
+sub filters {
+  my ($self, $filters) = @_;
+  my $session = $self->schema->resultset('WsSession')->find({session_token=> $self->session_token});
+  if ($session) {
+    if ($filters) {
+      $session->filters($filters);
+      $session->update;
+    }
+    return $session->filters
+  }
+};
+
 __PACKAGE__->meta->make_immutable;
 1;
