@@ -1,4 +1,6 @@
-<div class="alert alert-danger" role="alert">
-not implemented yet
+<div class=jumbotron>
+  <h2>Settings</h2>
 </div>
-<h1>TODO: implement settings page</h1>
+<div class="alert alert-danger" role="alert">not implemented yet</div>
+<h3>Request Roles</h3>
+...
