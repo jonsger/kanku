@@ -25,6 +25,7 @@ use FindBin;
 use Log::Log4perl;
 use Data::Dumper;
 use JSON::XS;
+use Net::Domain qw/hostfqdn/;
 
 use Kanku::Config;
 use Kanku::Airbrake;
@@ -132,13 +133,14 @@ sub prepare_and_run {
 
   $self->logger->info("Starting service ".ref(__PACKAGE__));
 
+  my $hn  = hostfqdn();
   my $ref = ref($self);
   my $notification = {
     type    => 'daemon_change',
     event   => 'start',
     daemon  => $ref,
     pid     => $$,
-    message => "$ref starting with pid $$",
+    message => "$ref starting (pid $$) on $hn",
   };
   $self->notify_queue->send($notification);
 
@@ -206,13 +208,14 @@ sub finalize_shutdown {
 
   $self->logger->info("Shutting down service ".ref(__PACKAGE__));
 
+  my $hn  = hostfqdn();
   my $ref = ref($self);
   my $notification = {
     type    => 'daemon_change',
     event   => 'stop',
     daemon  => $ref,
     pid     => $$,
-    message => "$ref stopping (pid $$)",
+    message => "$ref stopping (pid $$) on $hn",
   };
 
   $self->notify_queue->send($notification);
