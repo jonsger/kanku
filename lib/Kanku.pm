@@ -266,13 +266,13 @@ sub check_filters {
   my $key;
   $key = $dd->{'type'}.'-enable'; 
   $log->trace("Step 0 $key: $fd->{$key}");
-  return 0 if ! $fd->{$key};
+  return 0 if (exists $fd->{$key} && ! $fd->{$key});
   $key = $dd->{'type'}."-".$dd->{'event'};
   $log->trace("Step 1 $key $fd->{$key}");
-  return 0 if ! $fd->{$key};
+  return 0 if (exists $fd->{$key} && ! $fd->{$key});
   $key = $dd->{'type'}."-".$dd->{'event'}."-".$dd->{'result'};
   $log->trace("Step 3 $key");
-  return 0 if ($dd->{'result'} && ! $fd->{$key});
+  return 0 if ($dd->{'result'} && exists $fd->{$key} && ! $fd->{$key});
 
   return 1;
 }
