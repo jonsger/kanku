@@ -56,8 +56,8 @@ sub execute {
   my $vm = Kanku::Util::VM->new(domain_name=>$self->domain_name);
   $logger->debug("Searching for domain: ".$self->domain_name);
   my $state = $vm->state();
-  my $ip    = $vm->get_ipaddress();
   if ($state eq 'on' ) {
+    my $ip    = $vm->get_ipaddress();
     $logger->info("VM is running ($ip)");
   } elsif ( $state eq 'off' ) {
     $logger->error("VM isn't running");
