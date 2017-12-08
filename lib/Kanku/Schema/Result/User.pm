@@ -137,6 +137,13 @@ Composing rels: L</user_roles> -> role
 
 __PACKAGE__->many_to_many("roles", "user_roles", "role");
 
+__PACKAGE__->has_many(
+  "role_requests",
+  "Kanku::Schema::Result::RoleRequest",
+  { "foreign.user_id" => "self.id" },
+
+);
+
 
 # Created by DBIx::Class::Schema::Loader v0.07047 @ 2017-11-16 13:40:30
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:zEiq2HT5KP4WrhsL7TzAow
