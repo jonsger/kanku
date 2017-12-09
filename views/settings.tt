@@ -1,6 +1,19 @@
-<div class=jumbotron>
-  <h2>Settings</h2>
+<div id=change_result class="alert" style="display:none">
 </div>
-<div class="alert alert-danger" role="alert">not implemented yet</div>
 <h3>Request Roles</h3>
-...
+[% FOREACH role IN all_roles %]
+[% role_role = role.role %]
+<div class="checkbox">
+  <label>
+    <input class="role_checkbox" type="checkbox" value="[% role.id %]" [% IF user_roles.$role_role == 1 %]checked[% END %]>
+    [% role.role %]
+  </label>
+</div>
+[% END %]
+<div class="form-group">
+  <label for="comment">Comment:</label>
+  <textarea class="form-control" rows="5" id="comment"></textarea>
+</div>
+
+<a href="#" class="btn btn-primary btn-lg active" role="button" aria-pressed="true" id=send_request>Send Request</a>
+<script src="[% request.uri_base %]/javascripts/settings.js"></script>

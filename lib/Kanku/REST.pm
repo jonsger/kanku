@@ -288,6 +288,25 @@ get '/logout.:format' => sub {
     return { authenticated => 0 };
 };
 
+post '/request_roles.:format' => require_login sub {
+
+use Data::Dumper;
+  debug("roles: " . Dumper(params->{args}));
+  my $args = decode_json(params->{args});
+
+  my $result = schema->resultset('RoleRequest')->create(
+    {
+      user_id          => logged_in_user->{id},
+      comment          => $args->{comment},
+      roles            => join(',', @{$args->{roles}}),
+      creation_time    => time(),
+      decision         => 0,
+      decision_comment => ""
+    }
+  );
+
+  return { state => 'success', msg => 'Role request submitted successfully' }
+};
 __PACKAGE__->meta->make_immutable();
 
 true;

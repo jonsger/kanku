@@ -71,12 +71,22 @@ get '/admin' => requires_role Admin =>  sub {
     template 'admin' , { %{ get_defaults_for_views() }, kanku => { module => 'Administration' } };
 };
 
-get '/settings' => requires_role User =>  sub {
-    template 'settings' , { %{ get_defaults_for_views() }, kanku => { module => 'Settings' } };
-};
+get '/settings' => require_login sub {
+  my @all_roles = schema('default')->resultset('Role')->search();
 
-get '/request_roles' => require_login sub {
-    template 'request_roles' , { %{ get_defaults_for_views() }, kanku => { module => 'Request Roles' } };
+  for my $r (@all_roles) { debug "Role: ".$r->id." - ".$r->role; }
+
+  my $user_roles;
+  map { $user_roles->{$_} = 1 } @{user_roles()};
+
+  for my $r (keys(%$user_roles)) { debug "UserRole: $r"; }
+  template 'settings' ,
+    {
+      %{get_defaults_for_views()},
+      kanku => {module => 'Settings'},
+      all_roles => \@all_roles,
+      user_roles => $user_roles
+  };
 };
 
 ### LOGIN / SIGNIN / SIGNUP
@@ -123,8 +133,8 @@ get qr{/login(/[\w]{32})?} => sub {
   $code =~ s#/## if ($code);
   debug "code $code";
   if ($code) {
-    template 'reset_password' , 
-      { return_url => params->{return_url} ,  
+    template 'reset_password' ,
+      { return_url => params->{return_url} ,
         pw_reset_token => $code,
         kanku => { module => 'Reset Password' }
       };
@@ -197,8 +207,6 @@ post '/signup' => sub {
     });
   }
 
-debug "signup password: '".params->{password}."'";
-
   if ( create_user username => params->{username},
               name          => params->{name},
               email         => params->{email},
@@ -208,7 +216,7 @@ debug "signup password: '".params->{password}."'";
               role_id    => { Guest => 1 }
   ) {
 
-        session messagebar => messagebar('success',"Your account has been created successfully. Please check your emails and activate the account. Finally <a href=request_roles>request some roles!</a>");
+        session messagebar => messagebar('success',"Your account has been created successfully. Please check your emails and activate the account. Finally <a href=settings>request some roles!</a>");
         redirect('/');
   }
   template 'signup' , {
