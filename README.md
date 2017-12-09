@@ -13,10 +13,9 @@ At the moment kanku works only for
 
 * openSUSE Tumbleweed
 
-* openSUSE Leap 42.2
+* openSUSE Leap 42.3
 
-* openSUSE Leap 42.1
+* SLES 12 SP3
 
 But kanku is pure perl + libvirt + qemu, so it should run on any linux distribution.
 but feel free to send us your patches
-
