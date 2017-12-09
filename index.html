@@ -229,26 +229,21 @@ kanku ssh -u root
 <!-- FAQ --> 
 <div id=faq-div  class="hidden_content page_container">
     <h1>
-    <a id="faq-href" class="anchor" href="#faq-href" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>FAQ</h1>
-
-      <h2>
-      <a id="a-howto_setup_the_database_manually" class="anchor faq" href="#howto_setup_the_database_manually" aria-hidden="true" onclick='open_faq(this.id)'><span aria-hidden="true" class="octicon octicon-link"></span>How could I setup the database manually?</a></h2>
-      <div class="faq-div hidden_faq" id="div-howto_setup_the_database_manually">
-        <pre><code>export DBIC_MIGRATION_SCHEMA_CLASS=Kanku::Schema
-export PERL5LIB=./lib:$PERL5LIB
-
-# (optional) dbic-migration status
-
-dbic-migration install
-
-dbic-migration populate
-        </code></pre>
-      </div>
-      <h2>
-      <a id="a-where_can_i_find_images" class="anchor faq" href="#where_can_i_find_images" aria-hidden="true" onclick='open_faq(this.id)'><span aria-hidden="true" class="octicon octicon-link"></span>Where can I find prepared kanku images?</a></h2>
-      <div class="faq-div hidden_faq" id=div-where_can_i_find_images>
-        Have a look at <a href="https://build.opensuse.org/project/show/home:M0ses:kanku:Images">home:M0ses:kanku:Images</a> to get an overview of official kanku images. Keep in mind how to configure the selected image in kanku
-        <pre><code>
+      <a id="faq-href" class="anchor" href="#faq-href" aria-hidden="true">
+      <span aria-hidden="true" class="octicon octicon-link"></span></a>
+      FAQ
+    </h1>
+    <h2>
+      <a id="a-where_can_i_find_images" class="anchor faq" href="#where_can_i_find_images" aria-hidden="true" onclick='open_faq(this.id)'>
+      <span aria-hidden="true" class="octicon octicon-link"></span>
+      Where can I find prepared kanku images?</a>
+    </h2>
+    <div class="faq-div hidden_faq" id=div-where_can_i_find_images>
+        Have a look at 
+          <a href="https://build.opensuse.org/project/show/home:M0ses:kanku:Images">home:M0ses:kanku:Images</a>
+        to get an overview of official kanku images. Keep in mind how to configure the selected image in kanku
+      <pre>
+        <code>
 -
   use_module: Kanku::Handler::OBSCheck
   options:
@@ -259,16 +254,9 @@ dbic-migration populate
     # e.g. images_leap_42_2
     repository: &lt;repository name&gt;
 
-</code></pre>
-      </div>
-      <h2>
-      <a id="a-howto_upgrade_database" class="anchor faq" href="#howto_upgrade_database" aria-hidden="true" onclick='open_faq(this.id)'><span aria-hidden="true" class="octicon octicon-link"></span>How could I upgrade my database?</a></h1>
-      <div class="faq-div hidden_faq" id="div-howto_upgrade_database">
-        <p>After an upgrade of your kanku package you should run</p>
-        <pre><code>
-kanku dbmigrate
-        </code></pre>
-      </div>
+        </code>
+      </pre>
+    </div>
     <h1>
     <a id="known-issues" class="anchor" href="#known-issues" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>KNOWN ISSUES</h1>
       Please see the open issues on <a href=http://github.com/M0ses/kanku/issues>http://github.com/M0ses/kanku/issues</a>
