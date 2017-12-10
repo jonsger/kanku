@@ -68,7 +68,11 @@ get '/login/denied' => sub {
 };
 
 get '/admin' => requires_role Admin =>  sub {
-    template 'admin' , { %{ get_defaults_for_views() }, kanku => { module => 'Administration' } };
+  template 'admin', {
+      %{get_defaults_for_views()},
+      kanku => {module => 'Administration'
+    }
+  };
 };
 
 get '/settings' => require_login sub {

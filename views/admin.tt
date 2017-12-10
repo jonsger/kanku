@@ -1,4 +1,56 @@
-<div class="alert alert-danger" role="alert">
-not implemented yet
+<h1>Admin Tasks</h1>
+<h2>Role Change Requests</h2>
+<div id=task-list-role-requests>
 </div>
-<h1>TODO: implement admin page</h1>
+
+<script id="task-list-role-request-template" type="x-tmpl-mustache">
+<div class="request-div" id="request-div-{{ req_id }}">
+  <div class=row>
+    <div class="col-lg-2">
+	Request: <span class="badge">{{ req_id }}</span>
+    </div>
+    <div class="col-lg-10">
+	<strong>{{ user_name }} ({{ user_login }})</strong>
+    </div>
+  </div>
+  {{#roles}}
+  <div class=row>
+	<div class="col-lg-1">
+	  <input type=checkbox {{ checked }} disabled>
+	</div>
+	<div class="col-lg-1">
+	  <label for="comment">{{ role }}</label>
+	</div>
+	<div class="col-lg-10">
+	  <span class="label label-{{ class }}">{{ action }}</span>
+	</div>
+  </div>
+  {{/roles}}
+  <div class=row>
+      <div class="col-lg-12">
+	<div class="form-group">
+	  <label for="comment">Comment:</label>
+	  <textarea class="form-control" rows="2" id="comment" disabled>{{ comment }}</textarea>
+	</div>
+      </div>
+  </div>
+
+  <div class=row>
+      <div class="col-lg-12">
+	<div class="form-group">
+	  <label for="comment">Comment your decision:</label>
+	  <textarea class="form-control" rows="2" id="admin-comment-{{req_id}}"></textarea>
+	</div>
+      </div>
+  </div>
+
+  <div class=row>
+    <div class="col-lg-12">
+	<a href="#" class="btn btn-success button-submit-request-decision" role="button" aria-pressed="true" id="button-accept-request-{{ req_id }}" onclick="send_role_request({{req_id}},1)">Accept</a>
+	<a href="#" class="btn btn-danger  button-submit-request-decision" role="button" aria-pressed="true" id="button-decline-request-{{ req_id }}" onclick="send_role_request({{req_id}}, 2)">Decline</a>
+    </div>
+  </div>
+</div>
+</script>
+
+<script src="[% request.uri_base %]/javascripts/admin.js"></script>

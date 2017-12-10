@@ -307,6 +307,121 @@ use Data::Dumper;
 
   return { state => 'success', msg => 'Role request submitted successfully' }
 };
+
+get '/admin/task/list.:format' => requires_role Admin => sub {
+  my @requests = schema->resultset('RoleRequest')->search({decision => 0});
+  my @req;
+
+  foreach my $r (@requests) {
+    my $role_changes = calc_changes($r);
+    push(@req,
+      {
+        req_id      => $r->id,
+        roles       => $role_changes,
+        comment     => $r->comment,
+        user_id     => $r->user_id,
+        user_name   => $r->user->name,
+        user_login  => $r->user->username,
+      }
+    );
+  }
+  return \@req
+};
+
+sub calc_changes {
+  my ($r) = @_;
+    debug "RoleRequest: " . $r->roles;
+    my @ur_rs = schema->resultset('UserRole')->search({user_id => $r->user_id});
+    my $requested_roles = {};
+    my $user_roles      = {};
+    my @all_roles;
+    $requested_roles->{$_}     = 1 for (split(/,/, $r->roles));
+    $user_roles->{$_->role_id} = 1 for (@ur_rs);
+    debug(Dumper($user_roles));
+    my $ar_rs = schema->resultset('Role')->search();
+    while (my $ar = $ar_rs->next) {
+      my $already_exists = $user_roles->{$ar->id};
+      my $requested      = $requested_roles->{$ar->id};
+      my $action;
+      my $class;
+
+      if (
+	( $already_exists && $requested ) ||
+	( ! $already_exists && ! $requested )
+      ) {
+	$action = 'unchanged';
+        $class  = 'default';
+      } elsif ($already_exists && ! $requested) {
+	$action = 'remove';
+        $class  = 'danger';
+      } elsif (! $already_exists && $requested) {
+	$action = 'add';
+        $class  = 'success';
+      } else {
+	$action = 'unknown';
+        $class  = '';
+      }
+      push(@all_roles,
+        {
+          role_id => $ar->id,
+          role    => $ar->role,
+          action  => $action,
+          class   => $class,
+          checked => (($requested) ? 'checked' : ''),
+        }
+      );
+    }
+    return \@all_roles;
+}
+
+post '/admin/task/resolve.:format' => requires_role Admin => sub {
+  debug("args: " . Dumper(params->{args}));
+  my $args = decode_json(params->{args});
+  debug "request_id: ". $args->{req_id};
+  debug "decision ". $args->{decision};
+  debug "comment ". $args->{comment};
+
+  my $req = schema->resultset('RoleRequest')->find($args->{req_id});
+
+  if (!$req) {
+    return {
+      result => 'failed',
+      class  => 'danger',
+      msg    => "Request with id $args->{req_id} not found!"
+    };
+  }
+
+  if ($args->{decision} == 1) {
+    my $role_changes = calc_changes($req);
+    my $user_id = $req->user_id;
+    debug Dumper($role_changes);
+    for my $chg (@{$role_changes}) {
+      my $role_id = $chg->{role_id};
+      if ($chg->{action} eq 'add') {
+        debug "Role to add: ($user_id, $role_id)";
+        schema->resultset('UserRole')->create({
+          user_id => $user_id,
+          role_id => $role_id
+        });
+      } elsif ($chg->{action} eq 'remove') {
+        debug "Role to remove: ($user_id, $role_id)";
+        schema->resultset('UserRole')->find({
+          user_id => $user_id,
+          role_id => $role_id
+        })->delete;
+      } elsif ($chg->{action} eq 'unchanged') {
+        debug "Role unchanged: ($user_id, $role_id)";
+      } else {
+        error "Something wicked happend - action '$chg->{action}' is unknown";
+      }
+    }
+  }
+  $req->update({
+    decision => $args->{decision},
+    comment  => $args->{comment}
+  });
+};
+
 __PACKAGE__->meta->make_immutable();
 
 true;

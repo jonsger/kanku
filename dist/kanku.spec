@@ -325,7 +325,7 @@ TODO:
 /opt/kanku/views/login.tt
 %dir /opt/kanku/views/login
 /opt/kanku/views/login/denied.tt
-/opt/kanku/views/request_roles.tt
+/opt/kanku/views/admin.tt
 /opt/kanku/views/settings.tt
 /opt/kanku/views/signup.tt
 /opt/kanku/views/pwreset.tt
