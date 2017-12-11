@@ -416,10 +416,17 @@ post '/admin/task/resolve.:format' => requires_role Admin => sub {
       }
     }
   }
+
   $req->update({
     decision => $args->{decision},
     comment  => $args->{comment}
   });
+
+  return {
+    result => 'success',
+    class  => 'success',
+    msg    => "Request '$args->{req_id}' processed successfully!"
+  };
 };
 
 __PACKAGE__->meta->make_immutable();
