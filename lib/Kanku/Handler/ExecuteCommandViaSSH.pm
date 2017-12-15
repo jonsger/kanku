@@ -28,54 +28,31 @@ has timeout => (is=>'rw',isa=>'Int',lazy=>1,default=>60*60*4);
 
 has environment => (is=>'rw', isa=>'HashRef', default => sub {{}});
 has context2env => (is=>'rw', isa=>'HashRef', default => sub {{}});
-has _env_backup => (is=>'rw', isa=>'HashRef', default => sub {{}});
 
 sub distributable { 1 }
-
-sub prepare {
-  my ($self) = @_;
-  my %vars;
-  my $ctx = $self->job()->context();
-  for my $env_var (keys(%{$self->environment})) {
-    $self->logger->debug(
-      "Setting from config(environment) \$ENV{$env_var} = ".
-      $self->environment->{$env_var}.
-      " (Backup: '".$ENV{$env_var}."')"
-    );
-    $self->_env_backup->{$env_var} = $ENV{$env_var};
-    $ENV{$env_var} = $self->environment->{$env_var};
-    $vars{$env_var}=1;
-  }
-
-  for my $env_var (keys(%{$self->context2env})) {
-    # upper case environment variables are more shell
-    # style
-    my $n_env_var = uc($env_var);
-    $self->logger->debug(
-      "Setting from job context \$ENV{$n_env_var} = ".
-      $ctx->{$env_var}.
-      " (Backup: '".$ENV{$n_env_var}."')"
-    );
-    $self->_env_backup->{$n_env_var} = $ENV{$n_env_var};
-    $ENV{$n_env_var} = $ctx->{$env_var};
-    $vars{$n_env_var}=1;
-  }
-
-
-  $self->get_defaults();
-  return {
-    code => 0,
-    message => "Preparation successful"
-  };
-}
 
 sub execute {
   my $self    = shift;
   my $results = [];
   my $ssh2    = $self->connect();
   my $ip      = $self->ipaddress;
+  my $ctx     = $self->job->context;
 
   $ssh2->timeout(1000*$self->timeout) if ($self->timeout);
+
+  for my $env_var (keys(%{$self->context2env})) {
+    # upper case environment variables are more shell
+    # style
+    my $n_env_var = uc($env_var);
+    $self->ENV->{$n_env_var} = $ctx->{$env_var};
+  }
+
+  for my $env_var (keys(%{$self->environment})) {
+    # upper case environment variables are more shell
+    # style
+    my $n_env_var = uc($env_var);
+    $self->ENV->{$n_env_var} = $ctx->{$env_var};
+  }
 
   foreach my $cmd ( @{$self->commands} ) {
     
@@ -102,21 +79,6 @@ sub execute {
   };
 }
 
-sub finalize {
-  my ($self) = @_;
-  my @vars;
-  for my $env_var (keys(%{$self->_env_backup})) {
-    $self->logger->debug(
-      "Restoring \$ENV{$env_var} = '".($self->_env_backup->{$env_var}||'')."'"
-    );
-    $ENV{$env_var} = $self->_env_backup->{$env_var};
-  }
-
-  return {
-    code => 0,
-    message => "Finalization successful. Restored the following ENV Vars:".join(", ", @vars).")"
-  };
-}
 __PACKAGE__->meta->make_immutable;
 1;
 
@@ -133,6 +95,10 @@ Here is an example how to configure the module in your jobs file or KankuFile
   -
     use_module: Kanku::Handler::ExecuteCommandViaSSH
     options:
+      context2env:
+        ipaddress:
+      environment:
+        test: value
       publickey_path: /home/m0ses/.ssh/id_rsa.pub
       privatekey_path: /home/m0ses/.ssh/id_rsa
       passphrase: MySecret1234

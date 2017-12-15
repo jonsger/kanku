@@ -84,6 +84,13 @@ has auth_type => (
   }
 );
 
+has ENV => (
+  is=>'rw',
+  isa=>'HashRef',
+  lazy => 1,
+  default=> sub {{}}
+);
+
 sub get_defaults {
   my $self = shift;
 
@@ -165,6 +172,10 @@ sub exec_command {
 
   my $chan = $ssh2->channel();
   $chan->ext_data('merge');
+  for my $key (keys(%{$self->ENV})) {
+    my $val = $self->ENV->{$key};
+    $cmd = "export $key='$val'; $cmd";
+  }
 
   $self->logger->info("Executing command: $cmd");
   $chan->exec($cmd);
