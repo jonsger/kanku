@@ -78,8 +78,9 @@ sub prepare_ovs {
 
 	my $port_counter = 0;
 	for my $remote ( @{$lvhl->get_remote_ips} ) {
-		my $port = "$vlan-$port_counter";
-		system('ovs-vsctl','port-to-br',$port);
+          $self->logger->info("Setting up connection for $remote");
+          my $port = "$vlan-$port_counter";
+          system('ovs-vsctl','port-to-br',$port);
 		if ( $? > 0 ) {
 
 				$self->logger->info("Adding port $port on bridge $br");
@@ -88,6 +89,7 @@ sub prepare_ovs {
 		} else {
 			$self->logger->info("Port $port already exists on bridge $br");
 		}
+          $port_counter++;
 	}
 
         # Set ip address for bridge interface
