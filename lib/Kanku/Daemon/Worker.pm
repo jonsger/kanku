@@ -99,7 +99,7 @@ sub listen_on_queue {
   } catch {
     $logger->error("Could not create queue for exchange $opts{exchange_name}: $_");
   };
-  my $last_job_id;
+  my $last_job_id = 0;
   while(1) {
     try {
       my $msg = $kmq->recv(1000);
