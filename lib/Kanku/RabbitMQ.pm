@@ -295,4 +295,23 @@ sub destroy_queue {
     {if_empty => 0, if_unused => 0}
   );
 }
+
+=head2 destroy_queue - unbind and delete queue (if_unused=>0,if_empty=>0)
+
+   $kmq->destroy_queue;
+
+=cut
+
+sub reconnect {
+  my $self = shift;
+  my $mq = $self->queue;
+
+  try {
+    $mq->disconnect;
+  };
+
+  $self->connect;
+  $self->create_queue;
+
+}
 1;
