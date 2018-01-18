@@ -457,4 +457,15 @@ A simple triggerd for kanku based on RabbitMQ
 %{_sbindir}/rckanku-triggerd
 
 
+%package doc
+Summary: Documentation files for kanku
+
+%description doc
+This package contains the documentation files for kanku
+
+%files doc
+%docdir %{_defaultdocdir}/kanku
+%doc README.md CONTRIBUTING.md INSTALL.md LICENSE docs/Development.pod docs/README.apache-proxy.md docs/README.rabbitmq.md docs/README.setup-ovs.md docs/README.setup-worker.md
+
+
 %changelog

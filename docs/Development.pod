@@ -27,7 +27,7 @@
 
  cd /opt/kanku 
 
- dbic-migration install -S Kanku::Schema --dsn $KANKU_DSN
+ dbic-migration install -S Kanku::Schema --dsn $KANKU_DSN --dir share
 
 =head2 Upgrade database
 
@@ -41,7 +41,7 @@
 
 =head3 Populate database
 
- dbic-migration populate -S Kanku::Schema --dsn $KANKU_DSN --fixture_set install
+ dbic-migration populate -S Kanku::Schema --dsn $KANKU_DSN --fixture_set install --dir share
 
 =head3 Make you changes in Schema
 
