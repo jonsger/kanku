@@ -63,3 +63,8 @@ Kanku::Handler::CreateDomain:
 # (On worker) Create and populate database
 
 The database is only needed for the download history
+
+# (On worker) Start and enable kanku-worker
+
+systemctl start kanku-worker
+systemctl enable kanku-worker
