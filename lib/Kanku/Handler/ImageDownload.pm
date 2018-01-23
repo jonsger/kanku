@@ -58,12 +58,14 @@ sub execute {
     return $self->get_from_history();
   }
 
-  if ( $ctx->{vm_image_url} ) {
-    $self->url($ctx->{vm_image_url});
-  } elsif ( $ctx->{obs_direct_url} ) {
-    $self->url($ctx->{obs_direct_url});
-  } else {
-    die "Neither vm_image_url nor obs_direct_url found in context"
+  if (! $self->url ) {
+    if ( $ctx->{vm_image_url} ) {
+      $self->url($ctx->{vm_image_url});
+    } elsif ( $ctx->{obs_direct_url} ) {
+      $self->url($ctx->{obs_direct_url});
+    } else {
+      die "Neither vm_image_url nor obs_direct_url found in context"
+    }
   }
 
   my $curl =  Kanku::Util::CurlHttpDownload->new(url => $self->url);
