@@ -40,11 +40,12 @@ has [qw/
       network_name  network_bridge
     / ]  => ( is=>'rw', isa => 'Str');
 
-has job_id        => ( is => 'rw', isa => 'Int' );
-has root_disk     => ( is => 'rw', isa => 'Object' );
-has use_9p        => ( is => 'rw', isa => 'Bool' );
-has empty_disks   => ( is => 'rw', isa => 'ArrayRef', default => sub {[]});
-has '+uri'        => ( default => 'qemu:///system');
+has job_id           => ( is => 'rw', isa => 'Int' );
+has root_disk        => ( is => 'rw', isa => 'Object' );
+has use_9p           => ( is => 'rw', isa => 'Bool' );
+has empty_disks      => ( is => 'rw', isa => 'ArrayRef', default => sub {[]});
+has additional_disks => ( is => 'rw', isa => 'ArrayRef', default => sub {[]});
+has '+uri'           => ( default => 'qemu:///system');
 #has "+ipaddress"  => ( lazy => 1, default => sub { $self->get_ipaddress } );
 
 has vmm => (
@@ -145,6 +146,19 @@ has host_dir_9p => (
   default => sub { getcwd() }
 );
 
+
+has '_unit' => (
+  traits  => ['Counter'],
+  is      => 'ro',
+  isa     => 'Num',
+  default => 0,
+  handles => {
+    inc_unit   => 'inc',
+    dec_unit   => 'dec',
+    reset_unit => 'reset',
+  },
+);
+
 sub process_template {
   my ($self,$disk_xml) = @_;
 
@@ -229,9 +243,10 @@ sub process_template {
 }
 
 sub _generate_disk_xml {
-    my ($self,$unit,$file,$format) = @_;
-
+    my ($self,$file,$format) = @_;
+    $self->logger->debug("generate_disk_xml: $file, $format");
     # ASCII 97 = a + 0
+    my $unit  = $self->_unit;
     my $drive = "hd" . chr(97+$unit);
 
     return "
@@ -253,7 +268,6 @@ sub _get_hw_virtualization {
 
 sub create_empty_disks  {
   my ($self) = @_;
-  my $unit   = 1;
   my $xml    = "";
 
   for my $disk (@{$self->empty_disks}) {
@@ -267,8 +281,20 @@ sub create_empty_disks  {
               );
     my $vol = $img->create_volume();
 
-    $xml .= $self->_generate_disk_xml($unit,$vol->get_path,$img->format);
-    $unit++;
+    $xml .= $self->_generate_disk_xml($vol->get_path,$img->format);
+    $self->inc_unit;
+  }
+
+  return $xml;
+}
+
+sub create_additional_disks {
+  my ($self) = @_;
+  my $xml    = "";
+
+  for my $disk (@{$self->additional_disks}) {
+    $xml .= $self->_generate_disk_xml($disk->{file}, $disk->{format});
+    $self->inc_unit;
   }
 
   return $xml;
@@ -277,7 +303,9 @@ sub create_empty_disks  {
 sub create_domain {
   my $self  = shift;
 
-  my $disk_xml = $self->_generate_disk_xml(0,$self->image_file,$self->root_disk->format);
+  my $disk_xml = $self->_generate_disk_xml($self->image_file,$self->root_disk->format);
+  $self->inc_unit;
+  $disk_xml .= $self->create_additional_disks();
 
   $disk_xml .= $self->create_empty_disks();
 

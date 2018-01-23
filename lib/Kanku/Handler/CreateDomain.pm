@@ -77,6 +77,13 @@ has empty_disks => (
   default => sub {[]}
 );
 
+has additional_disks => (
+  is => 'rw',
+  isa => 'ArrayRef',
+  lazy => 1,
+  default => sub {[]}
+);
+
 has gui_config => (
   is => 'ro',
   isa => 'ArrayRef',
@@ -147,6 +154,8 @@ sub execute {
     $self->network_bridge($cfg->{'Kanku::Handler::CreateDomain'}->{bridge} || 'virbr0'),
   }
 
+  $self->logger->debug("additional_disks:".Dumper($self->additional_disks));
+
   my $vm = Kanku::Util::VM->new(
       vcpu                  => $self->vcpu,
       memory                => $mem,
@@ -158,6 +167,7 @@ sub execute {
       management_interface  => $self->management_interface,
       management_network    => $self->management_network,
       empty_disks           => $self->empty_disks,
+      additional_disks      => $self->additional_disks,
       job_id                => $self->job->id,
       network_name          => $self->network_name,
   );
