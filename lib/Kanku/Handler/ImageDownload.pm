@@ -185,7 +185,7 @@ sub update_history {
 
   my $rs = $self->schema->resultset('ImageDownloadHistory')->update_or_create(
     {
-      vm_image_url    => $self->job->context->{vm_image_url},
+      vm_image_url    => $self->url,
       vm_image_file   => shift,
       download_time   => time()
     },
@@ -200,7 +200,7 @@ sub get_from_history {
 
   my $rs = $self->schema->resultset('ImageDownloadHistory')->find(
     {
-      vm_image_url    => $self->job->context->{vm_image_url},
+      vm_image_url    => $self->url,
     }
   );
 
