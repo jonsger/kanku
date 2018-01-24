@@ -156,6 +156,23 @@ sub execute {
 
   $self->logger->debug("additional_disks:".Dumper($self->additional_disks));
 
+
+  my $final_file = $ctx->{vm_image_file};
+  my $image;
+
+  if ( $ctx->{use_cache} ) {
+    my $vol;
+    ($vol, $image) = $self->_create_image_file_from_cache($final_file, $self->root_disk_size, $self->domain_name);
+    $final_file = $vol->get_path();
+    for my $file(@{$self->additional_disks}) {
+      my ($avol,$aimage) = $self->_create_image_file_from_cache($file->{file});
+      $self->logger->debug("additional_disk: - before: $file->{file}");
+      $file->{file} = $avol->get_path();
+      $self->logger->debug("additional_disk: - after: $file->{file}");
+    }
+  }
+  # FIXME: Object for root_disk needs to be created if not use_cache
+
   my $vm = Kanku::Util::VM->new(
       vcpu                  => $self->vcpu,
       memory                => $mem,
@@ -170,23 +187,15 @@ sub execute {
       additional_disks      => $self->additional_disks,
       job_id                => $self->job->id,
       network_name          => $self->network_name,
+      image_file            => $final_file,
+      root_disk             => $image
   );
 
   $vm->host_dir_9p($self->host_dir_9p) if ($self->host_dir_9p);
 
-  my $final_file = $ctx->{vm_image_file};
-
-  if ( $ctx->{use_cache} ) {
-    $final_file = $self->_create_image_file_from_cache();
-  }
-
-  $vm->image_file($final_file);
-
   if ( $ctx->{vm_template_file} ) {
     $vm->template_file($ctx->{vm_template_file});
   }
-
-  $vm->root_disk($self->_root_disk);
 
   $vm->create_domain();
 
@@ -288,8 +297,13 @@ sub _setup_hostname {
 }
 
 sub _create_image_file_from_cache {
-  my $self = shift;
+  my $self       = shift;
+  my $file       = shift;
+  my $size       = shift || 0;
+  my $vol_prefix = shift;
   my $ctx  = $self->job()->context();
+  my $image;
+  my $vol;
 
   my $suffix2format = {
      qcow2 => 'qcow2',
@@ -297,33 +311,29 @@ sub _create_image_file_from_cache {
      img   => 'img'
   };
 
-  my $final_file;
-  my $in = Path::Class::File->new($self->cache_dir,$ctx->{vm_image_file});
-  if ( $ctx->{vm_image_file} =~ /\.(qcow2|raw|img)(\.(gz|bz2|xz))?$/ ) {
-    my $vol_name = $self->domain_name .".$1";
+  my $in = Path::Class::File->new($self->cache_dir,$file);
+  if ( $file =~ /\.(qcow2|raw|img)(\.(gz|bz2|xz))?$/ ) {
+    my $vol_name = $file;
 
-    $self->_root_disk(
+    $vol_name = $self->domain_name .".$1" if ($vol_prefix);
+
+    $image =
       Kanku::Util::VM::Image->new(
 	format		=> $suffix2format->{$1},
 	vol_name 	=> $vol_name,
 	source_file 	=> $in->stringify,
-	final_size	=> $self->root_disk_size || 0
-      )
+	final_size	=> $size
     );
 
     $self->logger->info("Uploading $in via libvirt to $vol_name");
 
-    $final_file = $self->_root_disk->create_volume()->get_path();
-
-    $self->logger->info(" -- final file $final_file");
+    $vol = $image->create_volume();
 
   } else {
-
-    die "Unknown extension for disk file ".$ctx->{vm_image_file}."\n";
-
+    die "Unknown extension for disk file $file\n";
   }
 
-  return $final_file;
+  return ($vol, $image);
 }
 1;
 
@@ -395,7 +405,7 @@ If configured a port_forward_list, it tries to find the next free port and confi
                             * pool   - name of pool (default: 'default')
 
                             * format - format of new disk (default: 'qcow2')
-   
+
 
 =head1 CONTEXT
 

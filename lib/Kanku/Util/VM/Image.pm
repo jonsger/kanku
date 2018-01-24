@@ -95,6 +95,7 @@ sub create_volume {
   </target>
 </volume>
 ";
+  $self->logger->debug("create_volume: xml -\n$xml");
   try {
       my $vol  = $self->pool->create_volume($xml);
 
