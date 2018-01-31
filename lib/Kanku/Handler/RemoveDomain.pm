@@ -26,6 +26,7 @@ with 'Kanku::Roles::Handler';
 has [qw/uri domain_name/] => (is => 'rw',isa=>'Str');
 
 has [qw/disabled/] => (is => 'rw',isa=>'Bool');
+has [qw/keep_volumes/] => (is => 'rw', isa => 'ArrayRef', lazy => 1, default => sub {[]});
 
 has gui_config => (
   is => 'ro',
@@ -74,8 +75,9 @@ sub execute {
   }
 
   my $vm    = Kanku::Util::VM->new(
-    domain_name => $self->domain_name,
-    job_id      => $self->job->id
+    domain_name  => $self->domain_name,
+    job_id       => $self->job->id,
+    keep_volumes => $self->keep_volumes
   );
 
   try {
@@ -111,6 +113,8 @@ Here is an example how to configure the module in your jobs file or KankuFile
     use_module: Kanku::Handler::RemoveDomain
     options:
       domain_name: my-unneeded-domain
+      keep_volumes:
+        - ....
 
 =head1 DESCRIPTION
 
@@ -121,6 +125,7 @@ This handler removes VM and removes configured port forwarding rules.
 
     domain_name           : name of domain to remove
 
+    keep_volumes          : list of volumes not to delete
 
 =head1 CONTEXT
 

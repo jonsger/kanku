@@ -37,7 +37,8 @@ has [qw/
       images_dir    login_user    login_pass  template_file
       ipaddress     uri           disks_xml
       management_interface        management_network
-      network_name  network_bridge
+      network_name  network_bridge 
+      keep_volumes
     / ]  => ( is=>'rw', isa => 'Str');
 
 has job_id           => ( is => 'rw', isa => 'Int' );
@@ -45,6 +46,7 @@ has root_disk        => ( is => 'rw', isa => 'Object' );
 has use_9p           => ( is => 'rw', isa => 'Bool' );
 has empty_disks      => ( is => 'rw', isa => 'ArrayRef', default => sub {[]});
 has additional_disks => ( is => 'rw', isa => 'ArrayRef', default => sub {[]});
+has keep_volumes     => ( is => 'rw', isa => 'ArrayRef', default => sub {[]});
 has '+uri'           => ( default => 'qemu:///system');
 #has "+ipaddress"  => ( lazy => 1, default => sub { $self->get_ipaddress } );
 
@@ -372,8 +374,6 @@ sub get_ipaddress {
     }
 
   }
-
-
 }
 
 sub remove_domain {
@@ -403,16 +403,73 @@ sub remove_domain {
     }
 
     $self->logger->debug("Undefine domain '".$dom->get_name."'");
-    $dom->undefine(
-      Sys::Virt::Domain::UNDEFINE_MANAGED_SAVE
-    );
-
+    if (@{$self->keep_volumes}) {
+      $self->_manual_delete_volumes;
+      $dom->undefine;
+    } else {
+      $dom->undefine(Sys::Virt::Domain::UNDEFINE_MANAGED_SAVE);
+    }
     $self->logger->debug("Successfully undefined domain '".$dom->get_name."'");
   } catch {
     die $_->message ."\n";
   };
 
   return 0;
+}
+
+sub _manual_delete_volumes {
+  my ($self) = @_;
+ 
+  my $vols = $self->list_volumes;
+
+  for my $vol (@$vols) {
+    my @res = grep { $vol->get_path =~ /\/$_$/ } @{$self->keep_volumes};
+    if (! @res) {
+      $self->logger->debug("Deleting volume ".$vol->get_path);
+      $vol->delete;
+    } else {
+      $self->logger->debug("Keeping volume ".$vol->get_path);
+    } 
+  }
+}
+
+sub list_volumes {
+  my ($self) = @_;
+
+  my $dom = $self->dom;
+
+  my $xml = $dom->get_xml_description;
+
+  my $xxp = XML::XPath->new(xml=>$xml);
+
+  my @nodes = $xxp->findnodes('/domain/devices/disk');
+  my @files;
+  my @volumes;
+
+  for my $node (@nodes) {
+     if (ref($node) eq 'XML::XPath::Node::Element') {
+       for my $c_node (@{$node->getChildNodes}) {
+         if ( ($c_node->getName || '') eq 'source') {
+           push @files, $c_node->getAttribute('file');
+         }
+       }
+     }
+  }
+
+  my @pools = $self->vmm->list_storage_pools();
+
+  for my $pool (@pools) {
+    my @vols = $pool->list_volumes();
+    for my $vol (@vols) {
+      my $path = $vol->get_path;
+      my @res = grep { $_ eq $path } @files;
+      if (@res) {
+        push @volumes, $vol;
+      }
+    }
+  }
+
+  return \@volumes;
 }
 
 sub create_snapshot {
