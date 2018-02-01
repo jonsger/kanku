@@ -403,12 +403,8 @@ sub remove_domain {
     }
 
     $self->logger->debug("Undefine domain '".$dom->get_name."'");
-    if (@{$self->keep_volumes}) {
-      $self->_manual_delete_volumes;
-      $dom->undefine;
-    } else {
-      $dom->undefine(Sys::Virt::Domain::UNDEFINE_MANAGED_SAVE);
-    }
+    $self->_manual_delete_volumes;
+    $dom->undefine;
     $self->logger->debug("Successfully undefined domain '".$dom->get_name."'");
   } catch {
     die $_->message ."\n";
