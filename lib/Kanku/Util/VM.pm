@@ -452,20 +452,40 @@ sub list_volumes {
      }
   }
 
+  for my $vol (@{$self->list_all_volumes}) {
+    my $path = $vol->get_path;
+    my @res = grep { $_ eq $path } @files;
+    push @volumes, $vol if (@res);
+  }
+
+  return \@volumes;
+}
+
+sub list_all_volumes {
+  my ($self) = @_;
+  my @volumes;
   my @pools = $self->vmm->list_storage_pools();
 
   for my $pool (@pools) {
     my @vols = $pool->list_volumes();
-    for my $vol (@vols) {
-      my $path = $vol->get_path;
-      my @res = grep { $_ eq $path } @files;
-      if (@res) {
-        push @volumes, $vol;
-      }
-    }
+    push @volumes, @vols;
   }
 
   return \@volumes;
+}
+sub search_volume {
+  my ($self, %opts) = @_;
+  my $vols;
+  if ($self->domain_name) {
+    $vols = $self->list_volumes;
+  } else {
+    $vols = $self->list_all_volumes;
+  }
+  for my $vol (@{$vols}) {
+    return $vol if ($opts{name} && $opts{name} eq $vol->get_name);
+    return $vol if ($opts{path} && $opts{path} eq $vol->get_path);
+  }
+
 }
 
 sub create_snapshot {

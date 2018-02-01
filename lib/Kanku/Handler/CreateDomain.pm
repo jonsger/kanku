@@ -162,10 +162,10 @@ sub execute {
 
   if ( $ctx->{use_cache} ) {
     my $vol;
-    ($vol, $image) = $self->_create_image_file_from_cache($final_file, $self->root_disk_size, $self->domain_name);
+    ($vol, $image) = $self->_create_image_file_from_cache({file=>$final_file}, $self->root_disk_size, $self->domain_name);
     $final_file = $vol->get_path();
     for my $file(@{$self->additional_disks}) {
-      my ($avol,$aimage) = $self->_create_image_file_from_cache($file->{file});
+      my ($avol,$aimage) = $self->_create_image_file_from_cache($file);
       $self->logger->debug("additional_disk: - before: $file->{file}");
       $file->{file} = $avol->get_path();
       $self->logger->debug("additional_disk: - after: $file->{file}");
@@ -298,7 +298,8 @@ sub _setup_hostname {
 
 sub _create_image_file_from_cache {
   my $self       = shift;
-  my $file       = shift;
+  my $file_data  = shift;
+  my $file       = $file_data->{file};
   my $size       = shift || 0;
   my $vol_prefix = shift;
   my $ctx  = $self->job()->context();
@@ -325,10 +326,15 @@ sub _create_image_file_from_cache {
 	final_size	=> $size
     );
 
-    $self->logger->info("Uploading $in via libvirt to $vol_name");
-
-    $vol = $image->create_volume();
-
+    if ($file_data->{reuse}) {
+      $self->logger->info("Uploading '$vol_name' skipped because of reuse flag");
+      my $vm = Kanku::Util::VM->new();
+      $vol = $vm->search_volume(name=>$vol_name);
+      die "No volume with name '$vol_name' found" if ! $vol;
+    } else {
+      $self->logger->info("Uploading $in via libvirt to $vol_name");
+      $vol = $image->create_volume();
+    }
   } else {
     die "Unknown extension for disk file $file\n";
   }
