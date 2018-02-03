@@ -105,13 +105,13 @@
 <div class="panel panel-{{ state_class }}" id="jh_line_{{ id }}">
   <div id="jh_ph_{{ id }}" class="result_toggler panel-heading">
     <div class='row'>
-      <div class="col-md-4">
+      <div class="col-md-7">
         <span class="badge">{{ id }}</span>
           {{ name }} ({{ workerhost }})
       </div>
-      <div class="col-md-3">{{ start_time }}</div>
-      <div class="col-md-3">({{ duration_min }}min {{ duration_sec }}sec)</div>
-      <div class="col-md-2">
+      <div class="col-md-2">{{ start_time }}</div>
+      <div class="col-md-2">({{ duration_min }}min {{ duration_sec }}sec)</div>
+      <div class="col-md-1">
 	<a class="pull-right" href="[% request.uri_base %]/job_result/{{ id }}"><span class="glyphicon glyphicon-link"/></a>
 	<span class="glyphicon glyphicon-download pull-right"/>
       </div>
