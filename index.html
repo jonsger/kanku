@@ -59,8 +59,9 @@ a.faq {
     <select id="os_version" onchange=change_os_version()>
       <option value='<YOUR_OS_VERSION_ID_HERE>'>Please choose your OS</option>
       <option value="openSUSE_Tumbleweed">openSUSE Tumbleweed</option>
+      <option value="openSUSE_Leap_42.3">openSUSE Leap 42.3</option>
       <option value="openSUSE_Leap_42.2">openSUSE Leap 42.2</option>
-      <option value="openSUSE_Leap_42.1">openSUSE Leap 42.1</option>
+      <option value="SLE_12_SP3">SLES 12 SP3</option>
     </select>
   </li>
 </ul>
@@ -154,7 +155,7 @@ a.faq {
     <h3>
     <a id="configuration-of-software-respositories" class="anchor" href="#configuration-of-software-respositories" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Configuration of software respositories</h3>
 
-    <pre><code>sudo zypper ar http://download.opensuse.org/repositories/devel:/languages:/perl/<span class=os_version_id></span>/devel:languages:perl.repo
+    <pre><code>
 sudo zypper ar http://download.opensuse.org/repositories/home:/M0ses:/Perl/<span class=os_version_id></span>/home:M0ses:Perl.repo
 sudo zypper ar http://download.opensuse.org/repositories/home:/M0ses:/kanku/<span class=os_version_id></span>/home:M0ses:kanku.repo
 sudo zypper ref -s
