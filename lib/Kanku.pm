@@ -68,10 +68,13 @@ get '/login/denied' => sub {
 };
 
 get '/admin' => requires_role Admin =>  sub {
+  my @users = schema('default')->resultset('User')->search();
+  my @roles = schema('default')->resultset('Role')->search(); 
   template 'admin', {
       %{get_defaults_for_views()},
-      kanku => {module => 'Administration'
-    }
+      kanku => {module => 'Administration'},
+      users => \@users,
+      roles => \@roles,
   };
 };
 

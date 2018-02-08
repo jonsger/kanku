@@ -53,4 +53,46 @@
 </div>
 </script>
 
+<h2>Users</h2>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">Username</th>
+      <th scope="col">Realname</th>
+      <th scope="col">E-Mail</th>
+      <th scope="col">active</th>
+      <th scope="col">Roles</th>
+    </tr>
+  </thead>
+  <tbody>
+[% FOREACH user IN users %]
+    <tr>
+      <td scope="col">[% user.id %]</td>
+      <td scope="col">[% user.username %]</td>
+      <td scope="col">[% user.name %]</td>
+      <td scope="col"><a href="mailto:[% user.email %]">[% user.email %]</a></td>
+      <td scope="col"><input type="checkbox" [% IF user.deleted %]checked[% END %] value=1></td>
+      <td scope="col">[% FOREACH role IN user.user_roles %][% role.role.role %] [% END %]</td>
+    </tr>
+[% END %]
+  </tbody>
+</table>
+<h2>Roles</h2>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">Role Name</th>
+    </tr>
+  </thead>
+  <tbody>
+[% FOREACH role IN roles %]
+    <tr>
+      <td scope="col">[% role.id %]</td>
+      <td scope="col">[% role.role %]</td>
+    </tr>
+[% END %]
+  </tbody>
+</table>
 <script src="[% request.uri_base %]/javascripts/admin.js"></script>
