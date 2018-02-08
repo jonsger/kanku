@@ -18,6 +18,8 @@ mySocket.onmessage = function (evt) {
   }
   var ico = uri_base + '/images/64/kanku' + ico_ext + '.png';
   console.log(ico);
+  var notify_timeout = $('#notification_timeout').val() * 1000;
+  console.log("using timeout: "+notify_timeout);
   Notification.requestPermission(function() {
     var n = new Notification(data.title, {
 	body: data.body,
@@ -27,13 +29,17 @@ mySocket.onmessage = function (evt) {
         window.open(data.link, 'newwindow', "menubar=no");
         n.close();
     };
-    setTimeout(n.close.bind(n), 20000);
+    if ( notify_timeout > 0 ) {
+      setTimeout(n.close.bind(n), notify_timeout);
+    }
   });
 };
 
 mySocket.onopen = function(evt) {
   console.log("opening Socket");
   var ico = uri_base + '/images/32/kanku-success.png';
+  var notify_timeout = $('#notification_timeout').val();
+  console.log("using timeout: "+notify_timeout);
   Notification.requestPermission(function() {
     $("#favicon").attr("href",ico);
     setTimeout(
@@ -43,14 +49,14 @@ mySocket.onopen = function(evt) {
 	console.log(msg)
 	mySocket.send(msg);
       },
-      2000
+      notify_timeout
     );
     setTimeout(
       function() {
 	mySocket.send('{"bounce":"Opened WebSocket successfully!"}');
         update_filters();
       },
-      2000
+      notify_timeout
     );
   });
 };
