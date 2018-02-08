@@ -7,6 +7,14 @@
  </div>
 </div>
 <form id=filters>
+<div class="form-group row">
+  <div class="col-xs-2">
+    <label for="notification_delay">Show for (seconds)</label>
+    <input class="form-control" id="notification_timeout" type="text" value=20>
+  </div>
+  <div class="col-xs-10">
+  </div>
+</div>
 <h2>Filters</h2>
 [% IF roles.Admin %]
 <div class="card event-card" id="admin_events">
