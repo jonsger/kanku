@@ -227,10 +227,10 @@ TODO:
 %dir /etc/sudoers.d
 %config (noreplace)  /etc/sudoers.d/kanku
 
-%exclude /etc/profile.d/
+%exclude %dir /etc/profile.d
 %config /etc/profile.d/kanku.sh
 
-%dir /etc/logrotate.d/
+%exclude %dir /etc/logrotate.d/
 %config /etc/logrotate.d/kanku-common
 
 /opt/kanku/lib/Kanku/Handler/
