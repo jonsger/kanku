@@ -28,6 +28,7 @@ use Kanku::Schema;
 use Cwd;
 use DBIx::Class::Migration;
 use IPC::Run qw/run timeout/;
+use Sys::Virt;
 
 extends qw(MooseX::App::Cmd::Command);
 with "Kanku::Cmd::Roles::Schema";
@@ -259,8 +260,44 @@ sub _execute_devel_setup {
 
   die if $?;
 
+  $self->_create_default_pool;
+
   $logger->info("Developer mode setup successfully finished!");
   $logger->info("Please reboot to make sure, libvirtd is coming up properly");  
+
+}
+
+sub _create_default_pool {
+  my $self    = shift;
+  my $logger  = $self->logger;
+  my $vmm     = Sys::Virt->new(uri => 'qemu:///system');
+  my @pools   = $vmm->list_storage_pools();
+
+  for my $pool (@pools) {
+    if ($pool->get_name eq 'default') {
+      $logger->info("Found pool default - enabling autostart");
+      $pool->set_autostart(1);
+      return 1;
+    }
+  }
+  
+  $logger->info("No pool named 'default' found - creating");
+  my $xml = "<pool type='dir'>
+  <name>default</name>
+  <source>
+  </source>
+  <target>
+    <path>/var/lib/libvirt/images</path>
+    <permissions>
+      <mode>0711</mode>
+      <owner>0</owner>
+      <group>0</group>
+    </permissions>
+  </target>
+</pool>
+";
+  my $pool = $vmm->define_storage_pool($xml);
+  $pool->set_autostart(1);
 
 }
 
