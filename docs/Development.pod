@@ -1,5 +1,13 @@
 =head1 dbic-migration cheat sheet
 
+=head2 TL;DR
+
+ kanku dbinit
+
+ or
+
+ kanku dbinit --server
+
 =head2 Preparation
 
  PLEASE BE AWARE: Your PERL5LIB ENV variable might result in unexpected results while testing.
@@ -23,11 +31,13 @@
  export KANKU_PATH=.
  export PERL5LIB=./lib
 
-=head2 Create a database
+=head2 Create and populate a database
 
  cd /opt/kanku 
 
  dbic-migration install -S Kanku::Schema --dsn $KANKU_DSN --dir share
+
+ dbic-migration populate -S Kanku::Schema --dsn $KANKU_DSN --fixture_set install --dir share
 
 =head2 Upgrade database
 
