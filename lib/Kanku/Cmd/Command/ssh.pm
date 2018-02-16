@@ -26,6 +26,16 @@ with 'Kanku::Roles::SSH';
 
 extends qw(MooseX::App::Cmd::Command);
 
+has domain_name => (
+    traits        => [qw(Getopt)],
+    isa           => 'Str',
+    is            => 'rw',
+    cmd_aliases   => 'X',
+    documentation => 'name of domain to connect to',
+    lazy          => 1,
+    default       => sub { $_[0]->cfg->config->{domain_name} }
+);
+
 has user => (
   traits        => [qw(Getopt)],
   isa           => 'Str',
@@ -68,7 +78,7 @@ sub execute {
   my $self  = shift;
   my $cfg   = Kanku::Config->instance();
   my $vm    = Kanku::Util::VM->new(
-                domain_name         => $cfg->config->{domain_name},
+                domain_name         => $self->domain_name,
 		login_user  => $self->login_user,
                 login_pass  => $self->login_pass,
                 management_network  => $cfg->config->{management_network} || ''
