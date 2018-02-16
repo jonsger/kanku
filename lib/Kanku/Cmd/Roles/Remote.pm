@@ -265,7 +265,8 @@ sub get_json {
   }
 
   if ($response->is_success) {
-    my $result = decode_json($response->decoded_content);
+    my $result;
+    $result = decode_json($response->decoded_content);
     return $result;
   } else {
      $self->logger->debug("url: $url");
@@ -314,6 +315,135 @@ sub post_json {
 
   my $request = HTTP::Request->new(
     POST => $url, 
+    [
+      'Content-Type'     => $ct,
+    ],
+    $data
+  );
+  
+  $self->cookie_jar->add_cookie_header($request);
+
+  my $response = $self->ua->simple_request($request);
+
+  if ( $response->code == 302 ) {
+      if ( ! $self->login() ) {
+	die "Failed to login\n";
+      }
+      $response = $self->ua->simple_request($request);
+  }
+  if ($response->is_success) {
+    my $result = decode_json($response->decoded_content);
+    return $result;
+  } else {
+     $self->logger->debug("url: $url");
+     die $response->status_line ."\n";
+  }
+}
+
+sub put_json {
+  my $self = shift;
+  my %opts = @_;
+
+  die "No path given!\n" if ( ! $opts{path} );
+  die "No data given!\n" if ( ! $opts{data} );
+
+  if ( ! -f $self->_cookie_jar_file ) {
+    if ( -f $self->rc_file ) {
+      $self->settings();
+    } else {
+      return 0;
+    }
+  }
+
+  $self->ua->cookie_jar->load();
+
+  my @param_arr;
+
+  while ( my ($p,$v) = each(%{$opts{params}}) ) {
+    push(@param_arr,"$p=$v" );
+  }
+
+  my $au      = $self->apiurl;
+  $au         =~ s/\/$//;
+  my $pstr    = join("&",@param_arr);
+  my $url     = "$au/rest/$opts{path}.json".(($pstr) ? "?$pstr" : '');
+  my $data;
+  my $ct;
+
+  if (ref($opts{data})) {
+    $data = encode_json($opts{data});
+    $ct   = 'application/json';
+  } else {
+    $data = $opts{data};
+    $ct   = 'application/x-www-form-urlencoded';
+  }
+
+  my $request = HTTP::Request->new(
+    PUT => $url, 
+    [
+      'Content-Type'     => $ct,
+    ],
+    $data
+  );
+  
+  $self->cookie_jar->add_cookie_header($request);
+
+  my $response = $self->ua->simple_request($request);
+
+  if ( $response->code == 302 ) {
+      if ( ! $self->login() ) {
+	die "Failed to login\n";
+      }
+      $response = $self->ua->simple_request($request);
+  }
+  if ($response->is_success) {
+    my $result = decode_json($response->decoded_content);
+    return $result;
+  } else {
+     $self->logger->debug("url: $url");
+     die $response->status_line ."\n";
+  }
+}
+
+sub delete_json {
+  my $self = shift;
+  my %opts = @_;
+
+  die "No path given!\n" if ( ! $opts{path} );
+
+  if ( ! -f $self->_cookie_jar_file ) {
+    if ( -f $self->rc_file ) {
+      $self->settings();
+    } else {
+      return 0;
+    }
+  }
+
+  $self->ua->cookie_jar->load();
+
+  my @param_arr;
+
+  while ( my ($p,$v) = each(%{$opts{params}}) ) {
+    push(@param_arr,"$p=$v" );
+  }
+
+  my $au      = $self->apiurl;
+  $au         =~ s/\/$//;
+  my $pstr    = join("&",@param_arr);
+  my $url     = "$au/rest/$opts{path}.json".(($pstr) ? "?$pstr" : '');
+  my $data;
+  my $ct;
+
+  if (ref($opts{data})) {
+    $data = encode_json($opts{data});
+    $ct   = 'application/json';
+  } else {
+    $data = $opts{data};
+    $ct   = 'application/x-www-form-urlencoded';
+  }
+
+  my $request = HTTP::Request->new(
+    DELETE => $url, 
     [
       'Content-Type'     => $ct,
     ],

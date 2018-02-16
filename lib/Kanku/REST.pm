@@ -173,6 +173,94 @@ get '/job/config/:name.:format' => require_any_role [qw/Admin User/] =>  sub {
   return { config => $rval }
 };
 
+get '/job/comments/:job_id.:format' => require_any_role [qw/Admin User/] =>  sub {
+
+  my $comments = schema('default')->resultset('JobHistoryComment')->search({job_id=>param('job_id')});
+  my @cl;
+  while (my $cm = $comments->next) {
+    push(@cl, $cm->TO_JSON);
+  }
+  debug Dumper(\@cl);
+  return { comments => \@cl }
+};
+
+post '/job/comment/:job_id.:format' => require_any_role [qw/Admin User/] =>  sub {
+
+  my $job_id  = param 'job_id';
+  my $message = param 'message';
+  my $ul      = logged_in_user();
+  my $user_id = $ul->{id};
+
+  schema('default')
+    ->resultset('JobHistoryComment')
+    ->create({
+      job_id  => $job_id,
+      user_id => $user_id,
+      comment => $message,
+    });
+
+  return { result => 'succeed' }
+};
+
+put '/job/comment/:comment_id.:format' => require_any_role [qw/Admin User/] =>  sub {
+
+  my $comment_id  = param 'comment_id';
+  my $comment = schema('default')
+                  ->resultset('JobHistoryComment')
+                  ->find($comment_id);
+  if (! $comment) {
+    return {
+      result  => 'failed',
+      code    => 404,
+      message => "comment not found with id ($comment_id)"
+    };
+  }
+  my $ul      = logged_in_user();
+  my $user_id = $ul->{id};
+  if ($comment->user_id != $user_id) {
+    return {
+      result  => 'failed',
+      code    => 403,
+      message => "user with id ($user_id) is not allowed to change comments of user (".$comment->user_id.")"
+    };
+  }
+  $comment->update({comment=>param('message')});
+
+  return { 
+    result => 'succeed',
+    code   => 200
+  }
+};
+
+del '/job/comment/:comment_id.:format' => require_any_role [qw/Admin User/] =>  sub {
+
+  my $comment_id  = param('comment_id');
+  my $comment = schema('default')
+                  ->resultset('JobHistoryComment')
+                  ->find($comment_id);
+  if (! $comment) {
+    return {
+      result  => 'failed',
+      code    => 404,
+      message => "comment not found with id ($comment_id)"
+    };
+  }
+  my $ul      = logged_in_user();
+  my $user_id = $ul->{id};
+  if ($comment->user_id != $user_id) {
+    return {
+      result  => 'failed',
+      code    => 403,
+      message => "user with id ($user_id) is not allowed to change comments of user (".$comment->user_id.")"
+    };
+  }
+  $comment->delete;
+
+  return { 
+    result => 'succeed',
+    code   => 200
+  }
+};
 
 get '/gui_config/job.:format' => sub {
   my $cfg = Kanku::Config->instance();

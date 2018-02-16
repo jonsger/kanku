@@ -149,5 +149,13 @@ __PACKAGE__->has_many(
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:zEiq2HT5KP4WrhsL7TzAow
 
 
-# You can replace this text with custom code or comments, and it will be preserved on regeneration
+sub TO_JSON {
+  my ($self) = @_;
+  my $rv = {};
+  for my $col (qw/id username name email deleted/){
+    $rv->{$col} = $self->$col;
+  }
+  return $rv;
+}
+
 1;
