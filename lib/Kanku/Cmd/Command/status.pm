@@ -33,7 +33,7 @@ has domain_name => (
     isa           => 'Str',
     is            => 'rw',
     cmd_aliases   => 'X',
-    documentation => 'name of domain to create',
+    documentation => 'name of domain to show',
     lazy          => 1,
     default       => sub { $_[0]->cfg->config->{domain_name} }
 );
@@ -45,9 +45,9 @@ has cfg => (
     default       => sub { Kanku::Config->instance(); }
 );
 
-sub abstract { "Start kanku VM" }
+sub abstract { "Show status of kanku VM" }
 
-sub description { "This command can be used to start an already existing VM" }
+sub description { "This command can be used to show the status of a VM" }
 
 sub execute {
   my $self    = shift;
