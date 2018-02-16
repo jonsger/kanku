@@ -1,4 +1,7 @@
 $VAR1 = {
+          'might_have' => {
+                            'fetch' => 0
+                          },
           'belongs_to' => {
                             'fetch' => 0
                           },
@@ -18,8 +21,5 @@ $VAR1 = {
                         'class' => 'User',
                         'quantity' => 'all'
                       }
-                    ],
-          'might_have' => {
-                            'fetch' => 0
-                          }
+                    ]
         };

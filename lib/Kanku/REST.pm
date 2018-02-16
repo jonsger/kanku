@@ -174,8 +174,16 @@ get '/job/config/:name.:format' => require_any_role [qw/Admin User/] =>  sub {
 };
 
 get '/job/comments/:job_id.:format' => require_any_role [qw/Admin User/] =>  sub {
-
-  my $comments = schema('default')->resultset('JobHistoryComment')->search({job_id=>param('job_id')});
+  my $job_id = param('job_id');
+  my $job = schema('default')->resultset('JobHistory')->find($job_id);
+  if (! $job) {
+    return {
+      result  => 'failed',
+      code    => 404,
+      message => "job not found with id ($job_id)"
+    };
+  }
+  my $comments = $job->comments;
   my @cl;
   while (my $cm = $comments->next) {
     push(@cl, $cm->TO_JSON);

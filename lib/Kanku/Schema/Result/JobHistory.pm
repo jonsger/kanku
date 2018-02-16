@@ -143,6 +143,12 @@ __PACKAGE__->has_many(
 # Created by DBIx::Class::Schema::Loader v0.07047 @ 2017-11-16 13:40:30
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:dOiKpTLA7PciDbF7AtbIHw
 
+__PACKAGE__->has_many(
+  "comments",
+  "Kanku::Schema::Result::JobHistoryComment",
+  { "foreign.job_id" => "self.id" },
+);
+
 sub TO_JSON {
   my $self = shift;
   my $rv = {};
