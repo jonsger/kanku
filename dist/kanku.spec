@@ -289,6 +289,8 @@ Requires: perl(Dancer2::Plugin::WebSocket)
 Requires: perl(Twiggy)
 Requires: perl(Mail::Message::Body::String)
 Requires: perl(Mail::Transport::Send)
+Requires: perl(Net::AMQP::RabbitMQ)
+Requires: perl(UUID)
 #Requires: %{?systemd_requires}
 
 %description web
