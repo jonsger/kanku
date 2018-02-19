@@ -24,9 +24,11 @@ sub get_defaults_for_views {
   session  messagebar => undef;
   my $logged_in_user = logged_in_user();
   my $roles;
+  my $user_id = 0;
   if ($logged_in_user)  {
     $roles = {Guest=>1};
     map { $roles->{$_} = 1 } @{user_roles()};
+    $logged_in_user->{id}
   }
 
   return {
@@ -34,7 +36,7 @@ sub get_defaults_for_views {
     logged_in_user  => $logged_in_user ,
     messagebar      => $messagebar,
     ws_url          => websocket_url(),
-    user_id         => $logged_in_user->{id}
+    user_id         => $user_id
   };
 };
 
