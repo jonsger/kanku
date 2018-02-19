@@ -6,6 +6,7 @@ var subtask_result_success_template = $("#subtask_result_success").html();
 var subtask_result_failed_template  = $("#subtask_result_failed").html();
 var job_result_failed_template      = $("#job_result_failed").html();
 var job_result_panel_info           = $("#job_result_panel_info").html();
+var single_job_comment              = $("#single_job_comment").html();
 
 Mustache.parse(header_template);
 Mustache.parse(job_result_template);
@@ -13,6 +14,7 @@ Mustache.parse(subtask_result_success_template);
 Mustache.parse(subtask_result_failed_template);
 Mustache.parse(job_result_failed_template);
 Mustache.parse(job_result_panel_info);
+Mustache.parse(single_job_comment);
 
 var alert_map =[];
 alert_map['succeed'] = 'success';
@@ -20,6 +22,102 @@ alert_map['running'] = 'info';
 alert_map['failed']  = 'danger';
 alert_map['skipped']  = 'warning';
 alert_map['dispatching']  = 'warning';
+
+function save_job_comment (job_id) {
+
+  var comment = $("#new_comment_text_"+job_id).val();
+  console.log("job_id   : " + job_id);
+  console.log("text     : " + comment);
+  console.log("user_id  : " + user_id);
+
+  $.post(
+    uri_base + "/rest/job/comment/" + job_id + ".json",
+    {
+      "job_id"   : job_id,
+      "message"  : comment
+    }
+  );
+
+  update_comments(job_id);
+}
+
+function delete_job_comment (comment_id, job_id) {
+  console.log("comment_id: "+comment_id);
+
+  $.ajax({
+    type  : 'DELETE',
+    url   : uri_base + "/rest/job/comment/" + comment_id + ".json"
+  });
+
+  update_comments(job_id);
+}
+
+function start_edit_job_comment (comment_id, job_id) {
+  console.log("edit comment_id: "+comment_id);
+  var org_comment = $("#job_comment_panel_body_"+comment_id).text();
+  $("#job_comment_panel_body_"+comment_id).empty();
+  console.log("org_comment:" + org_comment);
+  $("#job_comment_panel_body_"+comment_id).append(
+    "<textarea id='job_comment_edit_textarea_"+comment_id+"' style='width:100%;'>"
+     + $.trim(org_comment) +
+    "</textarea>" +
+    "<button "
+     + "class='btn btn-primary' "
+     + "style='margin-top:2px;' "
+     + "onclick='finish_edit_job_comment("+comment_id+","+job_id+")'>"+
+     "save" +
+     "</button>"
+  );
+}
+function finish_edit_job_comment (comment_id, job_id) {
+
+  $.ajax({
+    type  : 'PUT',
+    url   : uri_base + "/rest/job/comment/" + comment_id + ".json",
+    data  : {
+       message : $("#job_comment_edit_textarea_"+comment_id).val()
+    }
+  });
+
+  update_comments(job_id);
+}
+
+function update_comments (job_id) {
+  console.log("update_comments: "+job_id);
+
+  $("#job_comment_body_"+job_id).empty();
+
+  $.get(
+    uri_base + "/rest/job/comments/"+job_id+".json",
+    function (data) {
+      console.log(data);
+      var comments_as_html = "";
+      $.each(data.comments, function (idx, comment) {
+        console.log(comment);
+        var show_mod = 0;
+        if ( user_id == comment.user.id ) {
+          show_mod = 1;
+        }
+        var rendered = Mustache.render(
+          single_job_comment,
+          {
+            username      : comment.user.username,
+            name          : comment.user.name,
+            comment       : comment.comment,
+            show_mod      : show_mod,
+            comment_id    : comment.id,
+            job_id        : job_id,
+          }
+        );
+        comments_as_html += rendered;
+      });
+      comments_as_html += "<hr/>";
+      $("#job_comment_body_"+job_id).empty();
+      $("#job_comment_body_"+job_id).append(comments_as_html);
+      $("#new_comment_text_"+job_id).val('');
+    }
+  );
+}
 
 function update_job_history (data) {
 
@@ -67,6 +165,36 @@ function update_job_history (data) {
       if ( this.workerinfo ) {
          winfo = this.workerinfo.split(':');
       }
+      var comments_icon    = "";
+      var comments_as_html = "";
+      var job_id           = this.id;
+      if ( this.comments ) {
+        if ( this.comments.length > 0 ) {
+          comments_icon = 'fas';
+          $.each(this.comments, function(idx, comment) {
+            console.log(comment);
+            var show_mod = 0;
+            if ( user_id == comment.user.id ) {
+              show_mod = 1;
+            }
+            var rendered = Mustache.render(
+                  single_job_comment,
+                  {
+                    username      : comment.user.username,
+                    name          : comment.user.name,
+                    comment       : comment.comment,
+                    show_mod      : show_mod,
+                    comment_id    : comment.id,
+                    job_id        : job_id,
+                  }
+            );
+            comments_as_html += rendered;
+          });
+          comments_as_html += "<hr/>";
+        } else {
+          comments_icon = 'far';
+        }
+      }
 
       var rendered = Mustache.render(
                       job_result_template,
@@ -78,13 +206,18 @@ function update_job_history (data) {
                         duration_sec  : duration_sec,
                         state_class   : alert_map[this.state],
                         workerhost    : winfo[0],
+                        comments_icon : comments_icon,
+                        comments_as_html : comments_as_html,
                       }
       );
       $("#job_history").append(rendered);
-      $("#jh_ph_"+this.id).click(function (ev) {
+      $("#modal_window_comment_"+this.id).on('hidden.bs.modal', function(){
+        get_job_history();
+      });
+      $("#jh_ph_link_"+this.id).click(function (ev) {
         var ev_id           = $(ev.currentTarget).attr('id');
         console.log(ev_id);
-        var job_history_id  = ev_id.replace('jh_ph_','');
+        var job_history_id  = ev_id.replace('jh_ph_link_','');
 	toggle_job_result_body(job_history_id);
       });
     }
@@ -97,6 +230,7 @@ function update_job_result_panel_body (data) {
   var body   = $("#jbody_"+job_id);
 
   if ( data.result ) {
+    console.log("Data Result:"+data.result);
     var job_result = JSON.parse(data.result);
     console.log("error_message:"+job_result.error_message);
     if (job_result.error_message) {

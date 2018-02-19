@@ -7,11 +7,14 @@ use Dancer2::Plugin;
 use Dancer2::Plugin::REST;
 use Dancer2::Plugin::DBIC;
 use Dancer2::Plugin::Auth::Extensible;
+use Dancer2::Plugin::WebSocket;
 
 use Sys::Virt;
 use Try::Tiny;
 use Session::Token;
 use Carp qw/longmess/;
+
+use Data::Dumper;
 
 use Kanku::Config;
 use Kanku::Schema;
@@ -84,8 +87,21 @@ any '/jobs/list.:format' => sub {
 
   my $rv = [];
 
+  my @roles_found;
+  if (logged_in_user()) {
+    @roles_found = grep { /^(User|Admin)$/ } @{user_roles()};
+  }
+
   while ( my $ds = $rs->next ) {
     my $data = $ds->TO_JSON();
+
+    if (@roles_found) {
+      $data->{comments} = [];
+      my @comments = $ds->comments;
+      for my $comment (@comments) {
+        push(@{$data->{comments}}, $comment->TO_JSON);
+      }
+    }
     push(@$rv,$data);
   }
 
@@ -199,15 +215,22 @@ post '/job/comment/:job_id.:format' => require_any_role [qw/Admin User/] =>  sub
   my $ul      = logged_in_user();
   my $user_id = $ul->{id};
 
-  schema('default')
-    ->resultset('JobHistoryComment')
-    ->create({
-      job_id  => $job_id,
-      user_id => $user_id,
-      comment => $message,
-    });
+  if ($message && $user_id && $job_id) {
+    schema('default')
+      ->resultset('JobHistoryComment')
+      ->create({
+        job_id  => $job_id,
+        user_id => $user_id,
+        comment => $message,
+      });
 
-  return { result => 'succeed' }
+    return {
+      result => 'succeed',
+      code   => 200
+    };
+  }
+
+  return { result => 'failed' };
 };
 
 put '/job/comment/:comment_id.:format' => require_any_role [qw/Admin User/] =>  sub {
@@ -223,21 +246,27 @@ put '/job/comment/:comment_id.:format' => require_any_role [qw/Admin User/] =>  
       message => "comment not found with id ($comment_id)"
     };
   }
+  my $message = param('message');
   my $ul      = logged_in_user();
   my $user_id = $ul->{id};
-  if ($comment->user_id != $user_id) {
+  if ($message && $user_id) {
+
+    if ($comment->user_id != $user_id) {
+      return {
+        result  => 'failed',
+        code    => 403,
+        message => "user with id ($user_id) is not allowed to change comments of user (".$comment->user_id.")"
+      };
+    }
+    $comment->update({comment=>$message});
+
     return {
-      result  => 'failed',
-      code    => 403,
-      message => "user with id ($user_id) is not allowed to change comments of user (".$comment->user_id.")"
+      result => 'succeed',
+      code   => 200
     };
   }
-  $comment->update({comment=>param('message')});
 
-  return { 
-    result => 'succeed',
-    code   => 200
-  }
+  return { result => 'failed' };
 };
 
 del '/job/comment/:comment_id.:format' => require_any_role [qw/Admin User/] =>  sub {
@@ -386,8 +415,7 @@ get '/logout.:format' => sub {
 
 post '/request_roles.:format' => require_login sub {
 
-use Data::Dumper;
-  debug("roles: " . Dumper(params->{args}));
+  #debug("roles: " . Dumper(params->{args}));
   my $args = decode_json(params->{args});
 
   my $result = schema->resultset('RoleRequest')->create(
@@ -433,7 +461,7 @@ sub calc_changes {
     my @all_roles;
     $requested_roles->{$_}     = 1 for (split(/,/, $r->roles));
     $user_roles->{$_->role_id} = 1 for (@ur_rs);
-    debug(Dumper($user_roles));
+    #debug(Dumper($user_roles));
     my $ar_rs = schema->resultset('Role')->search();
     while (my $ar = $ar_rs->next) {
       my $already_exists = $user_roles->{$ar->id};
@@ -471,7 +499,7 @@ sub calc_changes {
 }
 
 post '/admin/task/resolve.:format' => requires_role Admin => sub {
-  debug("args: " . Dumper(params->{args}));
+  #debug("args: " . Dumper(params->{args}));
   my $args = decode_json(params->{args});
   debug "request_id: ". $args->{req_id};
   debug "decision ". $args->{decision};
@@ -490,7 +518,7 @@ post '/admin/task/resolve.:format' => requires_role Admin => sub {
   if ($args->{decision} == 1) {
     my $role_changes = calc_changes($req);
     my $user_id = $req->user_id;
-    debug Dumper($role_changes);
+    #debug Dumper($role_changes);
     for my $chg (@{$role_changes}) {
       my $role_id = $chg->{role_id};
       if ($chg->{action} eq 'add') {

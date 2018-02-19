@@ -105,14 +105,23 @@
 <div class="panel panel-{{ state_class }}" id="jh_line_{{ id }}">
   <div id="jh_ph_{{ id }}" class="result_toggler panel-heading">
     <div class='row'>
-      <div class="col-md-7">
+      <div id="jh_ph_link_{{id}}" class="col-md-7">
         <span class="badge">{{ id }}</span>
           {{ name }} ({{ workerhost }})
       </div>
       <div class="col-md-2">{{ start_time }}</div>
       <div class="col-md-2">({{ duration_min }}min {{ duration_sec }}sec)</div>
       <div class="col-md-1">
-	<a class="pull-right" href="[% request.uri_base %]/job_result/{{ id }}"><span class="glyphicon glyphicon-link"/></a>
+        {{#comments_icon }}
+          <a class="pull-right"
+             href="#"
+             data-toggle="modal"
+             data-target="#modal_window_comment_{{id}}"
+             style="margin-left:5px;">
+               <i class="{{comments_icon}} fa-comments"/>
+          </a>
+        {{/comments_icon}}
+	<a class="pull-right" href="[% request.uri_base %]/job_result/{{ id }}" style="margin-left:5px;"><span class="glyphicon glyphicon-link"/></a>
 	<span class="glyphicon glyphicon-download pull-right"/>
       </div>
     </div>
@@ -121,7 +130,58 @@
   </div>
 </div>
 
+<div id="modal_window_comment_{{id}}" class="modal fade" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Comments for Job {{id}}</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="job_comment_body_{{id}}">
+          {{{ comments_as_html }}}
+        </div>
+        <div id="new_comment_div_{{id}}">
+          New Comment:
+          <textarea id="new_comment_text_{{id}}" rows="2" style="width: 100%"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-success" onclick="save_job_comment({{id}})">Add Comment</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 </script>
+
+<script id="single_job_comment" type="x-tmpl-mustache">
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <div class=row>
+      <div class=col-sm-9>
+        {{username}} ({{name}})
+      </div>
+      <div class="col-sm-3 text-right">
+      {{#show_mod}}
+        <button type="button" aria-label="Edit" onclick="start_edit_job_comment({{comment_id}},{{job_id}})">
+          <i class="far fa-edit"></i>
+        </button>
+        <button type="button" aria-label="Delete" onclick="delete_job_comment({{comment_id}},{{job_id}})">
+          <i class="far fa-trash-alt"></i>
+        </button>
+      {{/show_mod}}
+      </div>
+    </div>
+  </div>
+  <div class="panel-body" id="job_comment_panel_body_{{comment_id}}">
+    {{comment}}
+  </div>
+</div>
+</script>
+
 
 <script id="job_result_panel_info" type="x-tmpl-mustache">
 
@@ -233,6 +293,28 @@
       </div>
     </div>
 
+</script>
+
+<script id="job_comment_modal_window" type="x-tmpl-mustache">
+<div class="modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Modal title</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Modal body text goes here.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary">Save changes</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 </script>
 
 <script src="[% request.uri_base %]/javascripts/job_history.js"></script>

@@ -16,17 +16,18 @@
 <script src="[% request.uri_base %]/javascripts/mustache.min.js"></script>
 <script src="[% request.uri_base %]/javascripts/js.cookie.js"></script>
 <script src="[% request.uri_base %]/bootstrap/js/bootstrap.min.js"></script>
+<script defer src="[% request.uri_base %]/font-awesome/on-server/js/fontawesome-all.min.js"></script>
 
 <script type="text/javascript">
 // This is used to bring uri_base into js on a
 // centralized place
 var uri_base = "[% request.uri_base %]";
-var ws_url = "[% ws_url %]";
+var ws_url   = "[% ws_url %]";
+var user_id  = "[% user_id %]";
 </script>
 
 </head>
 <body>
-
 
     <nav class="navbar navbar-fixed-top navbar-default">
       <div class="container">
@@ -47,11 +48,11 @@ var ws_url = "[% ws_url %]";
           <ul class="nav navbar-nav pull-right">
             <li class="dropdown">
             [% IF logged_in_user %]
-              <a href="#" 
-                      class="dropdown-toggle" 
-                      data-toggle="dropdown" 
-                      role="button" 
-                      aria-haspopup="true" 
+              <a href="#"
+                      class="dropdown-toggle"
+                      data-toggle="dropdown"
+                      role="button"
+                      aria-haspopup="true"
                       aria-expanded="false">
                   [% logged_in_user.name %]
                   <span class="caret"></span>
@@ -64,11 +65,11 @@ var ws_url = "[% ws_url %]";
                 <li><a href="[% request.uri_base %]/admin">Administration</a></li>
                 [% END %]
             [% ELSE %]
-              <a href="#" 
-                      class="dropdown-toggle" 
-                      data-toggle="dropdown" 
-                      role="button" 
-                      aria-haspopup="true" 
+              <a href="#"
+                      class="dropdown-toggle"
+                      data-toggle="dropdown"
+                      role="button"
+                      aria-haspopup="true"
                       aria-expanded="false">
                   Sign In
                   <span class="caret"></span>
@@ -96,7 +97,7 @@ var ws_url = "[% ws_url %]";
               <li><a href="https://github.com/M0ses/kanku" target=_blank>Code on github</a></li>
               </ul>
             </li>
-          </ul>    
+          </ul>
         </div><!--/.nav-collapse -->
       </div>
     </nav>

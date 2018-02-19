@@ -33,7 +33,8 @@ sub get_defaults_for_views {
     roles           => $roles,
     logged_in_user  => $logged_in_user ,
     messagebar      => $messagebar,
-    ws_url          => websocket_url()
+    ws_url          => websocket_url(),
+    user_id         => $logged_in_user->{id}
   };
 };
 
