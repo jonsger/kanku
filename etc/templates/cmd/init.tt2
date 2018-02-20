@@ -41,3 +41,8 @@ jobs:
       #forward_port_list: tcp:22,tcp:443
   -
     use_module: Kanku::Handler::PrepareSSH
+#  -
+#    use_module: Kanku::Handler::ExecuteCommandViaSSH
+#    options:
+#      commands:
+#        - echo "my test here"
