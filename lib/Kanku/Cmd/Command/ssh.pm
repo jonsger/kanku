@@ -33,7 +33,9 @@ has domain_name => (
     cmd_aliases   => 'X',
     documentation => 'name of domain to connect to',
     lazy          => 1,
-    default       => sub { $_[0]->cfg->config->{domain_name} }
+    default       => sub { 
+      Kanku::Config->instance()->config->{domain_name};
+    }
 );
 
 has user => (
