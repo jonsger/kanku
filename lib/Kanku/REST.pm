@@ -23,7 +23,21 @@ use Kanku::LibVirt::HostList;
 
 our $VERSION = '0.0.2';
 
-prepare_serializer_for_format;
+# TODO: reenable #prepare_serializer_for_format
+# temporarly disable because of 
+# https://github.com/PerlDancer/Dancer2/issues/686
+# (UTF8 double encoding)
+# and remove hard setting of serializer
+# don`t forget to remove option in config.yml
+# ...
+# engines:
+#   ...
+#   serializer:
+#     JSON:
+#       utf8: 0
+# ...
+#prepare_serializer_for_format;
+set serializer => 'JSON';
 
 Kanku::Config->initialize();
 
