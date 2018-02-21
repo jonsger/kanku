@@ -28,7 +28,7 @@ sub get_defaults_for_views {
   if ($logged_in_user)  {
     $roles = {Guest=>1};
     map { $roles->{$_} = 1 } @{user_roles()};
-    $logged_in_user->{id}
+    $user_id = $logged_in_user->{id};
   }
 
   return {
