@@ -567,6 +567,44 @@ post '/admin/task/resolve.:format' => requires_role Admin => sub {
   };
 };
 
+get '/admin/user/list.:format' => requires_role Admin => sub {
+  my @users = schema('default')->resultset('User')->search();
+  my $result = [];
+
+  foreach my $user (@users) {
+    my $rs = {
+      id       => $user->id,
+      username => $user->username,
+      name     => $user->name,
+      deleted  => $user->deleted,
+      email    => $user->email,
+      roles    => []
+    };
+    my @roles = $user->user_roles;
+    for my $role (@roles) {
+      push(@{$rs->{roles}}, $role->role->role);
+    }
+    push @$result, $rs;
+  }
+  debug(Dumper($result));
+  return $result;
+};
+
+get '/admin/role/list.:format' => requires_role Admin => sub {
+  my @roles = schema('default')->resultset('Role')->search();
+  my $result = [];
+
+  foreach my $role (@roles) {
+    my $rs = {
+      id       => $role->id,
+      role     => $role->role
+    };
+    push @$result, $rs;
+  }
+  debug(Dumper($result));
+  return $result;
+};
+
 __PACKAGE__->meta->make_immutable();
 
 true;

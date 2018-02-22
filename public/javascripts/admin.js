@@ -43,6 +43,71 @@ function send_role_request(req_id, decision) {
   get_admin_task_list();
 }
 
+function get_admin_user_list() {
+  var url = uri_base + "/rest/admin/user/list.json";
+  console.log(url);
+  $.get(
+    url,
+    update_admin_user_list
+  );
+}
+
+function update_admin_user_list(data) {
+  console.log(data);
+  $("#user_list").empty();
+
+  if (data.length < 1) {
+    $("#user_list").append("Looks like an error - No users found!");
+  } else {
+  console.log(data);
+    $(data).each(function(idx, user) {
+      console.log(user);
+      user.roles = user.roles.join(", ");
+      var template = $("#user-list-tr-template").html();
+      Mustache.parse(template);
+      var rendered = Mustache.render(
+	template,
+	user
+      );
+      $("#user_list").append(rendered);
+
+    });
+  }
+}
+
+function get_admin_role_list() {
+  var url = uri_base + "/rest/admin/role/list.json";
+  console.log(url);
+  $.get(
+    url,
+    update_admin_role_list
+  );
+}
+
+function update_admin_role_list(data) {
+  console.log(data);
+  $("#role_list").empty();
+
+  if (data.length < 1) {
+    $("#role_list").append("Looks like an error - No roles found!");
+  } else {
+  console.log(data);
+    $(data).each(function(idx, role) {
+      console.log(role);
+      var template = $("#role-list-tr-template").html();
+      Mustache.parse(template);
+      var rendered = Mustache.render(
+	template,
+	role
+      );
+      $("#role_list").append(rendered);
+
+    });
+  }
+}
+
 $(document).ready(function(){
   get_admin_task_list();
+  get_admin_user_list();
+  get_admin_role_list();
 });
