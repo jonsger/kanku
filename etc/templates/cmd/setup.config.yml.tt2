@@ -39,6 +39,8 @@ plugins:
     default:
       dsn: [% dsn %]
       schema_class: Kanku::Schema
+      options:
+        sqlite_unicode: 1
   Auth::Extensible:
     welcome_send: Kanku::email_welcome_send
     realms:

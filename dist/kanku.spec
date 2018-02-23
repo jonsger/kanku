@@ -227,10 +227,10 @@ TODO:
 %dir /etc/sudoers.d
 %config (noreplace)  /etc/sudoers.d/kanku
 
-%exclude /etc/profile.d/
+%exclude %dir /etc/profile.d
 %config /etc/profile.d/kanku.sh
 
-%dir /etc/logrotate.d/
+%exclude %dir /etc/logrotate.d/
 %config /etc/logrotate.d/kanku-common
 
 /opt/kanku/lib/Kanku/Handler/
@@ -289,6 +289,8 @@ Requires: perl(Dancer2::Plugin::WebSocket)
 Requires: perl(Twiggy)
 Requires: perl(Mail::Message::Body::String)
 Requires: perl(Mail::Transport::Send)
+Requires: perl(Net::AMQP::RabbitMQ)
+Requires: perl(UUID)
 #Requires: %{?systemd_requires}
 
 %description web

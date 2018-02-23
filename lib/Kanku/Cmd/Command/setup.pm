@@ -499,8 +499,9 @@ sub _configure_libvirtd_access {
     auth_unix_rw	    => 'none'
   };
   my $seen={};
+  my $regex = "^#?((".join('|',keys(%$defaults)).").*)";
   foreach my $line ( splice(@lines) ) {
-    if ( $line =~ s/^#?((unix_sock_group|unix_sock_ro_perms|unix_sock_rw_perms|unix_sock_admin_perms|auth_unix_ro|auth_unix_rw).*)/$1/ ) {
+    if ( $line =~ s/$regex/$1/ ) {
       $seen->{$2} = 1;
     }
     push(@lines,$line);
@@ -652,6 +653,8 @@ plugins:
     default:
       dsn: dbi:SQLite:dbname=%s
       schema_class: Kanku::Schema
+      options:
+        sqlite_unicode: 1
   Auth::Extensible:
     realms:
         users:
