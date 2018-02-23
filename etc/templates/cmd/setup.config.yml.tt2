@@ -33,17 +33,14 @@ engines:
     template_toolkit:
       start_tag: '[% start_tag %]'
       end_tag:   '[% end_tag %]'
-  # This is only needed because of
-  # https://github.com/PerlDancer/Dancer2/issues/686
-  serializer:
-    JSON:
-      utf8: 0
 
 plugins:
   DBIC:
     default:
       dsn: [% dsn %]
       schema_class: Kanku::Schema
+      options:
+        sqlite_unicode: 1
   Auth::Extensible:
     welcome_send: Kanku::email_welcome_send
     realms:

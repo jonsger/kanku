@@ -653,6 +653,8 @@ plugins:
     default:
       dsn: dbi:SQLite:dbname=%s
       schema_class: Kanku::Schema
+      options:
+        sqlite_unicode: 1
   Auth::Extensible:
     realms:
         users:

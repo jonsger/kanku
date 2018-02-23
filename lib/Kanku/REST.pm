@@ -23,21 +23,7 @@ use Kanku::LibVirt::HostList;
 
 our $VERSION = '0.0.2';
 
-# TODO: reenable #prepare_serializer_for_format
-# temporarly disable because of 
-# https://github.com/PerlDancer/Dancer2/issues/686
-# (UTF8 double encoding)
-# and remove hard setting of serializer
-# don`t forget to remove option in config.yml
-# ...
-# engines:
-#   ...
-#   serializer:
-#     JSON:
-#       utf8: 0
-# ...
-#prepare_serializer_for_format;
-set serializer => 'JSON';
+prepare_serializer_for_format;
 
 Kanku::Config->initialize();
 
@@ -218,7 +204,6 @@ get '/job/comments/:job_id.:format' => require_any_role [qw/Admin User/] =>  sub
   while (my $cm = $comments->next) {
     push(@cl, $cm->TO_JSON);
   }
-  debug Dumper(\@cl);
   return { comments => \@cl }
 };
 
@@ -429,7 +414,6 @@ get '/logout.:format' => sub {
 
 post '/request_roles.:format' => require_login sub {
 
-  #debug("roles: " . Dumper(params->{args}));
   my $args = decode_json(params->{args});
 
   my $result = schema->resultset('RoleRequest')->create(
@@ -475,7 +459,6 @@ sub calc_changes {
     my @all_roles;
     $requested_roles->{$_}     = 1 for (split(/,/, $r->roles));
     $user_roles->{$_->role_id} = 1 for (@ur_rs);
-    #debug(Dumper($user_roles));
     my $ar_rs = schema->resultset('Role')->search();
     while (my $ar = $ar_rs->next) {
       my $already_exists = $user_roles->{$ar->id};
@@ -513,7 +496,6 @@ sub calc_changes {
 }
 
 post '/admin/task/resolve.:format' => requires_role Admin => sub {
-  #debug("args: " . Dumper(params->{args}));
   my $args = decode_json(params->{args});
   debug "request_id: ". $args->{req_id};
   debug "decision ". $args->{decision};
@@ -532,7 +514,6 @@ post '/admin/task/resolve.:format' => requires_role Admin => sub {
   if ($args->{decision} == 1) {
     my $role_changes = calc_changes($req);
     my $user_id = $req->user_id;
-    #debug Dumper($role_changes);
     for my $chg (@{$role_changes}) {
       my $role_id = $chg->{role_id};
       if ($chg->{action} eq 'add') {
@@ -586,7 +567,6 @@ get '/admin/user/list.:format' => requires_role Admin => sub {
     }
     push @$result, $rs;
   }
-  debug(Dumper($result));
   return $result;
 };
 
@@ -601,7 +581,6 @@ get '/admin/role/list.:format' => requires_role Admin => sub {
     };
     push @$result, $rs;
   }
-  debug(Dumper($result));
   return $result;
 };
 
