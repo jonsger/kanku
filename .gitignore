@@ -12,7 +12,6 @@ etc/config.yml
 etc/kanku-worker.yml
 etc/jobs/*yml
 .kanku
-KankuFile
 config.yml
 .salt
 Saltfile

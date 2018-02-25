@@ -23,13 +23,12 @@ use Path::Class qw/file dir/;
 use FindBin;
 use File::HomeDir;
 use Term::ReadKey;
-use Template;
 use Kanku::Schema;
 use Cwd;
 use DBIx::Class::Migration;
 use IPC::Run qw/run timeout/;
 use Sys::Virt;
-
+use Net::Domain qw/hostfqdn/;
 extends qw(MooseX::App::Cmd::Command);
 with "Kanku::Cmd::Roles::Schema";
 
@@ -121,6 +120,17 @@ has ssl => (
     default       => 0
 );
 
+has apache => (
+    traits        => [qw(Getopt)],
+    isa           => 'Bool',
+    is            => 'rw',
+    #cmd_aliases   => 'X',
+    lazy          => 1,
+    documentation => 'Configure apache',
+    default       => 0
+);
+
+
 has _dbfile => (
 	isa 	=> 'Str',
 	is  	=> 'rw',
@@ -153,6 +163,18 @@ has app_root => (
   is    => 'rw',
   lazy  => 1,
   default => sub { dir($FindBin::Bin)->parent; }
+);
+
+has _tt_config => (
+  is => 'ro',
+  isa => 'HashRef',
+  lazy => 1,
+  default => sub {
+    {
+      INCLUDE_PATH => $FindBin::Bin."/../etc/templates/cmd/setup",
+      INTERPOLATE  => 1,               # expand "$var" in plain text
+    }
+  },
 );
 
 sub abstract { "Setup local environment to work as server or developer mode." }
@@ -209,16 +231,9 @@ sub _execute_server_setup {
 
   $self->user("root");
 
-  my @temp = <DATA>;
-  my $template = "@temp";
-
-  my $config = sprintf($template,$self->_dbfile);
-
-  my $cfg = file($self->app_root,'config.yml');
-
-  $cfg->spew($config);
-
   $self->_setup_database();
+
+  $self->_configure_apache if $self->apache;
 
   $self->_execute_distributed_setup if $self->distributed;
 
@@ -302,22 +317,17 @@ sub _create_default_pool {
 }
 
 sub _run_system_cmd {
-  my $self     = shift;
-  my $logger   = $self->logger;
-  my @commands = @_;
+  my ($self, $cmd, @opts) = @_;
+  my $logger = $self->logger;
+  
+  $logger->debug("Running command '$cmd'");
+  my ($in,$out,$err);
+  run [$cmd, @opts] , \$in, \$out , $err;
 
-  for my $cmd (@commands) {
-    $logger->debug("Running command '$cmd'");
-    my ($in,$out,$err);
-    run $cmd , \$in, \$out , $err;
-
-    if ($?) {
-      $logger->error("Execution of command failed: $err");
-    }
+  if ($?) {
+    $logger->error("Execution of command failed: $err");
   }
-
 }
-
 
 sub _configure_apache {
   my $self    = shift;
@@ -326,11 +336,29 @@ sub _configure_apache {
   $logger->debug("Enabling apache modules proxy, rewrite, headers");
 
   for my $mod (qw/proxy rewrite headers/) {
-    $self->_run_system_cmd("a2enmod $mod");
+    $self->_run_system_cmd("a2enmod", $mod);
   }
+
+  # create Template object
+  my $template  = Template->new($self->_tt_config);
+
+  # define template variables for replacement
+  my $vars = {kanku_host => hostfqdn() || $ENV{HOSTNAME}};
+
+  my $output = '';
+  my $cfg_file = "/etc/init.d/apache2/conf.d/kanku.conf";
+  my $tt_file = "kanku.conf.mod_proxy.tt2";
+
+  # process input template, substituting variables
+  $template->process($tt_file, $vars, $cfg_file)
+               || die $template->error()->as_string();
+
+  $self->logger->info("Created config file $cfg_file");
 
   $self->_configure_apache_ssl();
 
+  $self->_run_system_cmd("systemctl", "start", "apache2");
+  $self->_run_system_cmd("systemctl", "enable", "apache2");
 }
 
 sub _configure_apache_ssl {
@@ -424,15 +452,8 @@ sub _modify_path_in_bashrc {
 sub _setup_database {
   my $self = shift;
 
-  my $base_dir = dir($FindBin::Bin)->parent;
-
-  my $config = {
-    INCLUDE_PATH => $FindBin::Bin."/../etc/templates/cmd/",
-    INTERPOLATE  => 1,               # expand "$var" in plain text
-  };
-
   # create Template object
-  my $template  = Template->new($config);
+  my $template  = Template->new($self->_tt_config);
 
   # define template variables for replacement
   my $vars = {
@@ -445,7 +466,7 @@ sub _setup_database {
   my $cfg_file = "$FindBin::Bin/../config.yml";
 
   # process input template, substituting variables
-  $template->process('setup.config.yml.tt2', $vars, $cfg_file)
+  $template->process('config.yml.tt2', $vars, $cfg_file)
                || die $template->error()->as_string();
 
   $self->logger->info("Created config file $cfg_file");

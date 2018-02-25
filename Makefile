@@ -1,8 +1,30 @@
 PREFIX				=	/opt/kanku
 VERSION				=	$(shell grep VERSION lib/Kanku.pm |perl -p -e "s/.*'([\d.]+)'.*/\$$1/")
-CONFIG_FILES 	= templates/cmd/init.tt2 templates/examples-vm/obs-server-26.tt2 templates/examples-vm/sles11sp3.tt2 templates/examples-vm/obs-server.tt2 console-log.conf config.yml.template jobs/examples/obs-server.yml jobs/examples/sles11sp3.yml jobs/examples/obs-server-26.yml log4perl.conf templates/cmd/setup.config.yml.tt2 kanku-network-setup-logging.conf
+CONFIG_FILES = \
+	templates/cmd/init.tt2\
+	templates/cmd/setup/config.yml.tt2\
+	templates/cmd/setup/kanku.conf.mod_perl.tt2\
+	templates/cmd/setup/kanku.conf.mod_proxy.tt2\
+	templates/examples-vm/obs-server-26.tt2\
+	templates/examples-vm/sles11sp3.tt2\
+	templates/examples-vm/obs-server.tt2\
+	console-log.conf\
+	config.yml.template\
+	jobs/examples/obs-server.yml\
+	jobs/examples/sles11sp3.yml\
+	jobs/examples/obs-server-26.yml\
+	log4perl.conf\
+	kanku-network-setup-logging.conf
+
 FULL_DIRS			= bin lib share/migrations share/fixtures public views
-CONFIG_DIRS		= etc etc/templates etc/templates/cmd etc/templates/examples-vm/ etc/jobs etc/jobs/examples
+CONFIG_DIRS		= \
+	etc\
+	etc/templates\
+	etc/templates/cmd\
+	etc/templates/cmd/setup\
+	etc/templates/examples-vm/\
+	etc/jobs\
+	etc/jobs/examples
 DOCDIR = $(DESTDIR)/usr/share/doc/packages/kanku/
 PERL_CRITIC_READY := bin/*
 
@@ -11,7 +33,7 @@ all:
 install: install_dirs install_full_dirs install_services install_docs
 	install -m 644 ./dist/sudoers.d.kanku $(DESTDIR)/etc/sudoers.d/kanku
 	install -m 644 ./dist/kanku.logrotate $(DESTDIR)/etc/logrotate.d/kanku-common
-	install -m 644 dist/kanku.conf.mod_proxy $(DESTDIR)/etc/apache2/conf.d/kanku.conf
+	#install -m 644 dist/kanku.conf.mod_proxy $(DESTDIR)/etc/apache2/conf.d/kanku.conf
 	install -m 644 dist/profile.d-kanku.sh $(DESTDIR)/etc/profile.d/kanku.sh
 	#
 	for i in $(CONFIG_DIRS);do \

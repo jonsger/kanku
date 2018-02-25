@@ -4,6 +4,7 @@ Description=Kanku Dispatcher
 After=local-fs.target network.target
  
 [Service]
+User=kankurun
 Type=forking
 PIDFile=/opt/kanku/var/run/kanku-dispatcher.pid
 ExecStart=/opt/kanku/bin/kanku-dispatcher

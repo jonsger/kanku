@@ -5,6 +5,7 @@ Description=Kanku Worker
 After=local-fs.target network.target
  
 [Service]
+User=kankurun
 Type=forking
 PIDFile=/opt/kanku/var/run/kanku-worker.pid
 ExecStart=/opt/kanku/bin/kanku-worker

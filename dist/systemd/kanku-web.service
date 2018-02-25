@@ -5,6 +5,7 @@ Description=Kanku Web
 After=local-fs.target network.target
  
 [Service]
+User=kankurun
 Type=simple
 ExecStart=/usr/bin/plackup /opt/kanku/bin/kanku-app.psgi
 NonBlocking=yes
