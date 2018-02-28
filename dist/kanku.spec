@@ -33,6 +33,7 @@ BuildRequires:  perl-macros
 BuildRequires:  fdupes
 BuildRequires:  systemd-rpm-macros
 
+
 # perl requires for %check
 BuildRequires: perl(DBIx::Class::Fixtures)
 BuildRequires: perl(Test::Simple)
@@ -206,13 +207,13 @@ TODO:
 %ghost %{kanku_prefix}/etc/config.yml
 %config %{kanku_prefix}/etc/console-log.conf
 %config %{kanku_prefix}/etc/kanku-network-setup-logging.conf
-%config %{kanku_prefix}/etc/config.yml.template
 
 %dir %{kanku_prefix}/etc/templates
 %dir %{kanku_prefix}/etc/templates/examples-vm/
 %dir %{kanku_prefix}/etc/templates/cmd
-%config %{kanku_prefix}/etc/templates/cmd/setup.config.yml.tt2
+%dir %{kanku_prefix}/etc/templates/cmd/setup
 %config %{kanku_prefix}/etc/templates/cmd/init.tt2
+%config %{kanku_prefix}/etc/templates/cmd/setup/*
 %config %{kanku_prefix}/etc/templates/examples-vm/obs-server-26.tt2
 %config %{kanku_prefix}/etc/templates/examples-vm/sles11sp3.tt2
 %config %{kanku_prefix}/etc/templates/examples-vm/obs-server.tt2
@@ -306,6 +307,8 @@ exit 0
 %dir %attr(755, kankurun, kanku) %{kanku_prefix}/var/log
 %dir %attr(755, kankurun, kanku) %{kanku_prefix}/var/cache
 %dir %attr(755, kankurun, kanku) %{kanku_prefix}/var/run
+%dir /opt/kanku/lib/Kanku/NotifyQueue/
+/opt/kanku/lib/Kanku/NotifyQueue/*.pm
 
 %package web
 Summary: WebUI for kanku
@@ -362,7 +365,7 @@ TODO:
 
 %dir /etc/apache2
 %dir /etc/apache2/conf.d
-%config (noreplace) /etc/apache2/conf.d/kanku.conf
+%ghost %config (noreplace) /etc/apache2/conf.d/kanku.conf
 
 # public contains css/js/bootstrap/jquery etc
 %{kanku_prefix}/public/
