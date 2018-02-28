@@ -72,16 +72,12 @@ sub execute {
 
   $curl->output_file($self->_calc_output_file());
 
-  if ( $self->use_cache ) {
-    $ctx->{use_cache} = 1;
-    $curl->use_cache(1);
-    if ( $self->cache_dir ) {
-      $curl->cache_dir(Path::Class::Dir->new($self->cache_dir));
-    } else {
-      $ctx->{cache_dir} |= $curl->cache_dir();
-    }
+  $ctx->{use_cache} = 1;
+  $curl->use_cache(1);
+  if ( $self->cache_dir ) {
+    $curl->cache_dir(Path::Class::Dir->new($self->cache_dir));
   } else {
-    $curl->use_temp_file(1);
+    $ctx->{cache_dir} |= $curl->cache_dir();
   }
 
   $logger->debug("Using output file: ".$curl->output_file);
@@ -91,7 +87,6 @@ sub execute {
   my $tmp_file;
 
   try {
-    $logger->debug(" - use_cache: ".$curl->use_cache);
     $tmp_file = $curl->download();
   } catch {
     my $e = $_;
@@ -154,7 +149,7 @@ sub execute {
 }
 
 sub _calc_output_file {
-  my ($self,$use_public_api) = shift;
+  my ($self, $use_public_api) = @_;
   my $ctx                    = $self->job()->context();
   my $output_file;
 

@@ -18,7 +18,8 @@ sub setup {
   $self->_dbfile(
     file(
       $self->app_root,
-      "share",
+      "var",
+      "db",
       "kanku-schema.db"
     )->stringify
   );

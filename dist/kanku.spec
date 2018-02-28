@@ -307,6 +307,7 @@ exit 0
 %dir %attr(755, kankurun, kanku) %{kanku_prefix}/var/log
 %dir %attr(755, kankurun, kanku) %{kanku_prefix}/var/cache
 %dir %attr(755, kankurun, kanku) %{kanku_prefix}/var/run
+%dir %attr(755, kankurun, kanku) %{kanku_prefix}/var/db
 %dir /opt/kanku/lib/Kanku/NotifyQueue/
 /opt/kanku/lib/Kanku/NotifyQueue/*.pm
 
