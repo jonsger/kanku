@@ -29,6 +29,9 @@ session: "YAML"
 template: "template_toolkit"
 session: "YAML"
 engines:
+  session:
+    YAML:
+      session_dir: "/opt/kanku/var/sessions"
   template:
     template_toolkit:
       start_tag: '[% start_tag %]'

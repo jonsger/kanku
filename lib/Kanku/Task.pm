@@ -169,9 +169,13 @@ sub run {
   }
   catch {
     my $e = $_;
-
+    $e = $e->stringify if (ref($e) eq 'Sys::Virt::Error');
     $logger->error(Dumper($e));
-    $result = encode_json({error_message=>$e});
+    if ($e) {
+      $result = encode_json({error_message=>$e});
+    } else {
+      $result = "Unknown Result";
+    }
     $state  = 'failed';
     $job->state($state);
   };

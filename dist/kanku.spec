@@ -130,6 +130,7 @@ Recommends: osc
 Recommends: perl(IO::Uncompress::UnXz)
 Recommends: apache2
 Requires: libvirt-daemon-qemu qemu-kvm libvirt-daemon-config-network libvirt-daemon-config-nwfilter
+Requires: sudo
 Requires: perl(DBIx::Class::Fixtures)
 Requires: perl(Test::Simple)
 Requires: perl(YAML)
@@ -269,6 +270,8 @@ TODO:
 Summary: Command line client for kanku
 Requires: kanku-common
 Requires: libvirt-client
+Requires(pre): libvirt-daemon libvirt-daemon-driver-qemu qemu-kvm
+Requires(pre): sudo
 
 %description cli
 Command line client for kanku, mainly used for setup tasks
@@ -284,11 +287,12 @@ and in developer mode
 
 %package common-server
 Summary: Common server files or settings for kanku
+Requires(pre): libvirt-daemon libvirt-daemon-driver-qemu qemu-kvm
 Requires(pre): shadow
 
 %pre common-server
 getent group %{kanku_group} >/dev/null || groupadd -r %{kanku_group}
-getent passwd %{kanku_user} >/dev/null || useradd -r -g %{kanku_group} -d %{kanku_vardir} -s /sbin/nologin -c "user for kanku" %{kanku_user}
+getent passwd %{kanku_user} >/dev/null || useradd -r -g %{kanku_group} -G libvirt -d %{kanku_vardir} -s /sbin/nologin -c "user for kanku" %{kanku_user}
 exit 0
 
 %files common-server
@@ -296,6 +300,7 @@ exit 0
 %dir %{kanku_prefix}/var
 %dir %attr(755, kankurun, kanku) %{kanku_prefix}/var/log
 %dir %attr(755, kankurun, kanku) %{kanku_prefix}/var/cache
+%dir %attr(755, kankurun, kanku) %{kanku_prefix}/var/run
 
 %package web
 Summary: WebUI for kanku
@@ -327,6 +332,7 @@ TODO:
 
 %files web
 %attr(755,root,root) %{kanku_prefix}/bin/kanku-app.psgi
+%dir %attr(755, kankurun, kanku) %{kanku_prefix}/var/sessions
 %dir %{kanku_prefix}/views/
 %{_unitdir}/kanku-web.service
 %{_sbindir}/rckanku-web
@@ -398,6 +404,7 @@ Requires: kanku-common
 Requires: kanku-common-server
 #Requires: %{?systemd_requires}
 Requires: perl(Net::AMQP::RabbitMQ)
+Requires(pre): sudo
 Recommends: rabbitmq-server
 
 %description dispatcher

@@ -1,0 +1,105 @@
+---
+#dispatcher: Kanku::Dispatch::RabbitMQ
+
+Kanku::Util::DoD:
+  use_oscrc: 0
+
+[% IF use_publickey %]
+Kanku::Roles::SSH:
+  auth_type: publickey
+[% END %]
+
+plugins:
+  DBIC:
+    default:
+      dsn: dbi:SQLite:dbname=[% db_file %]
+      schema_class: Kanku::Schema
+
+#qemu:
+#  user: qemu
+#  images_dir: /var/lib/libvirt/images
+
+Kanku::LibVirt::HostList:
+  -
+    hostname: localhost
+#  -
+#    hostname: kanku-worker1
+#    remote_ip: 10.0.0.1
+#    driver: qemu
+#    transport: ssh
+#    # remote_port: 22
+#    # remote_path: system
+#    # The following options are documented in
+#    # https://libvirt.org/remote.html#Remote_URI_parameters
+#    extraparameters:
+#      keyfile: /opt/kanku/etc/ssh/id_dsa
+#      no_verify: 1
+#      no_tty: 1
+#      known_hosts: /opt/kanku/etc/ssh/known_hosts
+#      sshauth: privkey
+
+
+Kanku::LibVirt::Network::OpenVSwitch:
+  name:                 kanku-ovs
+  bridge:               kanku-br0
+  vlan:                 kanku-vlan1
+  host_ip:              192.168.199.1
+  network:              192.168.199.0/24
+  dhcp_range:           192.168.199.66,192.168.199.254
+  start_dhcp:           1
+  is_gateway:           1
+  iptables_chain:       KANKU_HOSTS
+
+Kanku::Util::IPTables:
+  start_port: 49001
+  iptables_chain:       KANKU_HOSTS
+
+Kanku::Util::VM::Console:
+  debug: 0
+#  log_dir: /srv/www/htdocs/kanku-console-logs/
+#  log_to_file: 1
+
+Kanku::Daemon::Scheduler:
+  -
+    job_name: kanku-vm
+    delay: 86400
+  -
+    job_name: obs-server
+    delay: 86400
+
+[% IF configure_rabbitmq %]
+Kanku::RabbitMQ:
+  vhost: /kanku
+  host: [% rabbitmq_host %]
+  user: [% rabbitmq_user %]
+  password: [% rabbitmq_host %]
+[% END %]
+
+Jobs:
+  kanku-vm:
+  obs-server:
+#  obs-server-26:
+#  sles11sp3:
+
+#Kanku::Daemon::TriggerD:
+#  listener:
+#    -
+#      class: Kanku::Listener::RabbitMQ
+#      host: rabbit.opensuse.org
+#      port: 5671
+#      user: linux
+#      password: linux
+#      heartbeat: 5
+#      ssl:  1
+#      ssl_verify_host: 0
+#      ssl_cacert: /usr/share/pki/trust/anchors/SUSE_Trust_Root.crt.pem
+#      exchange_name: pubsub
+#      routing_prefix: opensuse.obs
+#      triggers:
+#        -
+#          project: OBS:Server:Unstable
+#          package: obs-server
+#          repository: SLE_12_SP3
+#          arch: x86_64
+#          jobs:
+#            - obs-server

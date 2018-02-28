@@ -1,4 +1,4 @@
-# Copyright (c) 2015 SUSE LLC
+# Copyright (c) 2017 SUSE LLC
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 2 as
@@ -14,37 +14,54 @@
 # Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 #
-package Kanku::Roles::Config::KankuFile;
+package Kanku::Roles::NotifyQueue;
+
+=head1 NAME
+
+ Kanku::Roles::NotifyQueue - A role for NotifyQueue's
+
+=head1 SYNOPSIS
+
+  use Kanku::Roles::NotifyQueue;
+  with 'Kanku::Roles::NotifyQueue';
+
+=cut
 
 use Moose::Role;
-use Path::Class::File;
-use Path::Class::Dir;
+use FindBin;
+use Log::Log4perl;
 use Data::Dumper;
-use Cwd;
-use YAML;
+use JSON::XS;
 
-with 'Kanku::Roles::Config::Base';
+use Kanku::Config;
+use Kanku::RabbitMQ;
 
-has 'log_dir' => (is=>'rw',isa=>'Object',default=>sub {Path::Class::Dir->new(getcwd(),'.kanku','log')});
+=head1 ATTRIBUTES
 
-sub file {
-    return Path::Class::File->new(getcwd(),'KankuFile');
-};
+=over
 
-sub job_config {
-  my $self      = shift;
-  my $job_name  = shift;
+=item shutdown_file -
 
-  return $self->config->{jobs}->{$job_name};
-}
+=back
 
-sub notifiers_config {
-	# no notifiers in KankuFile
-	return []
-}
+=cut
 
-sub job_list {
-  return keys(%{$_[0]->config->{jobs}});
-}
+has shutdown_file => (
+  is      => 'rw',
+  isa     => 'Object',
+);
+
+has _queue => (
+  is      => 'rw',
+  isa     => 'Object',
+);
+
+has logger => (
+  is      => 'rw',
+  isa     => 'Object',
+);
+
+requires 'prepare';
+requires 'send';
 
 1;

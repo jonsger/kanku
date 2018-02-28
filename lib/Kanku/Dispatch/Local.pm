@@ -20,6 +20,7 @@ use Moose;
 
 with 'Kanku::Roles::Logger';
 with 'Kanku::Roles::Dispatcher';
+with 'Kanku::Roles::Daemon';
 
 use Kanku::Config;
 use Kanku::Job;

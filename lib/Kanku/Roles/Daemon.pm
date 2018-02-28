@@ -25,6 +25,7 @@ use FindBin;
 use Log::Log4perl;
 use Data::Dumper;
 use JSON::XS;
+use Sys::Hostname;
 use Net::Domain qw/hostfqdn/;
 
 use Kanku::Config;
@@ -67,7 +68,6 @@ has run_dir => (
   isa => 'Object',
   default => sub {
     my $rd = Path::Class::Dir->new("$FindBin::Bin/../var/run");
-    $rd->mkpath if (! -d $rd);
     return $rd
   }
 );
@@ -104,7 +104,10 @@ has notify_queue => (
   isa     => 'Object',
   lazy    => 1,
   default => sub {
-    my $q = Kanku::NotifyQueue->new(shutdown_file=>$_[0]->shutdown_file);
+    my $q = Kanku::NotifyQueue->new(
+      shutdown_file => $_[0]->shutdown_file,
+      logger        => $_[0]->logger
+    );
     $q->prepare;
     return $q;
   }
@@ -133,7 +136,7 @@ sub prepare_and_run {
 
   $self->logger->info("Starting service ".ref(__PACKAGE__));
 
-  my $hn  = hostfqdn();
+  my $hn  = hostfqdn() || hostname();
   my $ref = ref($self);
   my $notification = {
     type    => 'daemon_change',

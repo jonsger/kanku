@@ -17,15 +17,17 @@
 package Kanku::Handler::CreateDomain;
 
 use Moose;
+use Try::Tiny;
+use IO::Uncompress::AnyUncompress qw(anyuncompress $AnyUncompressError) ;
+use File::Copy qw/copy/;
+use Path::Class::File;
+use Data::Dumper;
+
 use Kanku::Config;
 use Kanku::Util::VM;
 use Kanku::Util::VM::Image;
 use Kanku::Util::IPTables;
 
-use IO::Uncompress::AnyUncompress qw(anyuncompress $AnyUncompressError) ;
-use File::Copy qw/copy/;
-use Path::Class::File;
-use Data::Dumper;
 with 'Kanku::Roles::Handler';
 
 has [qw/
@@ -333,7 +335,16 @@ sub _create_image_file_from_cache {
       die "No volume with name '$vol_name' found" if ! $vol;
     } else {
       $self->logger->info("Uploading $in via libvirt to $vol_name");
-      $vol = $image->create_volume();
+      try {
+        $vol = $image->create_volume();
+      } catch {
+        my $e = $_;
+        $self->logger->error("Error while uploading $in to $vol_name");
+        if ($e) {
+          $self->logger->error($e->stringify);
+          die $e->stringify;
+        }
+      };
     }
   } else {
     die "Unknown extension for disk file $file\n";

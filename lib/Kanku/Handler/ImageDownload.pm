@@ -161,21 +161,10 @@ sub _calc_output_file {
   $self->logger->trace("job->context:\n".Dumper($ctx));
   if ($use_public_api) {
     $output_file = $ctx->{obs_project}."-".$ctx->{obs_package} . '.cpio';
-  } elsif ( $self->use_cache ) {
+  } else {
     $output_file =  $self->url;
     $output_file =~ s#.*/(.*)$#$1#;
-  } else {
-    # TODO: this is hardcoded and only quick and dirty
-    # should be more flexible
-    # needs introduction of a file suffix which is set by OBSCheck
-    for my $var (qw/images_dir domain_name/) {
-      if (! $ctx->{$var} ) {
-      	die "Variable $var not set in job context.".
-	  " Please check your job configuration.\n"
-      }
-    }
-
-    $output_file =  $ctx->{images_dir}."/".$ctx->{domain_name}.".qcow2";
+    $self->use_cache(1);
   }
 
   return $output_file;

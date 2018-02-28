@@ -20,6 +20,7 @@ use Moose::Role;
 use Path::Class::File;
 use Data::Dumper;
 use YAML;
+use Path::Class qw/dir/;
 
 with 'Kanku::Roles::Logger';
 
@@ -59,7 +60,6 @@ has log_dir => (
   }
 );
 
-
 sub _build_config {
     my $self    = shift;
     my $file    = $self->file;
@@ -90,11 +90,14 @@ around 'config' => sub {
 };
 
 sub job_list {
-  my $self = shift;
-
-  return keys (%{$self->config->{Jobs}});
-
+  my $self  = shift;
+  my @files = dir($self->app_base_path, 'etc', 'jobs')->children;
+  my @result;
+  for my $f (@files) {
+    push(@result, $1) if ($f =~ /.*\/(.*)\.yml$/);
+  }
+  $self->logger->debug("*********** CONFIX @result");
+  return @result;
 }
 
 1;
-

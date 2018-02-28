@@ -120,19 +120,9 @@ sub job_config_plain {
   my $self      = shift;
   my $job_name  = shift;
   my $conf_file = Path::Class::File->new($self->app_base_path,'etc','jobs',$job_name.'.yml' . $self->mode);
-
-
-  my $content = $conf_file->slurp();
+  my $content   = $conf_file->slurp();
 
   return $content;
 }
 
-sub job_list {
-  my $self = shift;
-
-  return keys (%{$self->config->{Jobs}});
-
-}
-
 1;
-
