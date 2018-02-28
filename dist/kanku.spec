@@ -290,6 +290,11 @@ Summary: Common server files or settings for kanku
 Requires(pre): libvirt-daemon libvirt-daemon-driver-qemu qemu-kvm
 Requires(pre): shadow
 
+%description common-server
+This package contains common server files, settings and dependencies 
+for the kanku server components like kanku-worker, kanku-dispatcher,
+kanku-web, kanku-scheduler and kanku-triggerd
+
 %pre common-server
 getent group %{kanku_group} >/dev/null || groupadd -r %{kanku_group}
 getent passwd %{kanku_user} >/dev/null || useradd -r -g %{kanku_group} -G libvirt -d %{kanku_vardir} -s /sbin/nologin -c "user for kanku" %{kanku_user}
