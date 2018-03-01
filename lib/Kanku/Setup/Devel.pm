@@ -1,6 +1,7 @@
 package Kanku::Setup::Devel;
 
 use Moose;
+use Path::Class qw/dir file/;
 
 with 'Kanku::Setup::Roles::Common';
 with 'Kanku::Roles::Logger';
@@ -8,6 +9,11 @@ with 'Kanku::Roles::Logger';
 has homedir => (
     isa           => 'Str',
     is            => 'rw',
+    lazy          => 1,
+    default       => sub {
+      # dbi:SQLite:dbname=/home/frank/.kanku/kanku-schema.db
+      return File::HomeDir->users_home($_[0]->user);
+    }
 );
 
 has _dbfile => (
@@ -17,6 +23,24 @@ has _dbfile => (
         default => sub { $_[0]->homedir."/.kanku/kanku-schema.db" }
 );
 
+has apiurl => (
+  isa    => 'Str',
+  is     => 'rw',
+);
+
+has osc_user => (
+  isa     => 'Str',
+  is      => 'rw',
+  lazy    => 1,
+  default => ''      
+);
+
+has osc_pass => (
+  isa     => 'Str',
+  is      => 'rw',
+  lazy    => 1,
+  default => ''      
+);
 
 sub setup {
   my $self    = shift;
@@ -45,25 +69,22 @@ sub setup {
   # enable libvirtd
   system("chkconfig libvirtd on");
 
-  # start and set autostart for default network
-  system("virsh net-autostart default 1>/dev/null");
-
-  die if $?;
-
   $self->_create_default_pool;
 
   $self->_create_default_network;
 
   $logger->info("Developer mode setup successfully finished!");
   $logger->info("Please reboot to make sure, libvirtd is coming up properly");
-
 }
 
 sub _create_osc_rc {
   my $self  = shift;
-  my $rc        = file($self->homedir,".oscrc");
 
-  return if ( -f $rc );
+  my $rc        = file($self->homedir,".config/osc/oscrc");
+  my $rc_old    = file($self->homedir,".oscrc");
+
+  return if (-f $rc_old);
+  return if (-f $rc);
 
   if ( ! $self->apiurl ) {
      my $default = "https://api.opensuse.org";
@@ -134,10 +155,24 @@ sub _modify_path_in_bashrc {
   }
   
   if ( ! $found ) {
-        $self->logger->debug("modifying " . $rc->stringify);
+    $self->logger->debug("modifying " . $rc->stringify);
     push(@lines,"export PATH=$FindBin::Bin\:\$PATH\n");
-        $rc->spew(\@lines);
+    $rc->spew(\@lines);
   }
+}
+
+sub _ask_for_user {
+  my $self = shift;
+
+  while ( ! $self->user ) {
+    print "Please enter the username of the user who will run kanku [".($ENV{SUDO_USER} || $ENV{USER})."]\n";
+
+    my $answer = <STDIN>;
+    chomp($answer);
+    $self->user( $answer || $ENV{SUDO_USER} );
+  }
+
+  return undef;
 }
 
 1;

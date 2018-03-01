@@ -85,6 +85,7 @@ has apiurl => (
     is            => 'rw',
     #cmd_aliases   => 'X',
     documentation => 'url to your obs api',
+    default       => "https://api.opensuse.org"
 );
 
 has osc_user => (
@@ -93,6 +94,8 @@ has osc_user => (
     is            => 'rw',
     #cmd_aliases   => 'X',
     documentation => 'login user for obs api',
+    lazy          => 1,
+    default       => ''
 );
 
 has osc_pass => (
@@ -101,6 +104,8 @@ has osc_pass => (
     is            => 'rw',
     #cmd_aliases   => 'X',
     documentation => 'login password obs api',
+    lazy          => 1,
+    default       => ''
 );
 
 has dsn => (
@@ -130,18 +135,18 @@ has apache => (
     default       => 0
 );
 
-has homedir => (
-    traits        => [qw(Getopt)],
-    isa           => 'Str',
-    is            => 'rw',
-    #cmd_aliases   => 'X',
-    documentation => 'home directory for user',
-    lazy          => 1,
-    default       => sub {
-      # dbi:SQLite:dbname=/home/frank/.kanku/kanku-schema.db
-      return File::HomeDir->users_home($_[0]->user);
-    }
-);
+#has homedir => (
+#    traits        => [qw(Getopt)],
+#    isa           => 'Str',
+#    is            => 'rw',
+#    #cmd_aliases   => 'X',
+#    documentation => 'home directory for user',
+#    lazy          => 1,
+#    default       => sub {
+#      # dbi:SQLite:dbname=/home/frank/.kanku/kanku-schema.db
+#      return File::HomeDir->users_home($_[0]->user);
+#    }
+#);
 
 sub abstract { "Setup local environment to work as server or developer mode." }
 
@@ -188,7 +193,7 @@ sub execute {
     );
   } elsif ($self->devel) {
     $setup = Kanku::Setup::Devel->new(
-      homedir     => $self->homedir,
+      #homedir     => $self->homedir,
       user        => $self->user,
       images_dir  => $self->images_dir,
       apiurl      => $self->apiurl,
@@ -205,22 +210,6 @@ sub execute {
   $setup->dsn($self->dsn) if $self->dsn;
 
   $setup->setup();
-}
-
-sub _ask_for_user {
-  my $self = shift;
-
-  while ( ! $self->user ) {
-
-    print "Please enter the username of the user who will run kanku [".($ENV{SUDO_USER} || $ENV{USER})."]\n";
-
-    my $answer = <STDIN>;
-    chomp($answer);
-
-    $self->user( $answer || $ENV{SUDO_USER} );
-  }
-
-  return undef;
 }
 
 sub _ask_for_install_mode {

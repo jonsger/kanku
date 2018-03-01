@@ -155,8 +155,8 @@ sub _create_default_network {
   for my $net (@networks) {
     if ($net->get_name eq 'default') {
       $logger->info("Found pool default - enabling autostart");
-      $net->set_autostart(1);
-      $net->create();
+      $net->set_autostart(1) unless $net->get_autostart;
+      $net->create() unless $net->is_active;
       return 1;
     }
   }
