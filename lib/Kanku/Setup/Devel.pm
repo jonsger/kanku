@@ -86,6 +86,8 @@ sub _create_osc_rc {
   return if (-f $rc_old);
   return if (-f $rc);
 
+  $rc->parent->mkpath unless -d $rc->parent;
+
   if ( ! $self->apiurl ) {
      my $default = "https://api.opensuse.org";
      print "Please enter the apiurl of your obs server [$default]\n";
