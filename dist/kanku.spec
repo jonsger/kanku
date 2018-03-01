@@ -176,6 +176,7 @@ Requires: perl-DBD-SQLite
 Requires: perl(LWP::Protocol::https)
 Requires: perl(Mail::Sendmail)
 Requires: perl(Archive::Cpio)
+Requires: perl(UUID)
 Requires: logrotate
 
 Conflicts: perl-DBD-SQLite-Amalgamation
