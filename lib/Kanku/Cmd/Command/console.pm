@@ -43,9 +43,9 @@ sub execute {
   my $cfg     = Kanku::Config->instance();
 
 
-  my $cmd = "virsh console ".$self->domain_name;
+  my $cmd = "virsh -c qemu:///system console ".$self->domain_name;
 
-  system($cmd);
+  exec($cmd);
 }
 
 __PACKAGE__->meta->make_immutable;
