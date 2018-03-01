@@ -227,8 +227,7 @@ TODO:
 
 %config(noreplace) %{kanku_prefix}/etc/log4perl.conf
 
-%dir /etc/sudoers.d
-%config (noreplace)  /etc/sudoers.d/kanku
+%ghost /etc/sudoers.d/kanku
 
 %exclude %dir /etc/profile.d
 %config /etc/profile.d/kanku.sh
