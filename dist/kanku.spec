@@ -235,6 +235,8 @@ TODO:
 %exclude %dir /etc/logrotate.d/
 %config /etc/logrotate.d/kanku-common
 
+%dir %{kanku_prefix}/lib/Kanku/NotifyQueue/
+%{kanku_prefix}/lib/Kanku/NotifyQueue/*.pm
 %{kanku_prefix}/lib/Kanku/Handler/
 %{kanku_prefix}/lib/Kanku/Roles/
 %{kanku_prefix}/lib/Kanku/Schema/
@@ -308,8 +310,6 @@ exit 0
 %dir %attr(755, kankurun, kanku) %{kanku_prefix}/var/cache
 %dir %attr(755, kankurun, kanku) %{kanku_prefix}/var/run
 %dir %attr(755, kankurun, kanku) %{kanku_prefix}/var/db
-%dir /opt/kanku/lib/Kanku/NotifyQueue/
-/opt/kanku/lib/Kanku/NotifyQueue/*.pm
 
 %package web
 Summary: WebUI for kanku
