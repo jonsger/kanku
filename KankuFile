@@ -1,0 +1,177 @@
+#
+Kanku::Util::IPTables:
+  start_port: 49001
+
+
+domain_name: kanku-vm
+default_job: kanku-server
+
+#qemu:
+#  user: 
+
+jobs:
+ ###### JOB: 
+ kanku-server:
+  -
+    use_module: Kanku::Handler::SetJobContext
+    options:
+      host_interface: eth0
+      #domain_name: kanku-server
+      login_user: root
+      login_pass: kankudai
+  -
+    use_module: Kanku::Handler::OBSCheck
+    options:
+      api_url: https://api.opensuse.org/public
+      # Please have a look at
+      # https://build.opensuse.org/project/show/home:M0ses:kanku:Images
+      # to find more official Images
+      project: home:M0ses:kanku:Images
+      repository: images_leap_42_3
+      package: openSUSE-Leap-42.3-JeOS
+  -
+    use_module: Kanku::Handler::ImageDownload
+    options:
+      use_cache: 1
+
+  -
+    use_module: Kanku::Handler::CreateDomain
+    options:
+      memory: 6G
+      vcpu: 1
+      use_9p: 1
+  -
+    use_module: Kanku::Handler::PrepareSSH
+  -
+    use_module: Kanku::Handler::ExecuteCommandViaSSH
+    options:
+      commands:
+        - zypper -n ar obs://home:M0ses:Perl home:M0ses:Perl
+        #- zypper -n ar obs://home:M0ses:kanku:staging home:M0ses:kanku:staging
+        - zypper -n ar http://download.suse.de/ibs/home:/M0ses:/kanku:/staging/openSUSE_Leap_42.3/home:M0ses:kanku:staging.repo
+        - zypper --gpg-auto-import-keys ref -s
+        - zypper -n in kanku vim-data curl make apache2 systemd-bash-completion sqlite3
+        #- make -C /tmp/kanku install 2>&1 |tee /tmp/make.log
+        - /opt/kanku/bin/kanku setup --server --apache 2>&1 |tee /tmp/setup-server.log
+        - cp /opt/kanku/etc/jobs/examples/obs-server.yml /opt/kanku/etc/jobs/
+        - systemctl start kanku-web  
+        - systemctl enable kanku-web  
+        - systemctl start kanku-dispatcher
+        - systemctl enable kanku-dispatcher
+        - kanku login -a http://localhost:5000/kanku -u admin -p opensuse
+        - kanku rtrigger -j obs-server
+        - /tmp/kanku/contrib/wait_for_job.sh
+
+ ###### JOB: 
+ kanku-dist:
+  -
+    use_module: Kanku::Handler::SetJobContext
+    options:
+      host_interface: eth0
+      #domain_name: kanku-server
+      login_user: root
+      login_pass: kankudai
+  -
+    use_module: Kanku::Handler::OBSCheck
+    options:
+      api_url: https://api.opensuse.org/public
+      # Please have a look at
+      # https://build.opensuse.org/project/show/home:M0ses:kanku:Images
+      # to find more official Images
+      project: home:M0ses:kanku:Images
+      repository: images_leap_42_3
+      package: openSUSE-Leap-42.3-JeOS
+  -
+    use_module: Kanku::Handler::ImageDownload
+    options:
+      use_cache: 1
+
+  -
+    use_module: Kanku::Handler::CreateDomain
+    options:
+      memory: 6G
+      vcpu: 1
+      use_9p: 1
+  -
+    use_module: Kanku::Handler::PrepareSSH
+  -
+    use_module: Kanku::Handler::ExecuteCommandViaSSH
+    options:
+      commands:
+        - zypper -n ar obs://home:M0ses:Perl home:M0ses:Perl
+        #- zypper -n ar obs://home:M0ses:kanku:staging home:M0ses:kanku:staging
+        - zypper -n ar http://download.suse.de/ibs/home:/M0ses:/kanku:/staging/openSUSE_Leap_42.3/home:M0ses:kanku:staging.repo
+        - zypper --gpg-auto-import-keys ref -s
+        # Only for development
+        - zypper -n in vim-data curl make apache2 systemd-bash-completion sqlite3
+        - zypper -n in kanku rabbitmq-server rabbitmq-server-plugins openvswitch openvswitch-switch
+        - make -C /tmp/kanku install 2>&1 |tee /tmp/make.log
+        - /opt/kanku/bin/kanku setup --distributed --apache 2>&1 |tee /tmp/setup-server.log
+        - cp /opt/kanku/etc/jobs/examples/obs-server.yml /opt/kanku/etc/jobs/
+        - systemctl start kanku-web  
+        - systemctl enable kanku-web  
+        - systemctl start kanku-worker
+        - systemctl enable kanku-worker
+        - systemctl start kanku-dispatcher
+        - systemctl enable kanku-dispatcher
+        - systemctl start kanku-triggerd
+        - systemctl enable kanku-triggerd
+        - systemctl start kanku-scheduler
+        - systemctl enable kanku-scheduler
+        - kanku login -a http://localhost:5000/kanku -u admin -p opensuse
+        - kanku rtrigger -j obs-server
+        - /tmp/kanku/contrib/wait_for_job.sh
+
+ ###### JOB: 
+ kanku-devel:
+  -
+    use_module: Kanku::Handler::SetJobContext
+    options:
+      host_interface: eth0
+      #domain-name: kanku-devel
+      login_user: root
+      login_pass: kankudai
+  -
+    use_module: Kanku::Handler::OBSCheck
+    options:
+      api_url: https://api.opensuse.org/public
+      # Please have a look at
+      # https://build.opensuse.org/project/show/home:M0ses:kanku:Images
+      # to find more official Images
+      project: home:M0ses:kanku:Images
+      repository: images_leap_42_3
+      package: openSUSE-Leap-42.3-JeOS
+  -
+    use_module: Kanku::Handler::ImageDownload
+    options:
+      use_cache: 1
+
+  -
+    use_module: Kanku::Handler::CreateDomain
+    options:
+      memory: 6G
+      vcpu: 2
+      use_9p: 1
+      #forward_port_list: tcp:22,tcp:443
+  -
+    use_module: Kanku::Handler::PrepareSSH
+  -
+    use_module: Kanku::Handler::ExecuteCommandViaSSH
+    options:
+      commands:
+        - zypper -n ar obs://home:M0ses:Perl home:M0ses:Perl
+        - zypper -n ar obs://home:M0ses:kanku:staging home:M0ses:kanku:staging
+        #- zypper -n ar http://download.suse.de/ibs/home:/M0ses:/kanku:/staging/openSUSE_Leap_42.3/home:M0ses:kanku:staging.repo
+        - zypper --gpg-auto-import-keys ref -s
+        - zypper -n in vim-data curl make apache2 systemd-bash-completion sqlite3
+        - zypper -n in kanku-cli
+        - make -C /tmp/kanku install
+        - /opt/kanku/bin/kanku setup --devel --user kanku --osc_user M0ses --osc_pass ZTKDu9k5UJm!
+  -
+    use_module: Kanku::Handler::ExecuteCommandViaSSH
+    options:
+      username: kanku
+      commands:
+        - mkdir prj
+        - cp /tmp/kanku/kanku-test/devel/KankuFile.obs prj/KankuFile
+        - cd prj;kanku up 2>&1 | tee /tmp/kanku-up.log
