@@ -153,6 +153,7 @@ sub listen_on_queue {
       $logger->error($_);
       $self->airbrake->notify_with_backtrace($_, {context=>{pid=>$$,worker_id=>$self->worker_id}});
       $kmq->reconnect if $_ =~ /^recv: a SSL error occurred/;
+      sleep 1;
     };
 
 

@@ -135,18 +135,44 @@ has apache => (
     default       => 0
 );
 
-#has homedir => (
-#    traits        => [qw(Getopt)],
-#    isa           => 'Str',
-#    is            => 'rw',
-#    #cmd_aliases   => 'X',
-#    documentation => 'home directory for user',
-#    lazy          => 1,
-#    default       => sub {
-#      # dbi:SQLite:dbname=/home/frank/.kanku/kanku-schema.db
-#      return File::HomeDir->users_home($_[0]->user);
-#    }
-#);
+has mq_host => (
+    traits        => [qw(Getopt)],
+    isa           => 'Str',
+    is            => 'rw',
+    lazy          => 1,
+    documentation => 'Host for rabbitmq (distributed setup only)',
+    default       => 'localhost'
+);
+
+has mq_vhost => (
+    traits        => [qw(Getopt)],
+    isa           => 'Str',
+    is            => 'rw',
+    lazy          => 1,
+    documentation => 'VHost for rabbitmq (distributed setup only)',
+    default       => '/kanku'
+);
+
+has mq_user => (
+    traits        => [qw(Getopt)],
+    isa           => 'Str',
+    is            => 'rw',
+    lazy          => 1,
+    documentation => 'Username for rabbitmq (distributed setup only)',
+    default       => 'kanku'
+);
+
+has mq_pass => (
+    traits        => [qw(Getopt)],
+    isa           => 'Str',
+    is            => 'rw',
+    lazy          => 1,
+    documentation => 'Password for rabbitmq (distributed setup only)',
+    default       => sub {
+       my @alphanumeric = ('a'..'z', 'A'..'Z', 0..9);
+       join '', map $alphanumeric[rand @alphanumeric], 0..12;
+    }
+);
 
 sub abstract { "Setup local environment to work as server or developer mode." }
 
@@ -170,18 +196,20 @@ sub execute {
 
   ### Get information
   # ask for mode
-  $self->server(1) if ($self->distributed);
-  $self->_ask_for_install_mode() if ( ! $self->devel and ! $self->server );
+  $self->_ask_for_install_mode() unless ($self->devel or $self->server or $self->distributed );
 
   my $setup;
-  if ($self->server && $self->distributed) {
+
+  if ($self->distributed) {
     $setup = Kanku::Setup::Server::Distributed->new(
-      images_dir  => $self->images_dir,
-      apiurl      => $self->apiurl,
-      _ssl        => $self->ssl,
-      _apache     => $self->apache,
-      _apache     => $self->apache,
-      _devel      => 0,
+      images_dir   => $self->images_dir,
+      apiurl       => $self->apiurl,
+      _ssl         => $self->ssl,
+      _apache      => $self->apache,
+      _devel       => 0,
+      mq_user      => $self->mq_user,
+      mq_vhost     => $self->mq_vhost,
+      mq_pass      => $self->mq_pass,
     );
   } elsif ($self->server) {
     $setup = Kanku::Setup::Server::Standalone->new(
@@ -236,7 +264,6 @@ Please select installation mode :
     }
 
     if ( $answer == 2 ) {
-      $self->server(1);
       $self->distributed(1);
       last;
     }
@@ -245,7 +272,6 @@ Please select installation mode :
       $self->devel(1);
       last;
     }
-
   }
 }
 

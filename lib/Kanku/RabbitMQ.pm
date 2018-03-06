@@ -99,8 +99,9 @@ has shutdown_file => (
 sub connect {
   my $self = shift;
   my %opts = @_;
+  my $logger = $self->logger;
 
-  $self->logger->debug(__PACKAGE__."->connect to opts:".$self->dump_it(\%opts));
+  $logger->debug(__PACKAGE__."->connect to opts:".$self->dump_it(\%opts));
   $self->queue(Net::AMQP::RabbitMQ->new());
 
   my @connect_opts = (
@@ -117,7 +118,7 @@ sub connect {
     }
   );
 
-  $self->logger->debug("Trying to connect to rabbitmq with the folloing options: ".$self->dump_it(\@connect_opts));
+  $logger->debug("Trying to connect to rabbitmq with the folloing options: ".$self->dump_it(\@connect_opts));
 
   my $connect_success = 0;
   while (! $connect_success ) {
@@ -128,13 +129,14 @@ sub connect {
       if ( $self->shutdown_file ) {
         die "shutdown while trying to connect to rabbitmq" if ( -f $self->shutdown_file);
       }
+      $logger->trace("Error while connecting to RabbitMQ: '$_'");
       die "Could not connect to RabbitMQ: $_" if $opts{no_retry};
       sleep 1;
     };
 
   }
 
-  $self->logger->info("Connection rabbitmq on ".$self->host." established successfully");
+  $logger->info("Connection rabbitmq on ".$self->host." established successfully");
 
   $self->queue->channel_open($self->channel);
 
@@ -185,7 +187,6 @@ sub setup_worker {
 
 sub recv {
   my $self = shift;
-
   my $logger = $self->logger;
 
   $logger->trace("Waiting for message on channel:     '".$self->channel."'");

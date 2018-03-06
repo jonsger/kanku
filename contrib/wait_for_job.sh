@@ -1,10 +1,10 @@
 #!/bin/bash
 
 
-RUNNING=`kanku rhistory -l|grep -P "State\s+:\s+running"`
+RUNNING=`kanku rhistory -l|grep -P "State\s+:\s+(running|dispatching)"`
 
 while [ -n "$RUNNING" ];do
-  RUNNING=`kanku rhistory -l|grep -P "State\s+:\s+running"`
+  RUNNING=`kanku rhistory -l|grep -P "State\s+:\s+(running|dispatching)"`
   sleep 10
 done
 

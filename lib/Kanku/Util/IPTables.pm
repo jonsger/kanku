@@ -26,7 +26,7 @@ with 'Kanku::Roles::Logger';
 has [qw/domain_name/] => (is=>'rw',isa=>'Str');
 has [qw/guest_ipaddress host_ipaddress host_interface forward_port_list iptables_chain/] => (is=>'rw',isa=>'Str');
 has forward_ports => (is=>'rw',isa=>'ArrayRef',default=>sub { [] });
-has '+iptables_chain' => (default => 'KANKU_HOSTS');
+has '+iptables_chain' => (lazy=>1, default => 'KANKU_HOSTS');
 
 has host_ipaddress => (
   is      =>'rw',

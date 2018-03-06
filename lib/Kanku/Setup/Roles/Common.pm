@@ -67,6 +67,14 @@ has _devel => (
   is    => 'ro',
 );
 
+has _distributed => (
+  isa     => 'Bool',
+  is      => 'rw',
+  lazy    => 1,
+  default => 0
+);
+
+
 sub _configure_libvirtd_access {
   my ($self) = @_;
   my $logger        = $self->logger;
@@ -151,19 +159,21 @@ sub _create_default_network {
   my $logger   = $self->logger;
   my $vmm      = Sys::Virt->new(uri => 'qemu:///system');
   my @networks = $vmm->list_all_networks;
+  my $nn       = ($self->_distributed) ? 'kanku-ovs' : 'default';
 
   for my $net (@networks) {
-    if ($net->get_name eq 'default') {
-      $logger->info("Found pool default - enabling autostart");
+    if ($net->get_name eq $nn) {
+      $logger->info("Found network '$nn' - enabling autostart");
       $net->set_autostart(1) unless $net->get_autostart;
       $net->create() unless $net->is_active;
-      return 1;
+      return;
     }
   }
 
-  $logger->info("No network named 'default' found - creating");
+  my $ttf = "net-$nn.xml.tt2";
+  $logger->info("No network named '$nn' found - creating using '$ttf'");
   my $sn = int(rand(255));
-  my $xml = $self->_create_config_from_template('net-default.xml.tt2',undef,{subnet=>$sn});
+  my $xml = $self->_create_config_from_template($ttf, undef, {subnet=>$sn});
   my $net = $vmm->define_network($xml);
   $net->set_autostart(1);
   $net->create();
@@ -191,13 +201,15 @@ sub _run_system_cmd {
   my ($self, $cmd, @opts) = @_;
   my $logger = $self->logger;
 
-  $logger->debug("Running command '$cmd'");
+  $logger->debug("Running command '$cmd @opts'");
   my ($in,$out,$err);
   run [$cmd, @opts] , \$in, \$out , $err;
 
   if ($?) {
-    $logger->error("Execution of command failed: $err");
+    $logger->error("Execution of command failed: '".( $err || '' )."'");
   }
+
+  return $?
 }
 
 sub _chown {

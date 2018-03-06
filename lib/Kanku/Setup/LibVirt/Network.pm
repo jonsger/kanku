@@ -94,18 +94,18 @@ sub prepare_ovs {
 
         # Set ip address for bridge interface
 	my $ip = new Net::IP ($ncfg->{network});
-
-	my @cmd = ("ifconfig",$br,$ncfg->{host_ip},'netmask',$ip->mask);
-
+	my @cmd = ("ip", "addr", "add", "$ncfg->{host_ip}/".$ip->mask, 'dev', $br);
 	$self->logger->debug("Configuring interface with command '@cmd'");
+	system(@cmd);
 
+        # Set interface mode to up
+	my @cmd = ("ip", "link", "set",$br, "up");
+	$self->logger->debug("Configuring interface with command '@cmd'");
 	system(@cmd);
 
 	# Set MTU for bridge interface
 	@cmd=(qw/ip link set mtu/, $mtu, $br);
-
 	$self->logger->debug("Configuring interface with command '@cmd'");
-
 	system(@cmd);
 }
 

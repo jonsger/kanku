@@ -61,25 +61,33 @@ Kanku::Util::VM::Console:
 
 Kanku::Daemon::Scheduler:
   -
-    job_name: kanku-vm
-    delay: 86400
-  -
     job_name: obs-server
     delay: 86400
+#  -
+#    job_name: kanku-vm
+#    delay: 86400
 
-[% IF configure_rabbitmq %]
+[% IF distributed %]
+
+Kanku::Handler::CreateDomain:
+  name:   kanku-ovs
+  bridge: kanku-br0
+  iptables_chain:      KANKU_HOSTS
+
 Kanku::RabbitMQ:
-  vhost: /kanku
+  vhost: [% rabbitmq_vhost %]
   host: [% rabbitmq_host %]
   user: [% rabbitmq_user %]
-  password: [% rabbitmq_host %]
-[% END %]
+  password: [% rabbitmq_pass %]
+  ssl: 1
+  ssl_cacert: [% cacertfile %]
 
-Jobs:
-  kanku-vm:
-  obs-server:
-#  obs-server-26:
-#  sles11sp3:
+dispatcher: Kanku::Dispatch::RabbitMQ
+
+Kanku::Dispatch::RabbitMQ:
+  max_processes: 2
+
+[% END %]
 
 #Kanku::Daemon::TriggerD:
 #  listener:

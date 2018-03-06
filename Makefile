@@ -5,9 +5,12 @@ CONFIG_FILES = \
 	templates/cmd/setup/config.yml.tt2\
 	templates/cmd/setup/kanku.conf.mod_perl.tt2\
 	templates/cmd/setup/kanku.conf.mod_proxy.tt2\
+	templates/cmd/setup/openssl.cnf.tt2\
 	templates/cmd/setup/etc/config.yml.tt2\
 	templates/cmd/setup/net-default.xml.tt2\
+	templates/cmd/setup/net-kanku-ovs.xml.tt2\
         templates/cmd/setup/pool-default.xml\
+        templates/cmd/setup/rabbitmq.config.tt2\
 	templates/examples-vm/obs-server-26.tt2\
 	templates/examples-vm/sles11sp3.tt2\
 	templates/examples-vm/obs-server.tt2\
@@ -18,7 +21,7 @@ CONFIG_FILES = \
 	log4perl.conf\
 	kanku-network-setup-logging.conf
 
-FULL_DIRS			= bin lib share/migrations share/fixtures public views
+FULL_DIRS			= bin share/migrations share/fixtures public views
 CONFIG_DIRS		= \
 	etc\
 	etc/templates\
@@ -45,11 +48,14 @@ install: install_dirs install_full_dirs install_services install_docs
 		cp -av ./etc/$$i $(DESTDIR)$(PREFIX)/etc/$$i ;\
 	done
 
-install_full_dirs:
+install_full_dirs: lib
 	#
 	for i in $(FULL_DIRS) ;do \
 		cp -av ./$$i `dirname $(DESTDIR)$(PREFIX)/$$i` ;\
 	done
+
+lib:
+	cp -av ./lib $(DESTDIR)$(PREFIX)
 
 install_dirs:
 	install -m 755 -d $(DESTDIR)$(PREFIX)
@@ -112,4 +118,4 @@ test:
 critic:
 	perlcritic -brutal $(PERL_CRITIC_READY)
 
-.PHONY: dist install
+.PHONY: dist install lib
