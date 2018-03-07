@@ -230,7 +230,7 @@ sub _sub_get_image_file_from_url_cb {
     my $self = shift;
     my $arg = shift;
     foreach my $bin (@$arg) {
-      return $bin if $bin->{filename} =~ /\.(vmdk|qcow2|raw|raw\.xz)$/
+      return $bin if $bin->{filename} =~ /\.(vmdk|qcow2|raw|raw\.xz|vhdfixed\.xz)$/
     }
 }
 

@@ -309,14 +309,15 @@ sub _create_image_file_from_cache {
   my $vol;
 
   my $suffix2format = {
-     qcow2 => 'qcow2',
-     raw   => 'raw',
-     img   => 'img',
-     vmdk  => 'vmdk'
+     qcow2    => 'qcow2',
+     raw      => 'raw',
+     img      => 'raw',
+     vmdk     => 'vmdk',
+     vhdfixed => 'raw'
   };
 
   my $in = Path::Class::File->new($self->cache_dir,$file);
-  if ( $file =~ /\.(qcow2|raw|img|vmdk)(\.(gz|bz2|xz))?$/ ) {
+  if ( $file =~ /\.(qcow2|raw|img|vmdk|vhdfixed)(\.(gz|bz2|xz))?$/ ) {
     my $vol_name = $file;
 
     $vol_name = $self->domain_name .".$1" if ($vol_prefix);
