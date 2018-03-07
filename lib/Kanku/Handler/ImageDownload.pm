@@ -183,9 +183,11 @@ sub get_from_history {
   my $self = shift;
   my $ctx = $self->job->context;
 
+  $self->logger->debug("searching for '".$ctx->{vm_image_url}."' in download history");
+
   my $rs = $self->schema->resultset('ImageDownloadHistory')->find(
     {
-      vm_image_url    => $self->url,
+      vm_image_url    => $ctx->{vm_image_url},
     }
   );
 
