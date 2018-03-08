@@ -53,6 +53,7 @@ has '+vcpu'           => ( default => 1 );
 has [qw/
         use_9p
         skip_network
+        skip_login
 /]                    => (is => 'rw',isa=>'Bool',default=>0);
 
 has "+images_dir"     => (default=>"/var/lib/libvirt/images");
@@ -162,18 +163,16 @@ sub execute {
   my $final_file = $ctx->{vm_image_file};
   my $image;
 
-  if ( $ctx->{use_cache} ) {
-    my $vol;
-    ($vol, $image) = $self->_create_image_file_from_cache({file=>$final_file}, $self->root_disk_size, $self->domain_name);
-    $final_file = $vol->get_path();
-    for my $file(@{$self->additional_disks}) {
+
+  my $vol;
+  ($vol, $image) = $self->_create_image_file_from_cache({file=>$final_file}, $self->root_disk_size, $self->domain_name);
+  $final_file = $vol->get_path();
+  for my $file(@{$self->additional_disks}) {
       my ($avol,$aimage) = $self->_create_image_file_from_cache($file);
       $self->logger->debug("additional_disk: - before: $file->{file}");
       $file->{file} = $avol->get_path();
       $self->logger->debug("additional_disk: - after: $file->{file}");
-    }
   }
-  # FIXME: Object for root_disk needs to be created if not use_cache
 
   my $vm = Kanku::Util::VM->new(
       vcpu                  => $self->vcpu,
@@ -203,6 +202,25 @@ sub execute {
 
   my $con = $vm->console();
 
+  if ($self->skip_login) {
+    $con->wait_for_login_prompt;
+  } else {
+    $self->_prepare_vm_via_console($con, $vm);
+  }
+
+  return {
+    code    => 0,
+    message => "Create domain " . $self->domain_name ." (".( $ctx->{ipaddress} || 'no ip found' ).") successfully"
+  };
+}
+
+sub _prepare_vm_via_console {
+  my ($self, $con, $vm) = @_;
+
+  my $ctx    = $self->job()->context();
+  my $logger = $self->logger;
+  my $cfg    = Kanku::Config->instance()->config();
+
   $con->login();
 
   my $ip;
@@ -219,7 +237,7 @@ sub execute {
       "ifup " . $self->management_interface,
     );
   } else {
-    $self->logger->warn("No management_interface set. Your dhcp-server will not get updated hostname");
+    $logger->warn("No management_interface set. Your dhcp-server will not get updated hostname");
   };
 
 
@@ -246,18 +264,13 @@ sub execute {
 
   }
   if ( $self->wait_for_systemd ) {
-    $self->logger->info("Waiting for system to come up!");
+    $logger->info("Waiting for system to come up!");
     $con->cmd(
       'while [ "$s" != "No jobs running." ];do s=`systemctl list-jobs`;logger "systemctl list-jobs: $s";sleep 1;done'
     );
   }
 
   $con->logout();
-
-  return {
-    code    => 0,
-    message => "Create domain " . $self->domain_name ." (".( $ip || 'no ip found' ).") successfully"
-  };
 }
 
 sub _setup_9p {
@@ -313,11 +326,12 @@ sub _create_image_file_from_cache {
      raw      => 'raw',
      img      => 'raw',
      vmdk     => 'vmdk',
-     vhdfixed => 'raw'
+     vhdfixed => 'raw',
+     iso      => 'iso'
   };
 
   my $in = Path::Class::File->new($self->cache_dir,$file);
-  if ( $file =~ /\.(qcow2|raw|img|vmdk|vhdfixed)(\.(gz|bz2|xz))?$/ ) {
+  if ( $file =~ /\.(qcow2|raw|img|vmdk|vhdfixed|iso)(\.(gz|bz2|xz))?$/ ) {
     my $vol_name = $file;
 
     $vol_name = $self->domain_name .".$1" if ($vol_prefix);

@@ -168,6 +168,36 @@ sub login {
   $exp->clear_accum();
 }
 
+sub wait_for_login_prompt {
+  my $self      = shift;
+  my $exp       = $self->_expect_object();
+  my $timeout   = 300;
+  my $logger    = $self->logger();
+
+
+  my $login_counter = 0;
+
+  if (! $self->grub_seen ) {
+    $exp->send_slow(1,"\003","\004");
+  }
+  $exp->expect(
+    $timeout,
+      [ '^\S+ login: ' =>
+        sub {
+          my $exp = shift;
+
+          #die "login seems to be failed as login_counter greater than zero" if ($login_counter);
+          if ( $exp->match =~ /^(\S+) login: / ) {
+            $logger->debug("Found match '$1'");
+            $self->short_hostname($1);
+            $self->prompt_regex(qr/$1:.*\s+#/);
+          }
+        }
+      ],
+  );
+  $exp->clear_accum();
+}
+
 sub logout {
   my $self = shift;
   my $exp = $self->_expect_object();

@@ -17,7 +17,6 @@
 package Kanku::Handler::SetJobContext;
 
 use Moose;
-use Kanku::Util::DoD;
 use feature 'say';
 use Data::Dumper;
 with 'Kanku::Roles::Handler';
