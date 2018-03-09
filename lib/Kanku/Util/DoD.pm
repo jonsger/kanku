@@ -163,6 +163,14 @@ has auth_config => (
     return $cfg;
   }
 );
+
+has preferred_extension => (
+  is => 'rw',
+  isa => 'Str',
+  lazy => 1,
+  default =>''
+);
+
 sub download {
   my $self  = shift;
   my $ua    = Net::OBS::Client->new(
@@ -229,8 +237,23 @@ sub check_before_download {
 sub _sub_get_image_file_from_url_cb {
     my $self = shift;
     my $arg = shift;
+    my $reg = qr/\.(vmdk|qcow2|raw|raw\.xz|vhdfixed\.xz|install.iso|iso)$/;
+    my %all_images;
+
     foreach my $bin (@$arg) {
-      return $bin if $bin->{filename} =~ /\.(vmdk|qcow2|raw|raw\.xz|vhdfixed\.xz|iso)$/
+       $all_images{$1} = $bin if $bin->{filename} =~ $reg;
+    }
+    $self->logger->debug("all_images = ".Dumper(\%all_images));
+    if ($self->preferred_extension) {
+      if (! $all_images{$self->preferred_extension}) {
+        die "Found no images with preferred_extention '".$self->preferred_extension."'";
+      }
+      return $all_images{$self->preferred_extension};
+    } else {
+      if (%all_images > 1) {
+        die "More than one matching image found - please specify preferred_extension in your configuration";
+      }
+      return [values %all_images]->[0];
     }
 }
 

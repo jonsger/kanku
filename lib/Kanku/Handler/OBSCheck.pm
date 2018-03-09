@@ -37,16 +37,17 @@ has dod_object => (
       package             => $self->package,
       api_url             => $self->api_url,
       use_cache           => $self->use_cache,
+      preferred_extension => $self->preferred_extension,
     )
   },
 );
 
 has ['api_url','project','package'] => (is=>'rw',isa=>'Str',required=>1);
 
-has '+api_url' => (default=>"https://api.opensuse.org");
+has '+api_url' => (default=>"https://api.opensuse.org/public");
 
-has ['base_url','repository']       => (is=>'rw',isa=>'Str');
-
+has ['base_url', 'repository', 'preferred_extension']       => (is=>'rw',isa=>'Str');
+has '+preferred_extension' => (lazy => 1, default => '');
 has _changed => (is=>'rw',isa=>'Bool',default=>0);
 
 has _binary => (is=>'rw',isa=>'HashRef',lazy=>1,default=>sub { { } });

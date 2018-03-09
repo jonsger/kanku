@@ -251,11 +251,21 @@ sub _generate_disk_xml {
     my $unit  = $self->_unit;
     my $drive = "hd" . chr(97+$unit);
 
+    my $readonly;
+    my $device = 'disk';
+
+    if ($format eq 'iso') {
+      $format = 'raw';
+      $device = 'cdrom';
+      $readonly = '<readonly/>';
+    }
+
     return "
-    <disk type='file' device='disk'>
+    <disk type='file' device='$device'>
       <driver name='qemu' type='".$format."'/>
       <source file='$file'/>
       <target dev='$drive' bus='ide'/>
+      $readonly
       <address type='drive' controller='0' bus='0' target='0' unit='$unit'/>
     </disk>
 ";
