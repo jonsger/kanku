@@ -222,7 +222,9 @@ sub process_template {
   }
 
   my $template_file;
+  $self->logger->debug("Checking for template file '$template_path/default-vm.tt2'");
   $template_file = "$template_path/default-vm.tt2" if (-f "$template_path/default-vm.tt2");
+  $self->logger->debug("Checking for template file '$template_path$input'");
   $template_file = $template_path.$input if (-f $template_path.$input);
 
   if ( ! $template_file ) {
@@ -245,13 +247,13 @@ sub process_template {
 }
 
 sub _generate_disk_xml {
-    my ($self,$file,$format) = @_;
+    my ($self,$file,$format, $boot) = @_;
     $self->logger->debug("generate_disk_xml: $file, $format");
     # ASCII 97 = a + 0
     my $unit  = $self->_unit;
     my $drive = "hd" . chr(97+$unit);
 
-    my $readonly;
+    my $readonly='';
     my $device = 'disk';
 
     if ($format eq 'iso') {
@@ -260,12 +262,15 @@ sub _generate_disk_xml {
       $readonly = '<readonly/>';
     }
 
+    $boot = "<boot order='1'/>" if ($boot);
+
     return "
     <disk type='file' device='$device'>
       <driver name='qemu' type='".$format."'/>
       <source file='$file'/>
       <target dev='$drive' bus='ide'/>
       $readonly
+      ".($boot||'')."
       <address type='drive' controller='0' bus='0' target='0' unit='$unit'/>
     </disk>
 ";
@@ -315,11 +320,19 @@ sub create_additional_disks {
 sub create_domain {
   my $self  = shift;
 
-  my $disk_xml = $self->_generate_disk_xml($self->image_file,$self->root_disk->format);
-  $self->inc_unit;
-  $disk_xml .= $self->create_additional_disks();
+  my $disk_xml;
 
-  $disk_xml .= $self->create_empty_disks();
+  if ($self->root_disk->format eq 'iso') {
+    $disk_xml .= $self->create_additional_disks();
+    $disk_xml .= $self->create_empty_disks();
+    $disk_xml .= $self->_generate_disk_xml($self->image_file,$self->root_disk->format, 1);
+    $self->inc_unit;
+  } else {
+    $disk_xml .= $self->_generate_disk_xml($self->image_file,$self->root_disk->format, 1);
+    $self->inc_unit;
+    $disk_xml .= $self->create_additional_disks();
+    $disk_xml .= $self->create_empty_disks();
+  }
 
   my $xml   = $self->process_template($disk_xml);
   my $vmm;
@@ -659,7 +672,6 @@ __DATA__
   </cpu>
   <os>
     <type arch='x86_64' machine='pc-i440fx-2.3'>hvm</type>
-    <boot dev='hd'/>
   </os>
   <features>
     <acpi/>
