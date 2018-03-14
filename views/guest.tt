@@ -1,11 +1,8 @@
 <h1>Guest</h1>
+<div id="worker_errors"></div>
 
-<div id=schedule_result class="alert alert-success" style="display:none">
-</div>
+<div id="guest_list"></div>
 
-<div id=job_list>
-
-</div>
 <script id="guest_panel" type="x-tmpl-mustache">
 
 <div class="panel panel-default panel-{{ guest_class }}" id="guest_panel{{ id }}">

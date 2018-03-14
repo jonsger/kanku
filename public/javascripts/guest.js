@@ -33,6 +33,18 @@ Mustache.parse(href_guest);
       function (gc) {
         var guests = gc;
         var gl = Object.keys(gc.guest_list).sort();
+        var we = gc.errors;
+
+        $.each(
+          we,
+          function (num, error) {
+            console.log("error");
+            console.log(error);
+            $('#worker_errors').append(
+              '<div class="alert alert-danger">'+error+'</div>'
+            )
+          }
+        )
 
         $.each(
           //gc.guest_list,
@@ -48,7 +60,7 @@ Mustache.parse(href_guest);
                         }
             );
 
-            $("#job_list").append(r_guest_panel);
+            $("#guest_list").append(r_guest_panel);
 
             $.each(
               guest_data.nics,

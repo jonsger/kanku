@@ -292,7 +292,7 @@ del '/job/comment/:comment_id.:format' => require_any_role [qw/Admin User/] =>  
   }
   $comment->delete;
 
-  return { 
+  return {
     result => 'succeed',
     code   => 200
   }
@@ -340,15 +340,23 @@ get '/gui_config/job.:format' => sub {
 };
 
 get '/guest/list.:format' => sub {
+  my $result = {errors=>[]};
   my $guests = {};
-  my @sorted = ();
 
   my $hl = Kanku::LibVirt::HostList->new();
   $hl->calc_remote_urls();
 
   foreach my $host (@{$hl->cfg || []}) {
-    my $vmm = Sys::Virt->new(uri => $host->{remote_url});
-
+    my $vmm;
+    try {
+      $vmm = Sys::Virt->new(uri => $host->{remote_url});
+    } catch {
+      my $error = "ERROR while connecting '$host->{remote_ip}' " .$_->message;
+      error($error);
+      debug(Dumper($host));
+      push @{$result->{errors}}, $error;
+    };
+    next if (!$vmm);
     my @domains = $vmm->list_all_domains();
 
     foreach my $dom (@domains) {
@@ -372,9 +380,8 @@ get '/guest/list.:format' => sub {
 	}
     }
   }
-  return {
-      guest_list =>$guests
-  }
+  $result->{guest_list} = $guests;
+  return $result;
 };
 
 post '/login.:format' => sub {
