@@ -16,6 +16,7 @@
 <script src="[% request.uri_base %]/javascripts/mustache.min.js"></script>
 <script src="[% request.uri_base %]/javascripts/js.cookie.js"></script>
 <script src="[% request.uri_base %]/bootstrap/js/bootstrap.min.js"></script>
+<script src="[% request.uri_base %]/javascripts/ajaxsetup.js"></script>
 <script defer src="[% request.uri_base %]/font-awesome/on-server/js/fontawesome-all.min.js"></script>
 
 <script type="text/javascript">
