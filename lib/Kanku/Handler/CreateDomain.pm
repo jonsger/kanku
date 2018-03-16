@@ -112,6 +112,13 @@ has gui_config => (
   }
 );
 
+has installation => (
+  is      => 'rw',
+  isa     => 'ArrayRef',
+  lazy    => 1,
+  default => sub { [] }
+);
+
 sub distributable { 1 };
 
 sub prepare {
@@ -202,6 +209,10 @@ sub execute {
 
   my $con = $vm->console();
 
+  if (@{$self->installation}) {
+    $self->_handle_installation($con);
+  }
+
   if ($self->skip_login) {
     $con->wait_for_login_prompt;
   } else {
@@ -213,6 +224,43 @@ sub execute {
     message => "Create domain " . $self->domain_name ." (".( $ctx->{ipaddress} || 'no ip found' ).") successfully"
   };
 }
+
+sub _handle_installation {
+  my ($self, $con) = @_;
+  my $exp          = $con->_expect_object();
+  my $logger       = $self->logger;
+
+  $logger->debug("Handling installation");
+
+  for my $step (@{$self->installation}) {
+    my ($expect,$send) = ($step->{expect}, $step->{send});
+    my $timeout = $step->{timeout} || 300;
+    $logger->debug("Waiting for '$expect' on console (timeout: $timeout)");
+    $exp->expect(
+      $timeout,
+      [ $expect =>
+        sub {
+          my $exp = shift;
+          $logger->debug("SEEN '$expect' on console");
+          if ($send) {
+            $logger->debug("Sending '$send'");
+            $exp->send($send);
+          }
+          if ($step->{send_enter}) {
+            $logger->debug("Sending <enter>");
+            $exp->send("\r");
+          }
+          if ($step->{send_ctrl_c}) {
+            $logger->debug("Sending <CTRL>+C");
+            $exp->send("\cC");
+          }
+        }
+      ],
+    );
+    $exp->clear_accum();
+  }
+}
+
 
 sub _prepare_vm_via_console {
   my ($self, $con, $vm) = @_;
@@ -385,6 +433,14 @@ Here is an example how to configure the module in your jobs file or KankuFile
     options:
       domain_name: kanku-vm-1
       ....
+      installation:
+        -
+          expect: Install
+          send: yes
+          send_enter: 1
+        -
+          expect: Next Step
+          send_ctrl_c: 1
 
 =head1 DESCRIPTION
 
@@ -438,6 +494,8 @@ If configured a port_forward_list, it tries to find the next free port and confi
                             * pool   - name of pool (default: 'default')
 
                             * format - format of new disk (default: 'qcow2')
+
+    installation          : array of expect commands for installation process
 
 
 =head1 CONTEXT

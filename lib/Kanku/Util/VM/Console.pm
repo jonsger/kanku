@@ -45,7 +45,7 @@ sub init {
   $ENV{"LANG"} = "C";
   my $command = "virsh";
   my @parameters = ("-c",$self->connect_uri,"console",$self->domain_name);
- 
+
   my $exp = Expect->new;
   $exp->restart_timeout_upon_receive(1);
   $exp->debug($cfg->{$pkg}->{debug} || 0);
@@ -75,6 +75,7 @@ sub init {
         'Escape character is \^\]' => sub {
           $_[0]->clear_accum();
           $self->console_connected(1);
+          $logger->debug("Found Console");
         }
       ]
   );
@@ -82,8 +83,12 @@ sub init {
   $exp->expect(
       5,
       [
-        'Press any key to continue.' => sub {
-          $self->grub_seen(1);
+        qr/(Press any key to continue.|ISOLINUX)/ => sub {
+          $logger->debug("Seen bootloader");
+          if ($_[0]->match =~ /Press any key to continue./) {
+            $self->grub_seen(1);
+            $logger->debug("Seen bootloader grub");
+          }
         }
       ]
   );
