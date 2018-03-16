@@ -242,6 +242,10 @@ sub _handle_installation {
         sub {
           my $exp = shift;
           $logger->debug("SEEN '$expect' on console");
+          if ($step->{send_ctrl_c}) {
+            $logger->debug("Sending <CTRL>+C");
+            $exp->send("\cC");
+          }
           if ($send) {
             $logger->debug("Sending '$send'");
             $exp->send($send);
@@ -249,10 +253,6 @@ sub _handle_installation {
           if ($step->{send_enter}) {
             $logger->debug("Sending <enter>");
             $exp->send("\r");
-          }
-          if ($step->{send_ctrl_c}) {
-            $logger->debug("Sending <CTRL>+C");
-            $exp->send("\cC");
           }
         }
       ],

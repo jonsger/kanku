@@ -28,7 +28,7 @@ has ['domain_name','short_hostname','log_file','login_user','login_pass'] => (is
 has 'prompt' => (is=>'rw', isa=>'Str',default=>'Kanku-prompt: ');
 has 'prompt_regex' => (is=>'rw', isa=>'Object',default=>sub { qr/^Kanku-prompt: / });
 has _expect_object  => (is=>'rw', isa => 'Object');
-has [qw/grub_seen user_is_logged_in console_connected/] => (is=>'rw', isa => 'Bool');
+has [qw/bootloader_seen grub_seen user_is_logged_in console_connected/] => (is=>'rw', isa => 'Bool');
 has 'connect_uri' => (is=>'rw', isa=>'Str', default=>'qemu:///system');
 has ['job_id'] => (is=>'rw', isa=>'Int|Undef');
 
@@ -85,6 +85,7 @@ sub init {
       [
         qr/(Press any key to continue.|ISOLINUX)/ => sub {
           $logger->debug("Seen bootloader");
+          $self->bootloader_seen(1);
           if ($_[0]->match =~ /Press any key to continue./) {
             $self->grub_seen(1);
             $logger->debug("Seen bootloader grub");
@@ -118,7 +119,7 @@ sub login {
 
   my $login_counter = 0;
 
-  if (! $self->grub_seen ) {
+  if (! $self->bootloader_seen) {
     $exp->send_slow(1,"\003","\004");
   }
   $exp->expect(
@@ -182,7 +183,7 @@ sub wait_for_login_prompt {
 
   my $login_counter = 0;
 
-  if (! $self->grub_seen ) {
+  if (! $self->bootloader_seen) {
     $exp->send_slow(1,"\003","\004");
   }
   $exp->expect(
