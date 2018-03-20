@@ -58,7 +58,7 @@ sub execute {
     $self->vm_image_file($ctx->{vm_image_file});
   }
 
-  if ( $self->vm_image_file =~ /\.(qcow2|raw|img)$/ ) {
+  if ( $self->vm_image_file =~ /\.(qcow2|raw|img|vdi|vmdk)$/ ) {
     my $ext = $1;
     if ( $self->disk_size ) {
       my %formats = (qcow2 => 'qcow2', raw => 'raw', img => 'raw');
