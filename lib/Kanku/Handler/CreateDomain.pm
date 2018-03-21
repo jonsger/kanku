@@ -369,28 +369,30 @@ sub _create_image_file_from_cache {
   my $image;
   my $vol;
 
-  my $suffix2format = {
-     qcow2    => 'qcow2',
-     raw      => 'raw',
+  # 0 means that format is the same as suffix
+  my %suffix2format = (
+     qcow2    => 0,
+     raw      => 0,
+     vmdk     => 0,
+     vdi      => 0,
+     iso      => 0,
      img      => 'raw',
-     vmdk     => 'vmdk',
      vhdfixed => 'raw',
-     iso      => 'iso'
-  };
-
+  );
+  my $supported_formats = join('|', keys %suffix2format);
   my $in = Path::Class::File->new($self->cache_dir,$file);
-  if ( $file =~ /\.(qcow2|raw|img|vmdk|vhdfixed|iso)(\.(gz|bz2|xz))?$/ ) {
+  if ( $file =~ /\.($supported_formats)(\.(gz|bz2|xz))?$/ ) {
+    my $fmt      = $1;
     my $vol_name = $file;
-
-    $vol_name = $self->domain_name .".$1" if ($vol_prefix);
+    $vol_name = $self->domain_name .".$fmt" if ($vol_prefix);
 
     $image =
       Kanku::Util::VM::Image->new(
-	format		=> $suffix2format->{$1},
+	format		=> ($suffix2format{$fmt} || $fmt),
 	vol_name 	=> $vol_name,
 	source_file 	=> $in->stringify,
 	final_size	=> $size
-    );
+      );
 
     if ($file_data->{reuse}) {
       $self->logger->info("Uploading '$vol_name' skipped because of reuse flag");
@@ -444,7 +446,7 @@ Here is an example how to configure the module in your jobs file or KankuFile
 
 =head1 DESCRIPTION
 
-This handler creates a new VM from the given template file and a qcow2 image file.
+This handler creates a new VM from the given template file and a image file.
 
 It will login into the VM and try to find out the ipaddress of the interface connected to the default route.
 
@@ -456,7 +458,7 @@ If configured a port_forward_list, it tries to find the next free port and confi
 
     domain_name           : name of domain to create
 
-    vm_image_file         : file to qcow2 image to be used for domain
+    vm_image_file         : image file to be used for domain creation
 
     login_user            : user to be used to login via console
 
@@ -483,7 +485,7 @@ If configured a port_forward_list, it tries to find the next free port and confi
 
     noauto_9p		  : set noauto option for 9p directory in fstab.
 
-    root_disk_size        : define size of root disk - ONLY FOR RAW IMAGES
+    root_disk_size        : define size of root disk
 
     empty_disks           : Array of empty disks to be created
 

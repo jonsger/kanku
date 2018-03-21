@@ -111,7 +111,7 @@ has get_image_file_from_url => (
     );
     my $record = $self->get_image_file_from_url_cb->($self,$build_results->binarylist());
     if ( $record ) {
-      $record->{url} = $self->download_url . $record->{filename};
+      $record->{url} = $self->download_url .$record->{prefix}. $record->{filename};
       if ( $self->api_url =~ /\/public\/?$/ ) {
         $record->{bin_url} = $self->api_url ."/build/".$self->project."/".$self->repository."/".$self->arch."/".$self->package."?view=cpio";
         $record->{public_api} = 1;
@@ -237,11 +237,12 @@ sub check_before_download {
 sub _sub_get_image_file_from_url_cb {
     my $self = shift;
     my $arg = shift;
-    my $reg = qr/\.(vmdk|vdi|qcow2|raw|raw\.xz|vhdfixed\.xz|install.iso|iso)$/;
+    my $reg = qr/\.(qcow2|raw|raw\.xz|vmdk|vdi|vhdfixed\.xz|install.iso|iso)$/;
     my %all_images;
 
     foreach my $bin (@$arg) {
        $all_images{$1} = $bin if $bin->{filename} =~ $reg;
+       $bin->{prefix} = ($bin->{filename} =~ /\.iso$/ ) ? 'iso/' : '';
     }
     $self->logger->debug("all_images = ".Dumper(\%all_images));
     if ($self->preferred_extension) {

@@ -58,17 +58,24 @@ sub execute {
     $self->vm_image_file($ctx->{vm_image_file});
   }
 
-  if ( $self->vm_image_file =~ /\.(qcow2|raw|img)$/ ) {
+  # 0 means that format is the same as suffix
+  my %supported_formats = (
+    qcow2    => 0,
+    raw      => 0,
+    img      => 'raw',
+    vhdfixed => 'raw'
+  );
+  my $supported_suf = join('|', keys(%supported_formats));
+  if ( $self->vm_image_file =~ /\.($supported_suf)$/ ) {
     my $ext = $1;
     if ( $self->disk_size ) {
-      my %formats = (qcow2 => 'qcow2', raw => 'raw', img => 'raw');
-      my $format = ($formats{$ext}) ? "-f $formats{$ext}" : '';
+      my $format = "-f " . ( $supported_formats{$ext} || $ext );
       $img  = $self->vm_image_file;
       $size = $self->disk_size;
       `qemu-img resize $format $img $size`;
     }
   } else {
-    die "Image file has wrong suffix '".$self->vm_image_file."'.\nOnly qcow2 supported at the moment!\n";
+    die "Image file has wrong suffix '".$self->vm_image_file."'.\nList of supported suffixes: <$supported_suf> !\n";
   }
 
   return "Sucessfully resized image '$img' to $size"
@@ -93,7 +100,7 @@ Here is an example how to configure the module in your jobs file or KankuFile
 
 =head1 DESCRIPTION
 
-This handler resizes a downloaded qcow2 image to a given size using 'qemu-img'
+This handler resizes a downloaded image to a given size using 'qemu-img'
 
 =head1 OPTIONS
 
