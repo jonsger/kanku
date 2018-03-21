@@ -369,16 +369,36 @@ websocket_on_open sub {
   defined $pid or die "Error while forking\n";
      
 
+  debug "PID is $pid";
   if (!$pid) {
       # prepare rabbitmq
-      my $mq = Kanku::RabbitMQ->new(%{$config});
+      debug "PID is $pid ---";
+      my $mq;
+      try {
+        $mq = Kanku::RabbitMQ->new(%{$config});
+      } catch {
+        debug "ERROR:" . $_;
+        die $_;
+      };
+      debug "Create mq object sucessfully";
       my $log = $mq->logger;
       $mq->connect(no_retry=>1);
+      debug "connected successfully";
       $qn = $mq->queue->queue_declare(1,'');
+      debug "declared queue $qn successfully";
       $mq->queue_name($qn);
-      $mq->queue->queue_bind(1, $qn, 'kanku.notify', '');
+      debug "starting queue bind $qn -> kanku.notify";
+      try {
+        $mq->queue->queue_bind(1, $qn, 'kanku.notify', '');
+      } catch {
+        error $_;
+        $log->error($_);
+        die $_;
+      }
+      debug "queue bind succeed $qn -> kanku.notify";
       $mq->queue->consume(1, $qn);
       $log->debug("Starting child($$) and waiting for notifications on queue $qn");
+      debug "started consuming $qn";
       my $oldperms=10000;
       while (1) {
         my $perms = $ws_session->get_permissions;
@@ -387,6 +407,7 @@ websocket_on_open sub {
           $oldperms = $perms;
         }
         if ($perms < 0) {
+          debug "Perms count less the zero";
           $log->debug("Authentication failed ($perms)") if ($perms == -1);
           $log->debug("Detected connection closed ($perms)") if ($perms == -2);
 	  $ws_session->cleanup_session();
