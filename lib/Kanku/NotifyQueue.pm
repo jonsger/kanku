@@ -7,7 +7,7 @@ use Kanku::NotifyQueue::Dummy;
 
 sub new {
   my $self   = shift;
-  my $config = Kanku::Config->instance();
+  my $config = Kanku::Config->instance()->config;
 
   if (ref($config->{'Kanku::RabbitMQ'})) {
     return Kanku::NotifyQueue::RabbitMQ->new(@_);
