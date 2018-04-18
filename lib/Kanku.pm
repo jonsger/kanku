@@ -20,6 +20,8 @@ our $VERSION = '0.0.2';
 
 Kanku::Config->initialize();
 
+my $sub = "-";
+
 sub get_defaults_for_views {
   my $messagebar = session 'messagebar';
   session  messagebar => undef;
