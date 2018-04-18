@@ -1,2 +1,2 @@
 severity = 1
-exclude = (Modules::RequireVersionVar|CodeLayout::RequireTidyCode|ControlStructures::ProhibitPostfixControls)
+exclude = (Modules::RequireVersionVar|CodeLayout::RequireTidyCode|ControlStructures::ProhibitPostfixControls|CodeLayout::ProhibitHardTabs)
