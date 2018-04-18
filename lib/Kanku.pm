@@ -2,6 +2,7 @@ package Kanku;
 
 use Moose;
 
+use FindBin;
 use Dancer2;
 use Dancer2::Plugin::DBIC;
 use Dancer2::Plugin::Auth::Extensible;
@@ -20,7 +21,7 @@ our $VERSION = '0.0.2';
 Kanku::Config->initialize();
 
 sub get_defaults_for_views {
-  my $messagebar = session "messagebar";
+  my $messagebar = session 'messagebar';
   session  messagebar => undef;
   my $logged_in_user = logged_in_user();
   my $roles;
@@ -41,7 +42,7 @@ sub get_defaults_for_views {
 };
 
 sub messagebar {
-  return "<div id=messagebar class=\"alert alert-".shift.'" role=alert>'.
+  return '<div id=messagebar class="alert alert-'.shift.'" role=alert>'.
                       shift .
                     '</div>';
 }
@@ -84,7 +85,7 @@ get '/admin' => requires_role Admin =>  sub {
 get '/settings' => require_login sub {
   my @all_roles = schema('default')->resultset('Role')->search();
 
-  for my $r (@all_roles) { debug "Role: ".$r->id." - ".$r->role; }
+  for my $r (@all_roles) { debug 'Role: '.$r->id.' - '.$r->role; }
 
   my $user_roles;
   map { $user_roles->{$_} = 1 } @{user_roles()};
@@ -164,10 +165,10 @@ post qr{/login(/[\w]{32})?} => sub {
     $username = user_password code => $code, new_password => $password;
     debug "setting password for $username";
     if (! $username) {
-      session messagebar => messagebar('danger',"Password reset failed!");
+      session messagebar => messagebar('danger', 'Password reset failed!');
       redirect params->{return_url};
     } else {
-      session messagebar => messagebar('success',"Password reset succeed!");
+      session messagebar => messagebar('success', 'Password reset succeed!');
     }
   } else {
       $username = params->{username};
@@ -177,11 +178,11 @@ post qr{/login(/[\w]{32})?} => sub {
   if ($success) {
     session logged_in_user => $username;
     session logged_in_user_realm => $realm;
-    params->{username} = "";
-    params->{password} = "";
+    params->{username} = '';
+    params->{password} = '';
     redirect params->{return_url};
   } else {
-    session messagebar => messagebar('danger',"Authentication failed!");
+    session messagebar => messagebar('danger', 'Authentication failed!');
     redirect params->{return_url};
     # authentication failed
   }
@@ -202,7 +203,7 @@ sub verify_signup_params {
   return "Password do not match\n" if ( params->{password} ne params->{password_repeat} );
   return "Username already exists\n" if ( get_user_details params->{username} );
 
-  return undef;
+  return;
 
 }
 post '/signup' => sub {
@@ -226,11 +227,13 @@ post '/signup' => sub {
               role_id    => { Guest => 1 }
   ) {
 
-        session messagebar => messagebar('success',"Your account has been created successfully. Please check your emails and activate the account. Finally <a href=settings>request some roles!</a>");
+        session messagebar => messagebar(
+          'success',
+          'Your account has been created successfully. Please check your emails and activate the account. Finally <a href=settings>request some roles!</a>');
         redirect('/');
   }
   template 'signup' , {
-      messagebar => messagebar('danger',"Could not create user for unkown reason!"),
+      messagebar => messagebar('danger', 'Could not create user for unkown reason!'),
       %{ params() }
   };
 };
@@ -285,10 +288,10 @@ sub check_filters {
   $key = $dd->{'type'}.'-enable';
   $log->trace("Step 0 $key: $fd->{$key}");
   return 0 if (exists $fd->{$key} && ! $fd->{$key});
-  $key = $dd->{'type'}."-".$dd->{'event'};
+  $key = $dd->{'type'}.'-'.$dd->{'event'};
   $log->trace("Step 1 $key $fd->{$key}");
   return 0 if (exists $fd->{$key} && ! $fd->{$key});
-  $key = $dd->{'type'}."-".$dd->{'event'}."-".$dd->{'result'};
+  $key = $dd->{'type'}.'-'.$dd->{'event'}.'-'.$dd->{'result'};
   $log->trace("Step 3 $key");
   return 0 if ($dd->{'result'} && exists $fd->{$key} && ! $fd->{$key});
 
@@ -298,7 +301,7 @@ sub check_filters {
 websocket_on_open sub {
   my ($conn, $env) = @_;
 
-  debug "Opening websocket";
+  debug 'Opening websocket';
 
   my $notify = Kanku::WebSocket::Notification->new(conn=>$conn);
   my $ws_session;
@@ -315,17 +318,17 @@ websocket_on_open sub {
    task_change   => 9
   };
 
-  debug "Creating new session";
+  debug 'Creating new session';
   $ws_session = Kanku::WebSocket::Session->new(
     schema => schema()
   );
 
-  debug "Setting up WebSocket Connection callbacks";
+  debug 'Setting up WebSocket Connection callbacks';
   $conn->on(
     'close' => sub {
       debug "closing websocket\n";
       if ($ws_session) {
-        debug "closing session ".$ws_session->session_token;
+        debug 'closing session '.$ws_session->session_token;
         $ws_session->close_session();
       };
     },
@@ -343,28 +346,28 @@ websocket_on_open sub {
 	my $perms = $ws_session->authenticate;
         my $msg;
         if ($perms == -1) {
-          $msg = "Authentication failed!";
+          $msg = 'Authentication failed!';
         } else {
-          $msg="Authentication succeed!";
+          $msg = 'Authentication succeed!';
         }
 	debug "$msg ($perms)";
         $notify->send($msg);
       } elsif ($data->{filters}) {
-        debug("Got filters");
+        debug('Got filters');
         $ws_session->filters(encode_json($data->{filters}));
       } elsif ($data->{bounce}) {
         $notify->send($data->{bounce});
       }
-      debug "Returning from message";
+      debug 'Returning from message';
     }
   );
 
   # method session_token must be called before fork to grant a
   # shared token between parent and child
-  debug "Creating session token";
+  debug 'Creating session token';
   my $session_token = $ws_session->session_token;
 
-  debug "Forking away listner for rabbitmq";
+  debug 'Forking away listner for rabbitmq';
   $pid = fork();
   defined $pid or die "Error while forking\n";
 
@@ -377,13 +380,13 @@ websocket_on_open sub {
       try {
         $mq = Kanku::RabbitMQ->new(%{$config});
       } catch {
-        debug "ERROR:" . $_;
+        debug 'ERROR: ' . $_;
         die $_;
       };
-      debug "Create mq object sucessfully";
+      debug 'Create mq object sucessfully';
       my $log = $mq->logger;
       $mq->connect(no_retry=>1);
-      debug "connected successfully";
+      debug 'connected successfully';
       $qn = $mq->queue->queue_declare(1,'');
       debug "declared queue $qn successfully";
       $mq->queue_name($qn);
@@ -407,16 +410,16 @@ websocket_on_open sub {
           $oldperms = $perms;
         }
         if ($perms < 0) {
-          debug "Perms count less the zero";
+          debug 'Perms count less than zero';
           $log->debug("Authentication failed ($perms)") if ($perms == -1);
           $log->debug("Detected connection closed ($perms)") if ($perms == -2);
 	  $ws_session->cleanup_session();
           if ($mq->queue->is_connected) {
-            $log->debug("Unbinding queue");
+            $log->debug('Unbinding queue');
 	    $mq->queue->queue_unbind(1, $qn, 'kanku.notify', '');
             #$log->debug("Deleting queue");
 	    #$mq->queue->queue_delete(1, $qn);
-            $log->debug("Disconnecting queue");
+            $log->debug('Disconnecting queue');
 	    $mq->queue->disconnect();
           }
           $log->debug("Cleanup and exiting child($$)");
@@ -436,7 +439,7 @@ websocket_on_open sub {
             if (! $ev_to_role->{$ev_type} ) {
               $log->warning("recieved unknown event type: '$ev_type'");
             } elsif( $perms < $ev_to_role->{$ev_type}) {
-              $log->debug("User not authorized to get this type of notification");
+              $log->debug('User not authorized to get this type of notification');
             } else {
               check_filters($filters, $data->{body}, $log) && $notify->send($body);
             }
@@ -446,7 +449,7 @@ websocket_on_open sub {
 	  };
 	} else {
 	  if (! $mq->queue->is_connected()) {
-            my $msg = "No longer connected";
+            my $msg = 'No longer connected';
             $log->debug($msg);
             die $msg;
           }
