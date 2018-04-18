@@ -25,7 +25,7 @@ sub to_json {
   my $self = shift;
 
   my $data = {};
-  
+
   for my $attr (@{$self->json_keys}){
     $data->{$attr} = $self->$attr();
   }
@@ -36,7 +36,7 @@ sub to_json {
 sub from_json {
   my ($self,$string) = shift;
   my $data = decode_json($string);
-  
+
   for my $attr (@{$self->json_keys}){
     $self->$attr($data->{$attr});
   }

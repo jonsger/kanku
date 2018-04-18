@@ -61,7 +61,7 @@ sub execute {
   $con->login();
 
   foreach my $cmd ( @{$self->commands} ) {
-    
+
       my $out = $con->cmd($cmd);
 
       push @$results, {

@@ -48,7 +48,7 @@ has config => (
 
 sub abstract { "trigger a remote job given by name" }
 
-sub description {  
+sub description {
   "trigger a specified job on your remote instance
 
 " . $_[0]->description_footer;

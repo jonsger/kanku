@@ -134,7 +134,7 @@ sub authenticate {
   my $uri	= $self->os_auth_url.$self->tokens_url;
   my $ua	= LWP::UserAgent->new();
   my $content	= $self->_auth_json_string;
-  my $response  = $ua->post($uri,'Content-Type' => 'application/json', 'Content' => $content); 
+  my $response  = $ua->post($uri,'Content-Type' => 'application/json', 'Content' => $content);
 
   if (! $response->is_success) {
     die "Error while accessing uri '$uri'\n"
@@ -165,7 +165,7 @@ sub _auth_json_string {
 
 }
 =head2 service
-  
+
   my $nova    = $osa->service(type => 'compute');
 
   my $glance  = $osa->service(name => 'glance');

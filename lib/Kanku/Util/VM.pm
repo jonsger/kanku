@@ -37,7 +37,7 @@ has [qw/
       images_dir    login_user    login_pass  template_file
       ipaddress     uri           disks_xml
       management_interface        management_network
-      network_name  network_bridge 
+      network_name  network_bridge
       keep_volumes
     / ]  => ( is=>'rw', isa => 'Str');
 
@@ -279,7 +279,7 @@ sub _generate_disk_xml {
 
 sub _get_hw_virtualization {
   my $proc = open(my $fh,"<","/proc/cpuinfo") || die "Cannot open /proc/cpuinfo: $!";
-  while (<$fh>) { return $1 if /(vmx|svm)/ } 
+  while (<$fh>) { return $1 if /(vmx|svm)/ }
 }
 
 
@@ -438,7 +438,7 @@ sub remove_domain {
 
 sub _manual_delete_volumes {
   my ($self) = @_;
- 
+
   my $vols = $self->list_volumes;
 
   for my $vol (@$vols) {
@@ -448,7 +448,7 @@ sub _manual_delete_volumes {
       $vol->delete;
     } else {
       $self->logger->debug("Keeping volume ".$vol->get_path);
-    } 
+    }
   }
 }
 

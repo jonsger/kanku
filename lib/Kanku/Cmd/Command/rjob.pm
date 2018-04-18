@@ -39,7 +39,7 @@ has config => (
 
 sub abstract { "show result of tasks from a specified remote job" }
 
-sub description {  
+sub description {
   "show result of tasks from a specified job on your remote instance
 
 " . $_[0]->description_footer;
@@ -90,7 +90,7 @@ sub execute {
     # process input template, substituting variables
     $template->process($input, { job_names => \@job_names })
 			     || die $template->error()->as_string();
- 
+
   } elsif ($self->details) {
 
     my $kr;

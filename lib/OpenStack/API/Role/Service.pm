@@ -7,20 +7,20 @@ has [qw/type name/]		    => ( is => 'rw', isa => 'Str');
 has [qw/endpoints endpoints_links/] => ( is => 'rw', isa => 'ArrayRef');
 
 
-has os_region_name		    => ( 
-  is	  => 'rw', 
+has os_region_name		    => (
+  is	  => 'rw',
   isa	  => 'Str',
   lazy	  => 1,
   default => $ENV{OS_REGION_NAME} || '',
 );
 
-has endpoint			    => ( 
-  is	  => 'rw', 
+has endpoint			    => (
+  is	  => 'rw',
   isa	  => 'HashRef',
   lazy	  => 1,
-  default => sub { 
+  default => sub {
     my ($self) = @_;
-  
+
     die "No os_region_name given" if ( @{$self->endpoints} > 1 && ! $self->os_region_name );
 
     return $self->endpoints->[0] if (! $self->os_region_name );

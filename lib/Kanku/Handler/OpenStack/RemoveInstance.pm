@@ -32,7 +32,7 @@ has [qw/os_auth_url os_tenant_name os_username os_password import_from/ ] => (
   isa	  => 'Str',
 );
 
-has osa => ( 
+has osa => (
   is	  => 'rw',
   isa	  => 'Object',
   lazy	  => 1,

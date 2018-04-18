@@ -61,13 +61,13 @@ has settings => (
   isa           => 'HashRef',
   is            => 'rw',
   lazy          => 1,
-  default       => sub { 
+  default       => sub {
     my $self = shift;
     if ( -f $self->rc_file ) {
       my $ct = LoadFile($_[0]->rc_file);
       if ( $ct->{apiurl} ) {
 	$self->apiurl($ct->{apiurl});
-      } 
+      }
       return $ct;
     }
     return {
@@ -132,7 +132,7 @@ sub connect_restapi {
   my $self = shift;
   my $logger  = $self->logger;
 
-  if ( ! $self->apiurl ) { 
+  if ( ! $self->apiurl ) {
     if ( -f $self->rc_file ) {
       $self->settings(LoadFile($self->rc_file));
       $self->apiurl( $self->settings->{apiurl} || '');
@@ -315,13 +315,13 @@ sub post_json {
   }
 
   my $request = HTTP::Request->new(
-    POST => $url, 
+    POST => $url,
     [
       'Content-Type'     => $ct,
     ],
     $data
   );
-  
+
   $self->cookie_jar->add_cookie_header($request);
 
   my $response = $self->ua->simple_request($request);
@@ -380,13 +380,13 @@ sub put_json {
   }
 
   my $request = HTTP::Request->new(
-    PUT => $url, 
+    PUT => $url,
     [
       'Content-Type'     => $ct,
     ],
     $data
   );
-  
+
   $self->cookie_jar->add_cookie_header($request);
 
   my $response = $self->ua->simple_request($request);
@@ -444,13 +444,13 @@ sub delete_json {
   }
 
   my $request = HTTP::Request->new(
-    DELETE => $url, 
+    DELETE => $url,
     [
       'Content-Type'     => $ct,
     ],
     $data
   );
-  
+
   $self->cookie_jar->add_cookie_header($request);
 
   my $response = $self->ua->simple_request($request);

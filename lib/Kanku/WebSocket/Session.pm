@@ -11,7 +11,7 @@ has session_token => (
   isa=>'Str',
   lazy => 1,
   default => sub {
-    return Session::Token->new(entropy => 256)->get; 
+    return Session::Token->new(entropy => 256)->get;
   }
 );
 
@@ -83,7 +83,7 @@ sub authenticate {
   my $session = $self->schema->resultset('WsSession')->find({session_token=> $self->session_token});
 
   return -1 if ($session);
-  
+
   $self->schema->resultset('WsSession')->create({
     session_token => $self->session_token,
     user_id       => $self->user_id,
@@ -103,7 +103,7 @@ sub authenticate {
       my $rn = $role->role->role;
       $perms = $role_to_points->{$rn} if ( $role_to_points->{$rn} > $perms);
     }
-    
+
     $session->permissions($perms);
     $rs->delete;
   } else {

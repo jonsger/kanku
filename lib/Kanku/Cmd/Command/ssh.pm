@@ -33,7 +33,7 @@ has domain_name => (
     cmd_aliases   => 'X',
     documentation => 'name of domain to connect to',
     lazy          => 1,
-    default       => sub { 
+    default       => sub {
       Kanku::Config->instance()->config->{domain_name};
     }
 );

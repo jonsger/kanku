@@ -25,7 +25,7 @@ has schema => (
   is      => 'rw',
   isa     => 'Object',
   lazy    => 1,
-  default => sub { 
+  default => sub {
     my $cfg_file    = file($FindBin::Bin,'..','config.yml');
     my $cfg_content = $cfg_file->slurp;
     my $cfg_yaml    = YAML::Load($cfg_content);
@@ -34,5 +34,4 @@ has schema => (
 );
 
 
-1; 
-
+1;

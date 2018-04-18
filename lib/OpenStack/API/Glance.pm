@@ -67,7 +67,7 @@ sub task_detail {
 }
 
 sub task_create_image_import {
-  my ($self,%input) = @_; 
+  my ($self,%input) = @_;
 
 # { "type": "import",
 #   "input": {
@@ -78,7 +78,7 @@ sub task_create_image_import {
 #          "tags": ["lamp", "custom"]
 #       }
 #    }
-# } 
+# }
 
   my $uri = $self->endpoint->{publicURL}."/v2/tasks";
 

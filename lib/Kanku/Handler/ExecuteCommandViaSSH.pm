@@ -55,7 +55,7 @@ sub execute {
   }
 
   foreach my $cmd ( @{$self->commands} ) {
-    
+
       my $out = $self->exec_command($cmd);
 
       my @err = $ssh2->error();

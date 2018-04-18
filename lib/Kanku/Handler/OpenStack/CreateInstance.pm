@@ -37,7 +37,7 @@ has [qw/os_auth_url os_tenant_name os_username os_password/ ] => (
   isa	  => 'Str',
 );
 
-has osa => ( 
+has osa => (
   is	  => 'rw',
   isa	  => 'Object',
   lazy	  => 1,
@@ -110,7 +110,7 @@ sub finalize {
     while (1) {
       my $instance = $nova->instance_detail($server_id);
 
-      die "Got no task details\n" unless $instance; 
+      die "Got no task details\n" unless $instance;
 
       $status = $instance->{status};
       last if ( $status eq 'ACTIVE' );
@@ -128,7 +128,7 @@ sub finalize {
       'floating_network_id' => $self->floating_network_id,
       'status'              => 'DOWN'
     );
-    
+
     die "Could not find a free floating ip address\n" unless (@$list);
 
     my $ip = $list->[0]->{floating_ip_address};

@@ -73,8 +73,8 @@ around 'config' => sub {
 
   die "Config file '".$self->file->stringify."' not found!\n" if ( ! -f $self->file);
 
-  if ( 
-    $self->file->stat->mtime > $self->last_modified or 
+  if (
+    $self->file->stat->mtime > $self->last_modified or
     ! $self->$orig
   ) {
     if ( $self->last_modified ) {

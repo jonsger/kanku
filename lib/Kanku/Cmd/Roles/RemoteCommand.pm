@@ -37,7 +37,7 @@ has details => (
 sub description_footer {
  "
 All options marked with an asterisk (*) are subcommands.
-";   
+";
 }
 
 1;

@@ -34,7 +34,7 @@ has _tt_config => (
       INTERPOLATE  => 1,               # expand "$var" in plain text
     }
   },
-);  
+);
 
 has logger => (
   isa   => 'Object',

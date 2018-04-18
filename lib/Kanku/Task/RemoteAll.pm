@@ -125,7 +125,7 @@ sub run {
     $results = keys(%{$self->results});
     $seconds_running++;
   }
-  
+
   $self->logger->trace("all_workers task_results\n".Dumper($self->results));
 
   return $self->_calculate_results;
@@ -167,7 +167,7 @@ sub _calculate_results {
 
     return  {
       result => encode_json($final_result),
-      state  => 'succeed' 
+      state  => 'succeed'
     };
   }
 }

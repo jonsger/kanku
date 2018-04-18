@@ -134,7 +134,7 @@ sub finalize {
       my $task = $images->task_detail($task_id);
 
       die "Got no task details\n" unless $task;
- 
+
       if ( $task->{status} eq 'success' ) {
 	 $ctx->{os_image_id} = $task->{result}->{image_id};
 	 last;

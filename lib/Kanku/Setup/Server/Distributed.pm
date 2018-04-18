@@ -116,7 +116,7 @@ sub setup {
 
   $logger->info("Server mode setup successfully finished!");
   $logger->info("To make sure libvirtd is coming up properly we recommend a reboot");
-  
+
   $self->logger->fatal("PLEASE REMEMBER YOUR CA PASSWORD: ".$self->ca_pass) if $self->ca_pass;
 }
 
@@ -125,7 +125,7 @@ sub _create_ca {
   my @cmd;
   return if ( -d $self->ca_path);
 
- 
+
   my @alphanumeric = ('a'..'z', 'A'..'Z', 0..9);
   my $pass = join '', map $alphanumeric[rand @alphanumeric], 0..12;
   $self->ca_pass($pass);
@@ -161,7 +161,7 @@ sub _create_ca {
   my $ca_key_file = file($self->ca_path, '/private/ca.key.pem')->stringify;
   @cmd = ('openssl', 'genrsa', '-passout', 'stdin',
     '-aes256', '-out', $ca_key_file, '4096');
-  
+
   $self->logger->debug("Command: '@cmd'");
   open(PIPE, "| @cmd");
   print PIPE $ca_pass;
@@ -180,7 +180,7 @@ sub _create_ca {
   open(PIPE2, "| @cmd");
   print PIPE2 "$ca_pass\n\n\n\n\n\n\n\n";
   close PIPE2;
-  
+
 }
 
 sub _create_server_cert {
@@ -273,7 +273,7 @@ subjectAltName                  = @alt_names
 '.$DNS_NAMES.'
 ';
 
-  
+
   # sign cert
   $ENV{CA_PASS} = $ca_pass;
   $self->certfile(file($self->ca_path, "certs/$hostname.cert.pem")->stringify);
@@ -320,7 +320,7 @@ sub _setup_rabbitmq {
   }
 
   $self->logger->debug("epmd.socket:\n@out");
-  file("/etc/systemd/system/epmd.socket")->spew(\@out); 
+  file("/etc/systemd/system/epmd.socket")->spew(\@out);
 
   $self->_create_config_from_template(
     "rabbitmq.config.tt2",

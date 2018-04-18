@@ -149,7 +149,7 @@ sub prepare_and_run {
 
   $SIG{'INT'} = $SIG{'TERM'} = sub {
     $self->logger->info("Initializing shutdown");
-    $self->initialize_shutdown 
+    $self->initialize_shutdown
   };
 
   # daemonize

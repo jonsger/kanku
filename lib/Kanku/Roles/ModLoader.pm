@@ -21,7 +21,7 @@ use Carp;
 with 'Kanku::Roles::Logger';
 
 sub load_module {
-  my ($self,$mod) = @_;  
+  my ($self,$mod) = @_;
 
   confess "No mod given!" if (! $mod);
 
@@ -33,4 +33,4 @@ sub load_module {
   require "$mod2require";
 }
 
-1; 
+1;

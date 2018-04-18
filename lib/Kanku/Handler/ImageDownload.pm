@@ -83,7 +83,7 @@ sub execute {
   $logger->debug("Using output file: ".$curl->output_file);
 
   $ctx->{vm_image_file} = $curl->output_file;
-  
+
   my $tmp_file;
 
   try {
@@ -98,7 +98,7 @@ sub execute {
 
     $logger->debug("obs_direct_url = $ctx->{obs_direct_url}");
     $curl->url($ctx->{obs_direct_url});
-  
+
     $curl->output_file($self->_calc_output_file($ctx->{public_api}));
 
     $logger->info("Trying alternate url ".$curl->url);

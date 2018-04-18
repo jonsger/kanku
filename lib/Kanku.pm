@@ -72,7 +72,7 @@ get '/login/denied' => sub {
 
 get '/admin' => requires_role Admin =>  sub {
   my @users = schema('default')->resultset('User')->search();
-  my @roles = schema('default')->resultset('Role')->search(); 
+  my @roles = schema('default')->resultset('Role')->search();
   template 'admin', {
       %{get_defaults_for_views()},
       kanku => {module => 'Administration'},
@@ -279,10 +279,10 @@ sub check_filters {
     $log->error($_);
     $log->debug($data);
   };
-  return 1 if ! $fd; 
+  return 1 if ! $fd;
 
   my $key;
-  $key = $dd->{'type'}.'-enable'; 
+  $key = $dd->{'type'}.'-enable';
   $log->trace("Step 0 $key: $fd->{$key}");
   return 0 if (exists $fd->{$key} && ! $fd->{$key});
   $key = $dd->{'type'}."-".$dd->{'event'};
@@ -312,7 +312,7 @@ websocket_on_open sub {
    user_change   => 29,
    daemon_change => 19,
    job_change    => 9,
-   task_change   => 9 
+   task_change   => 9
   };
 
   debug "Creating new session";
@@ -335,7 +335,7 @@ websocket_on_open sub {
       debug "Server got message on WebSocket connection: $msg";
       my $data = decode_json($msg);
       # Proceed with data sent from client, eg.:
-      # * authentication request 
+      # * authentication request
       # * filter update
       if ($data->{token}) {
 	debug "Got Token $data->{token}";
@@ -359,7 +359,7 @@ websocket_on_open sub {
     }
   );
 
-  # method session_token must be called before fork to grant a 
+  # method session_token must be called before fork to grant a
   # shared token between parent and child
   debug "Creating session token";
   my $session_token = $ws_session->session_token;
@@ -367,7 +367,7 @@ websocket_on_open sub {
   debug "Forking away listner for rabbitmq";
   $pid = fork();
   defined $pid or die "Error while forking\n";
-     
+
 
   debug "PID is $pid";
   if (!$pid) {

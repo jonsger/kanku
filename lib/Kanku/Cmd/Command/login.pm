@@ -38,12 +38,12 @@ sub execute {
   # * command line options
   # * rc_file options
   # * manual input
-  
+
   if ( -f $self->rc_file ) {
 
     $self->settings(LoadFile($self->rc_file));
-   
-    if ( ! $self->apiurl ) { 
+
+    if ( ! $self->apiurl ) {
       $self->apiurl( $self->settings->{apiurl} || '');
     }
     if ( ! $self->user ) {
@@ -71,9 +71,9 @@ sub execute {
 
     $logger->info("Already logged in.");
     $logger->info(" Please use logut if you want to change user");
-  
- 
-    return { success => 1 } 
+
+
+    return { success => 1 }
   }
 
   while ( ! $self->user ) {
@@ -84,29 +84,29 @@ sub execute {
   }
 
   while ( ! $self->password ) {
-    
+
      print "Please enter your password for the remote server:\n";
      ReadMode('noecho');
      my $read = <STDIN>;
      chomp($read);
-    
-     ReadMode(0); 
+
+     ReadMode(0);
      print "Please repeat your password\n";
      ReadMode('noecho');
      my $read2 = <STDIN>;
      chomp($read2);
-     ReadMode(0); 
-    
+     ReadMode(0);
+
      $self->password($read || '') if ( $read eq $read2 );
-    
-  } 
+
+  }
 
   $self->user($self->user);
   $self->password($self->password);
 
   if ( $self->login() ) {
     # Store new default settings
-    $self->save_settings(); 
+    $self->save_settings();
     $logger->info("Login succeed!");
   } else {
     $logger->error("Login failed!");

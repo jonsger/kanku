@@ -155,7 +155,7 @@ sub TO_JSON {
   for my $col (qw/id name state args result creation_time start_time end_time last_modified workerinfo masterinfo/) {
     $rv->{$col} = $self->$col();
   }
-  
+
   return $rv
 }
 1;

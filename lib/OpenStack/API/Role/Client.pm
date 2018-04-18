@@ -55,11 +55,11 @@ sub request {
   if ( $self->token_id ) {
     if ( !  $self->__already_tried_authentication ) {
       #print "Using token:\n".$self->token_id."\n";
-      $header = [ 
-	%{$header || {}} , 
+      $header = [
+	%{$header || {}} ,
 	'X-Auth-Token' => $self->token_id,
 	'Content-Type' => $self->content_type,
-	'Accept'=>$self->content_type 
+	'Accept'=>$self->content_type
       ];
     }
   } else {
@@ -79,7 +79,7 @@ sub request {
 	$self->__already_tried_authentication(1);
 	return $self->request($method,$uri,$header,$content);
       } else {
-	die "Error while accessing '$uri'\n" . 
+	die "Error while accessing '$uri'\n" .
 	  $response->status_line . "\n".
 	  "Already tried authentication: " . $self->__already_tried_authentication . "\n";
       }

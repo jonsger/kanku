@@ -78,7 +78,7 @@ sub get_forwarded_ports_for_domain {
           if ($f =~ /^dpt:(\d+)$/ ) { $host_port = $1 }
           if ($f =~ /^to:[\d\.]+:(\d+)$/ ) { $guest_port = $1 }
         }
-        $result->{$destination}->{$host_port} = $guest_port; 
+        $result->{$destination}->{$host_port} = $guest_port;
       }
   }
 
@@ -150,7 +150,7 @@ sub add_forward_rules_for_domain {
   my $start_port    = $opts{start_port};
   my $forward_rules = $opts{forward_rules};
   my $sudo          = $self->sudo();
-  
+
   my $portlist      = { tcp =>[],udp=>[] };
   my $host_ip       = $self->host_ipaddress;
 
@@ -235,7 +235,7 @@ sub _find_free_ports {
     }
     $port2check++;
   }
-  
+
   return @result;
 };
 
@@ -256,22 +256,22 @@ has _used_ports => (
     # read PREROUTING rules
     foreach my $line (`$cmd`) {
       chomp $line;
-      my ($proto,$recvQ,$sendQ,$localAddress,$foreignAddress,$state) 
+      my ($proto,$recvQ,$sendQ,$localAddress,$foreignAddress,$state)
         = split(/\s+/,$line);
       if ( $localAddress =~ /(.*):(\d+)$/ ) {
-        if ( 
+        if (
               $1 eq '0.0.0.0' or
-              $1 eq $hostip  
+              $1 eq $hostip
               # or $1 eq '::' use only ipv4 for now
         ) {
           $result->{$2} = 1;
         }
-      } 
+      }
     }
 
     # prepare command to read PREROUTING chain
     $cmd = $self->sudo . "LANG=C iptables -t nat -L PREROUTING -n";
-    
+
     # read PREROUTING rules
     for my $line ( `$cmd` ) {
       chomp $line;
@@ -284,14 +284,14 @@ has _used_ports => (
         map { if ( $_ =~ /^dpt:(\d+)/ ) { $result->{$1} = 1 } } @opts;
       }
     }
-    return $result; 
+    return $result;
   }
 );
 
 sub sudo {
 
   my $sudo      = "";
-  
+
   # if EUID not root
   if ( $> != 0 ) {
     $sudo = "sudo -n ";

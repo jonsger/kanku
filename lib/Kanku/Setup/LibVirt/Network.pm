@@ -248,7 +248,7 @@ sub configure_iptables {
 		if ( $? ) {
 			$self->logger->error("Failed while executing '@cmd'");
 			$self->logger->error("Error: $ipt[2]");
-		} 
+		}
 	}
 
 	return 0;
@@ -322,8 +322,8 @@ sub cleanup_iptables {
 		my @args = split(/\s+/,$line,11);
 		# check if incomming interface matches
 		$self->logger->debug("Values: $netreg -> $args[8] / $args[9]");
-		if ( 
-			$args[8] =~ $netreg 
+		if (
+			$args[8] =~ $netreg
 			|| $args[9] =~ $netreg
 			|| $args[7] =~ /$brreg/
 			|| $args[6] =~ /$brreg/
@@ -340,8 +340,8 @@ sub cleanup_iptables {
 		my @args = split(/\s+/,$line,11);
 		# check if incomming interface matches
 		$self->logger->debug("Values: $netreg -> $args[8] / $args[9]");
-		if ( 
-			$args[8] =~ $netreg 
+		if (
+			$args[8] =~ $netreg
 			|| $args[9] =~ $netreg
 			|| $args[7] =~ /$brreg/
 			|| $args[6] =~ /$brreg/

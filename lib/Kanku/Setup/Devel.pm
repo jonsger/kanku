@@ -32,14 +32,14 @@ has osc_user => (
   isa     => 'Str',
   is      => 'rw',
   lazy    => 1,
-  default => ''      
+  default => ''
 );
 
 has osc_pass => (
   isa     => 'Str',
   is      => 'rw',
   lazy    => 1,
-  default => ''      
+  default => ''
 );
 
 sub setup {
@@ -149,13 +149,13 @@ sub _modify_path_in_bashrc {
   my @lines = $rc->slurp;
   my $found = 0;
 
-  
-  foreach my $line (@lines) { 
+
+  foreach my $line (@lines) {
     if ( $line =~ m#^\s*(export\s)?\s*PATH=.*$FindBin::Bin# ) {
       $found = 1
     }
   }
-  
+
   if ( ! $found ) {
     $self->logger->debug("modifying " . $rc->stringify);
     push(@lines,"export PATH=$FindBin::Bin\:\$PATH\n");

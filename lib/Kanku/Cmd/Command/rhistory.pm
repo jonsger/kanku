@@ -56,7 +56,7 @@ has page => (
 
 sub abstract { "list job history on your remote kanku instance" }
 
-sub description { 
+sub description {
   "list job history on your remote kanku instance
 
 " . $_[0]->description_footer;
@@ -64,7 +64,7 @@ sub description {
 
 sub execute {
   my $self  = shift;
-  my $logger  =	Log::Log4perl->get_logger;	
+  my $logger  =	Log::Log4perl->get_logger;
 
   if ( $self->list ) {
     $self->_list();

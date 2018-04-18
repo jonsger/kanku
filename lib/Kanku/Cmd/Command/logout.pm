@@ -27,10 +27,10 @@ with 'Kanku::Cmd::Roles::Remote';
 
 sub abstract { "logout from your remote kanku instance" }
 
-sub description { 
+sub description {
   "This command will proceeced a logout from your remote kanku instance, ",
   "delete the local session cookie ".
-  "and remove the apiurl incl. settings from your rcfile" 
+  "and remove the apiurl incl. settings from your rcfile"
 }
 
 sub execute {

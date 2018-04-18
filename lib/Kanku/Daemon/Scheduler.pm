@@ -37,13 +37,13 @@ sub run {
 
   while (1) {
     $self->create_scheduled_jobs();
-    
+
     last if $self->detect_shutdown();
 
     # TODO: we need a better delay algorithm here
     sleep 1;
   }
-  
+
   return;
 }
 

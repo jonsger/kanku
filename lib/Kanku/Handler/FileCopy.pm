@@ -79,7 +79,7 @@ sub prepare {
     open($dst,$self->dst) || die "Error while opening ".$self->dst.": $!\n";
     my $dst_md5 = Digest::MD5->new()->addfile($dst)->digest;
     $self->_changed(1) if ( $binary->{md5} ne $dst_md5 );
-  
+
   } else {
     $self->_changed(1);
   }
@@ -108,7 +108,7 @@ sub execute {
   if ( -f $self->dst ) {
     unlink $self->dst || die "Error while unlinking file $file: $!\n";
   }
-  
+
   copy($self->src,$self->dst) || die "Error while copying file '".$self->src."' to '".$self->dst."': $!\n";
 
 

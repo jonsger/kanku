@@ -109,7 +109,7 @@ has delete => (
 
 sub abstract { "list job history on your remote kanku instance" }
 
-sub description { 
+sub description {
   "list/create/show/modify/delete comments in the job history on your remote kanku instance
 
 " . $_[0]->description_footer;
@@ -117,7 +117,7 @@ sub description {
 
 sub execute {
   my $self  = shift;
-  my $logger  =	Log::Log4perl->get_logger;	
+  my $logger  =	Log::Log4perl->get_logger;
 
   if ($self->list) {
     $self->_list();
@@ -134,7 +134,7 @@ sub execute {
 
 sub _list {
   my $self = shift;
-  my $logger  =	Log::Log4perl->get_logger;	
+  my $logger  =	Log::Log4perl->get_logger;
 
   if (! $self->job_id ) {
     $logger->warn("Please specify a job_id");
@@ -186,7 +186,7 @@ sub _list {
 
 sub _create {
   my $self = shift;
-  my $logger  =	Log::Log4perl->get_logger;	
+  my $logger  =	Log::Log4perl->get_logger;
 
   if (! $self->job_id ) {
     $logger->warn("Please specify a job_id (-j <job_id>)");
@@ -241,7 +241,7 @@ sub _create {
 
 sub _modify {
   my $self = shift;
-  my $logger  =	Log::Log4perl->get_logger;	
+  my $logger  =	Log::Log4perl->get_logger;
 
   if (! $self->comment_id ) {
     $logger->warn("Please specify a comment_id (-C <comment_id>)");
@@ -296,7 +296,7 @@ sub _modify {
 
 sub _delete {
   my $self = shift;
-  my $logger  =	Log::Log4perl->get_logger;	
+  my $logger  =	Log::Log4perl->get_logger;
 
   if (! $self->comment_id ) {
     $logger->warn("Please specify a comment_id (-C <comment_id>)");
