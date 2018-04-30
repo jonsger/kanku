@@ -5,14 +5,14 @@ function send_request () {
   $('.role_checkbox').each(function(idx, elem) {
     if ($(elem).is(':checked')) { roles.push($(elem).attr('value')); }
   });
-  var result = { 'roles' : roles, 'comment' : comment }
+  var request = { 'roles' : roles, 'comment' : comment }
   console.log(result);
 
   var url = uri_base + "/rest/request_roles.json";
   console.log(url);
   var result = $.post(
     url,
-    'args=' + JSON.stringify(result),
+    JSON.stringify(request),
     function(response) {
       $("#change_result").removeClass("alert-success");
       $("#change_result").removeClass("alert-warning");

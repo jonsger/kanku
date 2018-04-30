@@ -53,17 +53,6 @@
 </div>
 </script>
 
-<script id="user-list-tr-template" type="x-tmpl-mustache">
-<tr>
-<td scope="col">{{id}}</td>
-<td scope="col">{{username}}</td>
-<td scope="col">{{name}}</td>
-<td scope="col">{{email}}</td>
-<td scope="col">{{deleted}}</td>
-<td scope="col">{{roles}}</td>
-</tr>
-</script>
-
 <script id="role-list-tr-template" type="x-tmpl-mustache">
 <tr>
 <td scope="col">{{id}}</td>
@@ -81,6 +70,7 @@
       <th scope="col">E-Mail</th>
       <th scope="col">active</th>
       <th scope="col">Roles</th>
+      <th scope="col">Actions</th>
     </tr>
   </thead>
   <tbody id=user_list>
@@ -98,3 +88,15 @@
   </tbody>
 </table>
 <script src="[% request.uri_base %]/javascripts/admin.js"></script>
+
+<script id="user-list-tr-template" type="x-tmpl-mustache">
+<tr>
+<td scope="col">{{id}}</td>
+<td scope="col">{{username}}</td>
+<td scope="col">{{name}}</td>
+<td scope="col">{{email}}</td>
+<td scope="col">{{deleted}}</td>
+<td scope="col">{{roles}}</td>
+<td scope="col"><a href="#" onclick="delete_user({{id}})"><i class="far fa-trash-alt"></i></a></td>
+</tr>
+</script>

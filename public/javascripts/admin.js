@@ -38,9 +38,10 @@ function send_role_request(req_id, decision) {
   console.log(url);
   $.post(
     url,
-    'args=' + JSON.stringify({"req_id":req_id, "decision":decision,"comment":comment}),
+    JSON.stringify({"req_id":req_id, "decision":decision,"comment":comment}),
   );
   get_admin_task_list();
+  get_admin_user_list();
 }
 
 function get_admin_user_list() {
@@ -104,6 +105,16 @@ function update_admin_role_list(data) {
 
     });
   }
+}
+
+function delete_user(user_id) {
+  var url = uri_base + "/rest/admin/user/" + user_id + ".json";
+  console.log(url);
+  $.ajax({
+    url: url,
+    type: 'DELETE',
+    success: get_admin_user_list
+  });
 }
 
 $(document).ready(function(){

@@ -74,7 +74,7 @@ function schedule_job(job_name) {
 
   $.post(
     uri_base + "/rest/job/trigger/" + job_name + ".json",
-    'args=' + JSON.stringify(data),
+    JSON.stringify(data),
     function(response) {
       $("#schedule_result").removeClass("alert-success");
       $("#schedule_result").removeClass("alert-warning");

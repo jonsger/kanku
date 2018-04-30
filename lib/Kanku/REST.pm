@@ -142,7 +142,7 @@ get '/job/:id.:format' => sub {
 };
 
 post '/job/trigger/:name.:format' => require_any_role [qw/Admin User/] =>  sub {
-
+  my $self = shift;
   my $name = param('name');
 
   debug("active jobs:\n");
@@ -162,11 +162,13 @@ post '/job/trigger/:name.:format' => require_any_role [qw/Admin User/] =>  sub {
     };
   }
 
+  my $args = decode_json($self->app->request->body);
+
   my $jd = {
     name => param('name'),
     state => 'triggered',
     creation_time => time(),
-    args => param("args")
+    args => $args
   };
 
   my $job = schema('default')->resultset('JobHistory')->create($jd);
@@ -420,8 +422,8 @@ get '/logout.:format' => sub {
 };
 
 post '/request_roles.:format' => require_login sub {
-
-  my $args = decode_json(params->{args});
+  my ($self) = @_;
+  my $args = decode_json($self->app->request->body);
 
   my $result = schema->resultset('RoleRequest')->create(
     {
@@ -455,6 +457,23 @@ get '/admin/task/list.:format' => requires_role Admin => sub {
     );
   }
   return \@req
+};
+
+del '/admin/user/:user_id.:format' => requires_role Admin => sub {
+  my $user = schema->resultset('User')->find({id => param('user_id')});
+  if (! $user ) {
+    return {
+      'state'         => 1,
+      'message' => 'User with id '.param('user_id').' not found!'
+    }
+  }
+
+  $user->delete;
+
+  return {
+      'state'         => 0,
+      'message' => 'Deleting user with id '.param('user_id').' succeed!'
+    }
 };
 
 sub calc_changes {
@@ -503,7 +522,8 @@ sub calc_changes {
 }
 
 post '/admin/task/resolve.:format' => requires_role Admin => sub {
-  my $args = decode_json(params->{args});
+  my ($self) = @_;
+  my $args = decode_json($self->app->request->body);
   debug "request_id: ". $args->{req_id};
   debug "decision ". $args->{decision};
   debug "comment ". $args->{comment};
@@ -572,7 +592,7 @@ get '/admin/user/list.:format' => requires_role Admin => sub {
     for my $role (@roles) {
       push(@{$rs->{roles}}, $role->role->role);
     }
-    push @$result, $rs;
+    push @{$result}, $rs;
   }
   return $result;
 };
@@ -584,13 +604,13 @@ get '/admin/role/list.:format' => requires_role Admin => sub {
   foreach my $role (@roles) {
     my $rs = {
       id       => $role->id,
-      role     => $role->role
+      role     => $role->role,
     };
-    push @$result, $rs;
+    push @{$result}, $rs;
   }
   return $result;
 };
 
 __PACKAGE__->meta->make_immutable();
 
-true;
+1;

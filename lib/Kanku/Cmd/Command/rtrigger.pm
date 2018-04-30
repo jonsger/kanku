@@ -65,13 +65,11 @@ sub execute {
     } catch {
       exit 1;
     };
-    # uri_base + "/rest/job/trigger/" + job_name + ".json",
-    # 'args=' + JSON.stringify(data),
 
     my $response = $kr->post_json(
       # path is only subpath, rest is added by post_json
       path => "job/trigger/".$self->job,
-      data => 'args: "'.($self->config || "[]").'"'
+      data => $self->config || '[]'
     );
 
     # some useful options (see below for full list)
