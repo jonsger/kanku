@@ -322,7 +322,7 @@ Requires: perl(Mail::Message::Body::String)
 Requires: perl(Mail::Transport::Send)
 Requires: perl(Net::AMQP::RabbitMQ)
 Requires: perl(UUID)
-#Requires: %{?systemd_requires}
+Requires: smtp_daemon
 
 %description web
 TODO:
