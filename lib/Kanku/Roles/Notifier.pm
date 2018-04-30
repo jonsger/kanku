@@ -26,4 +26,6 @@ has options => (is=>'rw',isa=>'HashRef',default=>sub {{}});
 has short_message => ( is=>'rw', isa => 'Str', default => 'Message from kanku');
 has full_message => ( is=>'rw', isa => 'Str', default => 'Please enter your full text message here');
 
+has job_id => ( is=>'ro', isa => 'Int', required => 1);
+
 1;

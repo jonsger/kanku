@@ -183,13 +183,25 @@ sub execute_notifier {
 
   $self->load_module($mod);
 
-  my $notifier = $mod->new( options=> $args );
+  my $notifier = $mod->new(
+    options=> $args,
+    job_id => $job->id,
+  );
 
   $notifier->short_message("Job ".$job->name." has exited with state '$state'");
-  $notifier->full_message($task->result);
+  my $result;
+  try {
+    $result = decode_json($task->result)->{error_message};
+  } catch {
+    $result = 'Error while decoding result of task from job '.
+      $job->id . ":\n\n$_\nJSON:\n".$task->result."\n";
+    $self->logger->error($result);
+  };
+  $notifier->full_message($result);
 
   $notifier->notify();
 
+  return;
 }
 
 sub load_job_definition {

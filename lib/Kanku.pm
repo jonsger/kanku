@@ -2,7 +2,6 @@ package Kanku;
 
 use Moose;
 
-use FindBin;
 use Dancer2;
 use Dancer2::Plugin::DBIC;
 use Dancer2::Plugin::Auth::Extensible;
@@ -19,8 +18,6 @@ use Kanku::WebSocket::Notification;
 our $VERSION = '0.0.2';
 
 Kanku::Config->initialize();
-
-my $sub = "-";
 
 sub get_defaults_for_views {
   my $messagebar = session 'messagebar';
@@ -120,7 +117,7 @@ sub email_welcome_send {
         $reset_link =~ s#([^:])//+#$1/#;
         $message{subject} = "Welcome to $host";
         $message{from}    = $plugin->mail_from;
-        $message{plain}   = <<__EMAIL;
+        $message{plain}   = <<'__EMAIL';
 An account has been created for you at $host. If you would like
 to accept this, please follow the link below to set a password:
 
@@ -264,8 +261,6 @@ get '/notify' => requires_any_role [qw(Admin User Guest)] => sub {
     template 'notify_disabled' , { %{ get_defaults_for_views() }, kanku => { module => 'Desktop Notifications' } };
   }
 };
-
-Log::Log4perl->init("$FindBin::Bin/../etc/log4perl.conf");
 
 sub check_filters {
   my ($filters, $data, $log) = @_;
