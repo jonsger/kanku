@@ -162,7 +162,7 @@ post '/job/trigger/:name.:format' => require_any_role [qw/Admin User/] =>  sub {
     };
   }
 
-  my $args = decode_json($self->app->request->body);
+  my $args = $self->app->request->body;
 
   my $jd = {
     name => param('name'),
