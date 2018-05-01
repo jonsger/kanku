@@ -6,9 +6,11 @@ use Test::More tests => 2;
 use Plack::Test;
 use HTTP::Request::Common;
 use Data::Dumper;
+use FindBin;
 BEGIN {
-   $ENV{DANCER_ENVIRONMENT} = "unit";
+  $ENV{DANCER_ENVIRONMENT} = "unit";
 }
+Log::Log4perl->init("$FindBin::Bin/etc/log_to_dev_null.conf");
 my $app = Kanku->to_app;
 is( ref $app, 'CODE', 'Got app' );
 

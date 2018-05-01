@@ -118,4 +118,9 @@ test:
 critic:
 	perlcritic -brutal $(PERL_CRITIC_READY)
 
-.PHONY: dist install lib
+cover:
+	PERL5OPT=-MDevel::Cover prove -Ilib -It/lib t/*.t
+
+check: cover critic
+
+.PHONY: dist install lib cover check test

@@ -1,8 +1,12 @@
 use strict;
 use warnings;
 
-use Test::More tests => 6;
+use Test::More tests => 5;
 use Test::Exception;
+use FindBin;
+use Log::Log4perl;
+
+Log::Log4perl->init("$FindBin::Bin/etc/log_to_dev_null.conf");
 
 # avoid 'only used once'
 my $xy = $FindBin::Bin;

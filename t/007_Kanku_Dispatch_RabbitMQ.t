@@ -4,7 +4,7 @@ use warnings;
 use Test::More tests => 4;                      # last test to print
 use Log::Log4perl;
 use FindBin;
-Log::Log4perl->init("$FindBin::Bin/etc/console-log.conf");
+Log::Log4perl->init("$FindBin::Bin/etc/log_to_dev_null.conf");
 
 require_ok('Kanku::Dispatch::RabbitMQ');
 
