@@ -119,7 +119,7 @@ critic:
 	perlcritic -brutal $(PERL_CRITIC_READY)
 
 cover:
-	PERL5OPT=-MDevel::Cover prove -Ilib -It/lib t/*.t
+	PERL5LIB=lib:t/lib cover -test -ignore '(^\/usr|t\/)'
 
 check: cover critic
 
