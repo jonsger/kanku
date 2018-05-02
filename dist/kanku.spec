@@ -379,7 +379,6 @@ Summary: Worker daemon for kanku
 
 Requires: kanku-common
 Requires: kanku-common-server
-#Requires: %{?systemd_requires}
 Requires: perl(Net::AMQP::RabbitMQ)
 Requires: perl(UUID)
 Requires: perl(Sys::CPU)
@@ -412,7 +411,6 @@ Summary: Dispatcher daemon for kanku
 
 Requires: kanku-common
 Requires: kanku-common-server
-#Requires: %{?systemd_requires}
 Requires: perl(Net::AMQP::RabbitMQ)
 Requires(pre): sudo
 Recommends: rabbitmq-server
@@ -438,12 +436,12 @@ A simple dispatcher for kanku based on RabbitMQ
 %{kanku_prefix}/bin/kanku-dispatcher
 %{kanku_prefix}/lib/Kanku/Daemon/Dispatcher.pm
 %{kanku_prefix}/lib/Kanku/Dispatch/RabbitMQ.pm
+%{kanku_prefix}/views/notifier/
 
 %package scheduler
 Summary: Scheduler daemon for kanku
 Requires: kanku-common
 Requires: kanku-common-server
-#Requires: %{?systemd_requires}
 
 %description scheduler
 A simple scheduler for kanku based on RabbitMQ
@@ -470,7 +468,6 @@ A simple scheduler for kanku based on RabbitMQ
 Summary: Trigger daemon for kanku
 Requires: kanku-common
 Requires: kanku-common-server
-#Requires: %{?systemd_requires}
 
 %description triggerd
 A simple triggerd for kanku based on RabbitMQ
