@@ -1,4 +1,0 @@
-User_Alias KANKU = kankurun
-
-KANKU ALL=NOPASSWD: /usr/sbin/iptables
-KANKU ALL=NOPASSWD: /usr/sbin/netstat
