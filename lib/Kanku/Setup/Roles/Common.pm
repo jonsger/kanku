@@ -30,9 +30,9 @@ has _tt_config => (
   lazy => 1,
   default => sub {
     {
-      INCLUDE_PATH => $FindBin::Bin."/../etc/templates/cmd/setup",
+      INCLUDE_PATH => "$FindBin::Bin/../etc/templates/cmd/setup",
       INTERPOLATE  => 1,               # expand "$var" in plain text
-    }
+    };
   },
 );
 
@@ -40,14 +40,14 @@ has logger => (
   isa   => 'Object',
   is    => 'rw',
   lazy  => 1,
-  default => sub { Log::Log4perl->get_logger }
+  default => sub { Log::Log4perl->get_logger },
 );
 
 has app_root => (
   isa   => 'Object',
   is    => 'rw',
   lazy  => 1,
-  default => sub { dir($FindBin::Bin)->parent; }
+  default => sub { dir($FindBin::Bin)->parent; },
 );
 
 has user => (
@@ -59,7 +59,7 @@ has dsn => (
   isa   => 'Str',
   is    => 'rw',
   lazy  => 1,
-  default => sub { "dbi:SQLite:dbname=".$_[0]->_dbfile }
+  default => sub { 'dbi:SQLite:dbname='.$_[0]->_dbfile },
 );
 
 has _devel => (
@@ -71,7 +71,7 @@ has _distributed => (
   isa     => 'Bool',
   is      => 'rw',
   lazy    => 1,
-  default => 0
+  default => 0,
 );
 
 
@@ -80,6 +80,22 @@ sub _configure_libvirtd_access {
   my $logger        = $self->logger;
 
   $self->_configure_qemu_config if $self->_devel;
+
+  my $choice = $self->_query_interactive(
+    '
+Should libvirt be reconfigured to run with unix sockets?
+This might be required to control VM`s without entering a password.
+
+Your choice (Y|n)?
+',
+    1,
+    'Bool',
+  );
+
+  return unless $choice;
+
+  my $conf = file("/etc/libvirt/qemu.conf");
+  $self->_backup_config_file($conf);
 
   my $dconf = file("/etc/libvirt/libvirtd.conf");
 
@@ -90,7 +106,7 @@ sub _configure_libvirtd_access {
     unix_sock_rw_perms      => '0770',
     unix_sock_admin_perms   => '0700',
     auth_unix_ro            => 'none',
-    auth_unix_rw            => 'none'
+    auth_unix_rw            => 'none',
   };
   my $seen={};
   my $regex = "^#?((".join('|',keys(%$defaults)).").*)";
@@ -98,7 +114,7 @@ sub _configure_libvirtd_access {
     if ( $line =~ s/$regex/$1/ ) {
       $seen->{$2} = 1;
     }
-    push(@lines,$line);
+    push @lines, $line;
   }
 
   for my $key (keys(%{$defaults})) {
@@ -110,7 +126,7 @@ sub _configure_libvirtd_access {
   system("systemctl enable libvirtd");
   system("systemctl restart libvirtd");
 
-  return undef;
+  return;
 }
 
 sub _configure_qemu_config {
@@ -118,10 +134,22 @@ sub _configure_qemu_config {
   my $logger = $self->logger;
   my $user   = $self->user;
 
-  my $conf = file("/etc/libvirt/qemu.conf");
+  my $choice = $self->_query_interactive(
+    "Should libvirt be reconfigured run qemu under your user ($user)?
+This is required for shared folder to work smoothly between host and guest.
+
+Your choice (Y|n)?
+",
+    1,
+    'Bool',
+  );
+
+  return unless $choice;
+
+  my $conf = file('/etc/libvirt/qemu.conf');
 
   $logger->debug("Setting user ".$user." in ". $conf->stringify);
-
+  $self->_backup_config_file($conf);
   my @lines = $conf->slurp;
 
   foreach my $line ( splice(@lines) ) {
@@ -130,6 +158,8 @@ sub _configure_qemu_config {
   }
 
   $conf->spew(\@lines);
+
+  return;
 }
 
 sub _create_default_pool {
@@ -137,21 +167,42 @@ sub _create_default_pool {
   my $logger  = $self->logger;
   my $vmm     = Sys::Virt->new(uri => 'qemu:///system');
   my @pools   = $vmm->list_storage_pools();
+  my $choice;
 
   for my $pool (@pools) {
     if ($pool->get_name eq 'default') {
-      $logger->info("Found pool default - enabling autostart");
+      $logger->info('Found pool default - enabling autostart');
+      $choice = $self->_query_interactive(
+        'Should autostart for libvirt pool "default" be enabled?
+
+Your choice (Y|n)?
+',
+        1,
+        'Bool',
+      );
+      return unless $choice;
       $pool->set_autostart(1);
       return 1;
     }
   }
 
-  $logger->info("No pool named 'default' found - creating");
+  $logger->info('No pool named "default" found - creating');
+  $choice = $self->_query_interactive(
+    'Should libvirt pool "default" be created?
+
+Your choice (Y|n)?
+',
+    1,
+    'Bool',
+  );
+
+  return unless $choice;
   my $xml = file($self->_tt_config->{INCLUDE_PATH},"pool-default.xml")->slurp;
   my $pool = $vmm->define_storage_pool($xml);
   $pool->create();
   $pool->set_autostart(1);
 
+  return;
 }
 
 sub _create_default_network {
@@ -164,6 +215,15 @@ sub _create_default_network {
   for my $net (@networks) {
     if ($net->get_name eq $nn) {
       $logger->info("Found network '$nn' - enabling autostart");
+      my $choice = $self->_query_interactive(
+        "Should autostart for libvirt net '$nn' be enabled and started?
+
+Your choice (Y|n)?
+",
+        1,
+        'Bool',
+      );
+      return unless $choice;
       $net->set_autostart(1) unless $net->get_autostart;
       $net->create() unless $net->is_active;
       return;
@@ -172,6 +232,18 @@ sub _create_default_network {
 
   my $ttf = "net-$nn.xml.tt2";
   $logger->info("No network named '$nn' found - creating using '$ttf'");
+
+  my $choice = $self->_query_interactive(
+    "Should libvirt net '$nn' be created?
+
+Your choice (Y|n)?
+",
+    1,
+    'Bool',
+  );
+
+  return unless $choice;
+
   my $sn = int(rand(255));
   my $xml = $self->_create_config_from_template($ttf, undef, {subnet=>$sn});
   my $net = $vmm->define_network($xml);
@@ -227,11 +299,22 @@ sub _set_sudoers {
   my $self          = shift;
   my $user          = $self->user;
   my $logger        = $self->logger;
-  my $sudoers_file  = file("/etc/sudoers.d/kanku");
 
-  $logger->info("Adding commands for user $user in " . $sudoers_file->stringify);
+  my $choice = $self->_query_interactive(
+    "Should we add user $user to the sudoers to be able to execute iptables/netstat as root?
+This is required if you want to use portforwarding from host to guests!
+(Y|n)
+",
+    1,
+    'Bool',
+  );
 
-  $sudoers_file->spew("$user ALL=NOPASSWD: /usr/sbin/iptables, /bin/netstat\n");
+  if ($choice) {
+    my $sudoers_file  = file("/etc/sudoers.d/kanku");
+    $self->_backup_config_file($sudoers_file);
+    $logger->info("Adding commands for user $user in " . $sudoers_file->stringify);
+    $sudoers_file->spew("$user ALL=NOPASSWD: /usr/sbin/iptables, /bin/netstat\n");
+  }
 
   return undef;
 }
@@ -273,6 +356,38 @@ sub _setup_database {
 
   $self->_chown($self->_dbfile);
 
+}
+
+sub _query_interactive {
+  my ($self, $query, $default, $type) = @_;
+
+  return $default unless $self->interactive;
+
+  print $query;
+
+  my $choice = <>;
+  chomp $choice;
+
+  return $default unless $choice;
+
+  if ($type && ($type eq 'Bool')) {
+    $choice = ($choice =~ m{^no?$}smxi) ? 0 : 1;
+  }
+
+  return $choice;
+}
+
+sub _backup_config_file {
+  my ($self, $rc) = @_;
+  my $src = file($rc);
+  my $dst = file("$rc.kanku-bak".time().'.'.$$);
+  if (-e $src) {
+    $src->copy_to($dst);
+    $self->logger->debug("Create backup of config $src -> $dst");
+  } else {
+    $self->logger->debug("No backup of config $src - File does not exist");
+  }
+  return;
 }
 
 1;

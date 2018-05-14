@@ -51,7 +51,6 @@ has distributed => (
     traits        => [qw(Getopt)],
     isa           => 'Bool',
     is            => 'rw',
-    #cmd_aliases   => 'X',
     documentation => 'Run setup in distributed server mode',
 );
 
@@ -59,7 +58,6 @@ has devel => (
     traits        => [qw(Getopt)],
     isa           => 'Bool',
     is            => 'rw',
-    #cmd_aliases   => 'X',
     documentation => 'Run setup in developer mode',
 );
 
@@ -67,14 +65,12 @@ has user => (
     traits        => [qw(Getopt)],
     isa           => 'Str',
     is            => 'rw',
-    #cmd_aliases   => 'X',
     documentation => 'User who will be running kanku',
 );
 has images_dir => (
     traits        => [qw(Getopt)],
     isa           => 'Str',
     is            => 'rw',
-    #cmd_aliases   => 'X',
     documentation => 'directory where vm images will be stored',
     default       => "/var/lib/libvirt/images"
 );
@@ -83,7 +79,6 @@ has apiurl => (
     traits        => [qw(Getopt)],
     isa           => 'Str',
     is            => 'rw',
-    #cmd_aliases   => 'X',
     documentation => 'url to your obs api',
     default       => "https://api.opensuse.org"
 );
@@ -174,6 +169,16 @@ has mq_pass => (
     }
 );
 
+has interactive => (
+    traits        => [qw(Getopt)],
+    isa           => 'Bool',
+    is            => 'rw',
+    lazy          => 1,
+    cmd_aliases   => 'i',
+    documentation => 'Interactive Mode - more choice/info how to configure your system',
+    default       => 0,
+);
+
 sub abstract { "Setup local environment to work as server or developer mode." }
 
 sub description { "
@@ -230,6 +235,7 @@ sub execute {
       _ssl        => $self->ssl,
       _apache     => $self->apache,
       _devel      => 1,
+      interactive => $self->interactive
     );
   } else {
     die "No valid setup mode found";
@@ -254,7 +260,7 @@ Please select installation mode :
 ";
 
   while (1) {
-    my $answer = <STDIN>;
+    my $answer = <>;
     chomp($answer);
     exit 0 if ( $answer == 9 );
 
