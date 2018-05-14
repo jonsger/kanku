@@ -112,7 +112,7 @@ sub connect {
       password	      => $self->password,
       port            => $self->port,
       ssl             => $self->ssl,
-      ssl_cacert      => $self->ssl_cacert || '',
+      ssl_cacert      => $self->ssl_cacert || '/etc/ssl/ca-bundle.pem',
       ssl_verify_host => $self->ssl_verify_host,
       ssl_init        => $self->ssl_init,
     }

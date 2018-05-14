@@ -37,7 +37,7 @@ sub connect_listener {
   my $ssl_cacert      |= '';
   my $ssl_verify_host |= 0;
   if ($ssl) {
-    $ssl_cacert      = $lcfg->{ssl_cacert} || '/usr/share/pki/trust/DigiCert_High_Assurance_EV_Root_CA.pem';
+    $ssl_cacert      = $lcfg->{ssl_cacert} || '/etc/ssl/ca-bundle.pem';
     $ssl_verify_host = 0;
   };
   my $mq = Net::AMQP::RabbitMQ->new();
