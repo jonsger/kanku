@@ -23,7 +23,11 @@ extends qw(MooseX::App::Cmd);
 use Log::Log4perl;
 use Kanku::Config;
 
-Log::Log4perl->init("$FindBin::Bin/../etc/console-log.conf");
+my $lconf = (-e "$ENV{HOME}/.kanku/logging.conf" )
+               ? "$ENV{HOME}/.kanku/logging.conf"
+               : "$FindBin::Bin/../etc/console-log.conf";
+
+Log::Log4perl->init($lconf);
 Kanku::Config->initialize(class => "KankuFile");
 
 __PACKAGE__->meta->make_immutable();
