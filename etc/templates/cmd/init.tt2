@@ -22,11 +22,11 @@ jobs:
     options:
       api_url: https://api.opensuse.org/public
       # Please have a look at
-      # https://build.opensuse.org/project/show/home:M0ses:kanku:Images
+      # https://build.opensuse.org/project/show/devel:kanku:immages
       # to find more official Images
-      project: home:M0ses:kanku:Images
-      repository: images_leap_42_3
-      package: openSUSE-Leap-42.3-JeOS
+      project: devel:kanku:images
+      repository: images_leap_15_0
+      package: openSUSE-Leap-15.0-JeOS
   -
     use_module: Kanku::Handler::ImageDownload
     options:

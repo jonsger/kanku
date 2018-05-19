@@ -164,8 +164,8 @@ Here is an example how to configure the module in your jobs file or KankuFile
     use_module: Kanku::Handler::GIT
     options:
       mirror:     1
-      giturl:     http://192.168.199.1/git/github.com/M0ses/kanku.git
-      remote_url: https://github.com/M0ses/kanku.git
+      giturl:     http://192.168.199.1/git/github.com/openSUSE/open-build-service.git
+      remote_url: https://github.com/openSUSE/open-build-service.git
       destination: /root/kanku
       revision: master
       submodules : 1

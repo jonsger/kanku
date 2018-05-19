@@ -275,8 +275,9 @@ Here is an example how to configure the module in your jobs file or KankuFile
     use_module: Kanku::Handler::OBSCheck
     options:
       api_url: https://api.opensuse.org
-      project: home:M0ses:kanku:images
-      package: openSUSE-Leap-42.1-JeOS
+      project: devel:kanku:images
+      package: openSUSE-Leap-15.0-JeOS
+      repository: images_leap_15_0
       use_cache: 1
 
 
