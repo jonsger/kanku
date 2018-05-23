@@ -20,6 +20,7 @@ use Moose;
 use Kanku::Util::DoD;
 use Try::Tiny;
 use Data::Dumper;
+use Carp;
 with 'Kanku::Roles::Handler';
 with 'Kanku::Roles::Logger';
 
@@ -38,17 +39,17 @@ has dod_object => (
       api_url             => $self->api_url,
       use_cache           => $self->use_cache,
       preferred_extension => $self->preferred_extension,
-      use_oscrc           => $self->use_oscrc
-    )
+      use_oscrc           => $self->use_oscrc,
+    );
   },
 );
 
 has ['api_url','project','package'] => (is=>'rw',isa=>'Str',required=>1);
 
-has '+api_url' => (default=>"https://api.opensuse.org/public");
+has '+api_url' => (default => 'https://api.opensuse.org/public');
 
-has ['base_url', 'repository', 'preferred_extension']       => (is=>'rw',isa=>'Str');
-has '+preferred_extension' => (lazy => 1, default => '');
+has ['base_url', 'repository', 'preferred_extension'] => (is=>'rw',isa=>'Str');
+has '+preferred_extension' => (lazy => 1, default => q{});
 has _changed => (is=>'rw',isa=>'Bool',default=>0);
 
 has _binary => (is=>'rw',isa=>'HashRef',lazy=>1,default=>sub { { } });
@@ -67,30 +68,30 @@ has gui_config => (
         {
           param => 'api_url',
           type  => 'text',
-          label => 'API URL'
+          label => 'API URL',
         },
         {
           param => 'skip_all_checks',
           type  => 'checkbox',
-          label => 'Skip all checks'
+          label => 'Skip all checks',
         },
         {
           param => 'project',
           type  => 'text',
-          label => 'Project'
+          label => 'Project',
         },
         {
           param => 'package',
           type  => 'text',
-          label => 'Package'
+          label => 'Package',
         },
         {
           param => 'repository',
           type  => 'text',
-          label => 'Repository'
+          label => 'Repository',
         },
       ];
-  }
+  },
 );
 
 sub prepare {
@@ -103,7 +104,7 @@ sub prepare {
 
   return {
     state => 'succeed',
-    message => "Preparation finished successfully"
+    message => 'Preparation finished successfully',
   };
 }
 
@@ -119,7 +120,7 @@ sub execute {
 
   if ( $self->base_url ) {
     # prevent from errors because of missing trailing slash
-    if (  $self->base_url !~ q{/$} ) { $self->base_url($self->base_url.'/') }
+    if (  $self->base_url !~ q{/$} ) { $self->base_url($self->base_url.q{/}) }
     $dod->base_url($self->base_url);
   }
   $dod->base_url($self->base_url)     if $self->base_url;
@@ -132,7 +133,7 @@ sub execute {
   # check if $binary is HashRef to prevent Moose from
   # crashing the whole application with an exception
   # if value is undef
-  $self->_binary($binary) if ( ref($binary) eq "HashRef");
+  $self->_binary($binary) if ( ref($binary) eq 'HashRef');
 
   # Don`t check for skipping if no last run found
   # or Job was triggered instead of scheduled
@@ -140,17 +141,17 @@ sub execute {
   # and have higher priority
   if (
       $last_run and
-      ! $self->job->triggered and
-      ! $self->skip_all_checks
+      (! $self->job->triggered) and
+      (! $self->skip_all_checks)
   ) {
     # TODO: implement offline mode
     #
     my $prep_result = $last_run->{prepare}->{binary};
     foreach my $key (qw/mtime filename size/) {
-      my $bv = $binary->{$key} || '';
-      my $pv = $prep_result->{$key} || '';
+      my $bv = $binary->{$key} || q{};
+      my $pv = $prep_result->{$key} || q{};
       if ( $bv ne $pv ) {
-        $self->logger->debug("Change detected");
+        $self->logger->debug('Change detected');
         $self->_changed(1);
       }
     }
@@ -159,12 +160,12 @@ sub execute {
   }
 
   if ( ! $self->_changed ) {
-    $self->logger->debug("Setting job skipped");
+    $self->logger->debug('Setting job skipped');
     $self->job->skipped(1);
     return {
       code    => 0,
       state   => 'skipped',
-      message => "execution skipped because binary did not change since last run"
+      message => 'execution skipped because binary did not change since last run',
     };
   }
 
@@ -180,10 +181,10 @@ sub execute {
         return {
           code    => 0,
           state   => 'skipped',
-          message => $e
+          message => $e,
         };
       }
-      die $e;
+      croak($e);
     };
   }
 
@@ -191,21 +192,20 @@ sub execute {
   $ctx->{obs_direct_url} = $binary->{bin_url};
   $ctx->{public_api}     = $binary->{public_api};
   $ctx->{obs_filename}   = $binary->{filename};
-  $self->logger->debug("obs_direct_url = '".( $ctx->{obs_direct_url} || '')."'");
+  $self->logger->debug('obs_direct_url = "'.( $ctx->{obs_direct_url} || q{}).q{"});
   $ctx->{obs_username}   = $binary->{obs_username};
   $ctx->{obs_password}   = $binary->{obs_password};
   $ctx->{obs_project}    = $self->project;
   $ctx->{obs_package}    = $self->package;
 
-  if (!$ctx->{vm_image_url} and !$ctx->{obs_direct_url}) {
-    die "Neither vm_image_url nor obs_direct_url found\n"
+  if (!($ctx->{vm_image_url} or $ctx->{obs_direct_url})) {
+    croak("Neither vm_image_url nor obs_direct_url found\n"
       ."HINT: Try \n\nosc api /build/"
-      . $dod->project ."/"
-      . $dod->repository ."/"
-      . $dod->arch ."/"
+      . $dod->project .q{/}
+      . $dod->repository .q{/}
+      . $dod->arch .q{/}
       . $dod->package
-      . "\n\nfor further debugging\n"
-    ;
+      . "\n\nfor further debugging\n");
   }
 
   $self->update_history();
@@ -213,12 +213,12 @@ sub execute {
   return {
     code    => 0,
     state   => 'succeed',
-    message => "Sucessfully checked project ".$self->project." under url "
+    message => 'Sucessfully checked project '.$self->project.' under url '
                  .$self->api_url ."\n"
-                 ." ("
+                 .' ('
                  .    "vm_image_url: $ctx->{vm_image_url}, "
                  .    "obs_direct_url: $ctx->{obs_direct_url}"
-                 .")"
+                 .')',
   };
 }
 
@@ -231,13 +231,15 @@ sub update_history {
       project     => $self->project,
       package     => $self->package,
       check_time  => time(),
-      vm_image_url=> $self->job->context->{vm_image_url}
-    },{
-      unique_obscheck => [$self->api_url,$self->project,$self->package]
-    }
+      vm_image_url=> $self->job->context->{vm_image_url},
+    },
+    {
+      unique_obscheck => [$self->api_url,$self->project,$self->package],
+    },
   );
 
-};
+  return;
+}
 
 sub get_from_history {
   my $self = shift;
@@ -247,20 +249,19 @@ sub get_from_history {
       api_url     => $self->api_url,
       project     => $self->project,
       package     => $self->package,
-    }
+    },
   );
 
-  die "Could not found last entry in database" if (! $rs);
+  croak('Could not found last entry in database') if (! $rs);
 
   $ctx->{vm_image_url} = $rs->vm_image_url;
 
   return {
     code    => 0,
     state   => 'succeed',
-    message => "Sucessfully fetch vm_image_url '".$ctx->{vm_image_url}."' from database"
+    message => "Sucessfully fetch vm_image_url '$ctx->{vm_image_url}' from database",
   };
-
-};
+}
 
 1;
 __END__

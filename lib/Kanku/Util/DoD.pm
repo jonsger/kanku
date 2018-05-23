@@ -25,6 +25,8 @@ use Net::OBS::Client::Project;
 use Net::OBS::Client::Package;
 use Kanku::Util::CurlHttpDownload;
 use Kanku::Config;
+use Carp;
+
 with 'Kanku::Roles::Logger';
 
 # http://download.opensuse.org/repositories/OBS:/Server:/Unstable/images/
@@ -38,31 +40,31 @@ has project => (
 has repository => (
   is      => 'rw',
   isa     => 'Str',
-  default => 'images'
+  default => 'images',
 );
 
 has arch => (
   is      => 'rw',
   isa     => 'Str',
-  default => 'x86_64'
+  default => 'x86_64',
 );
 
 has package => (
   is      => 'rw',
   isa     => 'Str',
-  default => ''
+  default => q{},
 );
 
 has images_dir => (
   is      => 'rw',
   isa     => 'Str',
-  default => '/var/lib/libvirt/images'
+  default => '/var/lib/libvirt/images',
 );
 
 has base_url => (
   is      => 'rw',
   isa     => 'Str',
-  default => "http://download.opensuse.org/repositories/"
+  default => 'http://download.opensuse.org/repositories/',
 );
 
 has download_url => (
@@ -73,17 +75,17 @@ has download_url => (
     my $self = shift;
 
     my $prj = $self->project();
-    $prj =~ s#:#:/#g;
+    $prj =~ s{:}{:/}g;
 
-    return $self->base_url . $prj . "/" . $self->repository . "/";
-  }
+    return $self->base_url . "$prj/" . $self->repository . q{/};
+  },
 );
 
 has api_url => (
   is      =>'rw',
   isa     =>'Str',
   lazy    => 1,
-  default => "https://api.opensuse.org"
+  default => 'https://api.opensuse.org',
 );
 
 has get_image_file_from_url_cb => (
@@ -107,23 +109,23 @@ has get_image_file_from_url => (
       arch        => $self->arch,
       package     => $self->package,
       apiurl      => $self->api_url,
-      %{$self->auth_config}
+      %{$self->auth_config},
     );
     my $record = $self->get_image_file_from_url_cb->($self,$build_results->binarylist());
     if ( $record ) {
       $record->{url} = $self->download_url .$record->{prefix}. $record->{filename};
       if ( $self->api_url =~ /\/public\/?$/ ) {
-        $record->{bin_url} = $self->api_url ."/build/".$self->project."/".$self->repository."/".$self->arch."/".$self->package."?view=cpio";
+        $record->{bin_url} = $self->api_url .'/build/'.$self->project.q{/}.$self->repository.q{/}.$self->arch.q{/}.$self->package.'?view=cpio';
         $record->{public_api} = 1;
       } else {
-	$record->{bin_url} = $self->api_url . "/build/".$self->project."/".$self->repository."/".$self->arch."/".$self->package."/".$record->{filename};
+	$record->{bin_url} = $self->api_url . '/build/'.$self->project.q{/}.$self->repository.q{/}.$self->arch.q{/}.$self->package."/$record->{filename}";
       }
       $record->{obs_username} = $build_results->user;
       $record->{obs_password} = $build_results->pass;
     }
     $self->logger->trace("\$record:\n".Dumper($record));
     return $record || {};
-  }
+  },
 );
 
 has [qw/skip_all_checks skip_check_project skip_check_package use_cache/ ] => (is => 'ro', isa => 'Bool',default => 0 );
@@ -141,7 +143,7 @@ has pkg_config => (
     my $cfg = Kanku::Config->instance()->config()->{$pkg};
     $self->logger->trace(Dumper($cfg));
     return $cfg || {};
-  }
+  },
 );
 
 has auth_config => (
@@ -153,25 +155,24 @@ has auth_config => (
     my $pkg_config = $self->pkg_config;
     my $cfg        = {};
 
-    $self->logger->debug(sprintf(" -- use oscrc (%s/%s",$self->use_oscrc,$pkg_config->{use_oscrc}));
     if (exists($pkg_config->{use_oscrc})) {
       $cfg->{use_oscrc} = $pkg_config->{use_oscrc};
       if (! $cfg->{use_oscrc} ) {
-	$cfg->{user} = $pkg_config->{$self->api_url}->{obs_username} || $pkg_config->{obs_username} || '';
-	$cfg->{pass} = $pkg_config->{$self->api_url}->{obs_password} || $pkg_config->{obs_password} || '';
+	$cfg->{user} = $pkg_config->{$self->api_url}->{obs_username} || $pkg_config->{obs_username} || q{};
+	$cfg->{pass} = $pkg_config->{$self->api_url}->{obs_password} || $pkg_config->{obs_password} || q{};
       }
     } else {
       $cfg->{use_oscrc} = $self->use_oscrc;
     }
     return $cfg;
-  }
+  },
 );
 
 has preferred_extension => (
-  is => 'rw',
-  isa => 'Str',
-  lazy => 1,
-  default =>''
+  is      => 'rw',
+  isa     => 'Str',
+  lazy    => 1,
+  default => q{},
 );
 
 sub download {
@@ -182,10 +183,10 @@ sub download {
 
   my $fn    = $self->get_image_file_from_url()->{filename};
   my $url   = $self->download_url . $fn;
-  my $file  = $self->images_dir() . "/" . $fn;
+  my $file  = $self->images_dir() . q{/} . $fn;
 
-  $self->logger->debug(" -- state of skip_all_checks : ".$self->skip_all_checks);
-  $self->logger->debug(" -- use_cache : ".$self->use_cache);
+  $self->logger->debug(' -- state of skip_all_checks : '.$self->skip_all_checks);
+  $self->logger->debug(' -- use_cache : '.$self->use_cache);
 
 
   if (! $self->use_cache ) {
@@ -195,7 +196,7 @@ sub download {
   my $curl = Kanku::Util::CurlHttpDownload->new(
       url         => $url,
       output_file => $file,
-      use_cache   => $self->use_cache
+      use_cache   => $self->use_cache,
   );
 
   return $curl->download();
@@ -206,32 +207,32 @@ sub check_before_download {
   my $self = shift;
 
   return if ( $self->skip_all_checks() );
-  unless ($self->skip_check_project()) {
+  if (!$self->skip_check_project()) {
       my $prj = Net::OBS::Client::Project->new(
           name     => $self->project,
           repository  => $self->repository,
           arch        => $self->arch,
           apiurl      => $self->api_url,
-	  %{$self->auth_config}
+	  %{$self->auth_config},
       );
 
-      if ( $prj->dirty or $prj->code ne 'published' ) {
-        die "Project not ready yet\n";
+      if ($prj->dirty or $prj->code ne 'published') {
+        croak("Project not ready yet\n");
       }
   }
 
-  unless ($self->skip_check_package()) {
+  if (!$self->skip_check_package()) {
       my $pkg = Net::OBS::Client::Package->new(
           name        => $self->package,
           project     => $self->project,
           repository  => $self->repository,
           arch        => $self->arch,
           apiurl      => $self->api_url,
-	  %{$self->auth_config}
+	  %{$self->auth_config},
       );
 
       if ( $pkg->code ne 'succeeded' ) {
-        die "Package not ready yet\n";
+        croak("Package not ready yet\n");
       }
   }
 
@@ -243,19 +244,19 @@ sub _sub_get_image_file_from_url_cb {
     my $reg = qr/\.(qcow2|raw|raw\.xz|vmdk|vdi|vhdfixed\.xz|install.iso|iso)$/;
     my %all_images;
 
-    foreach my $bin (@$arg) {
+    foreach my $bin (@{$arg}) {
        $all_images{$1} = $bin if $bin->{filename} =~ $reg;
-       $bin->{prefix} = ($bin->{filename} =~ /\.iso$/ ) ? 'iso/' : '';
+       $bin->{prefix} = ($bin->{filename} =~ /\.iso$/ ) ? 'iso/' : q{};
     }
-    $self->logger->debug("all_images = ".Dumper(\%all_images));
+    $self->logger->debug('all_images = '.Dumper(\%all_images));
     if ($self->preferred_extension) {
-      if (! $all_images{$self->preferred_extension}) {
-        die "Found no images with preferred_extention '".$self->preferred_extension."'";
+      if (!$all_images{$self->preferred_extension}) {
+        croak('Found no images with preferred_extention "'.$self->preferred_extension.q{"});
       }
       return $all_images{$self->preferred_extension};
     } else {
       if (%all_images > 1) {
-        die "More than one matching image found - please specify preferred_extension in your configuration";
+        croak('More than one matching image found - please specify preferred_extension in your configuration');
       }
       return [values %all_images]->[0];
     }
