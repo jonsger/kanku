@@ -27,6 +27,7 @@ jobs:
       project: devel:kanku:images
       repository: images_leap_15_0
       package: openSUSE-Leap-15.0-JeOS
+      use_oscrc: 0
   -
     use_module: Kanku::Handler::ImageDownload
     options:

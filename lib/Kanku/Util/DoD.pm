@@ -127,6 +127,7 @@ has get_image_file_from_url => (
 );
 
 has [qw/skip_all_checks skip_check_project skip_check_package use_cache/ ] => (is => 'ro', isa => 'Bool',default => 0 );
+has [qw/use_oscrc/ ] => (is => 'ro', isa => 'Bool',default => 1);
 
 has pkg_config => (
   is => 'rw',
@@ -151,6 +152,8 @@ has auth_config => (
     my ($self)     = @_;
     my $pkg_config = $self->pkg_config;
     my $cfg        = {};
+
+    $self->logger->debug(sprintf(" -- use oscrc (%s/%s",$self->use_oscrc,$pkg_config->{use_oscrc}));
     if (exists($pkg_config->{use_oscrc})) {
       $cfg->{use_oscrc} = $pkg_config->{use_oscrc};
       if (! $cfg->{use_oscrc} ) {
@@ -158,7 +161,7 @@ has auth_config => (
 	$cfg->{pass} = $pkg_config->{$self->api_url}->{obs_password} || $pkg_config->{obs_password} || '';
       }
     } else {
-      $cfg->{use_oscrc} = 1;
+      $cfg->{use_oscrc} = $self->use_oscrc;
     }
     return $cfg;
   }

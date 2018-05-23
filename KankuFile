@@ -3,7 +3,7 @@ Kanku::Util::IPTables:
   start_port: 49001
 
 
-domain_name: kanku-vm
+domain_name: kanku-devel
 default_job: kanku-server
 
 #qemu:
@@ -26,9 +26,10 @@ jobs:
       # Please have a look at
       # https://build.opensuse.org/project/show/home:M0ses:kanku:Images
       # to find more official Images
-      project: home:M0ses:kanku:Images
-      repository: images_leap_42_3
-      package: openSUSE-Leap-42.3-JeOS
+      project: devel:kanku:images
+      repository: images_leap_15_0
+      package: openSUSE-Leap-15.0-JeOS
+      use_oscrc: 0
   -
     use_module: Kanku::Handler::ImageDownload
     options:

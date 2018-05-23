@@ -38,6 +38,7 @@ has dod_object => (
       api_url             => $self->api_url,
       use_cache           => $self->use_cache,
       preferred_extension => $self->preferred_extension,
+      use_oscrc           => $self->use_oscrc
     )
   },
 );
@@ -53,7 +54,8 @@ has _changed => (is=>'rw',isa=>'Bool',default=>0);
 has _binary => (is=>'rw',isa=>'HashRef',lazy=>1,default=>sub { { } });
 
 has [qw/skip_check_project skip_check_package skip_download/ ] => (is => 'ro', isa => 'Bool',default => 0 );
-has [qw/offline use_cache skip_all_checks/ ] => (is => 'rw', isa => 'Bool',default => 0 );
+has [qw/offline use_cache skip_all_checks use_oscrc/ ] => (is => 'rw', isa => 'Bool',default => 0 );
+has [qw/use_oscrc/ ] => (is => 'rw', isa => 'Bool',default => 1);
 
 
 has gui_config => (
