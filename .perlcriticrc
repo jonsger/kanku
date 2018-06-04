@@ -1,2 +1,6 @@
 severity = 1
 exclude = (Modules::RequireVersionVar|CodeLayout::RequireTidyCode|ControlStructures::ProhibitPostfixControls|CodeLayout::ProhibitHardTabs)
+
+[InputOutput::RequireCheckedSyscalls]
+functions = :builtins
+exclude_functions = print sleep system
