@@ -1,0 +1,10 @@
+tasks:
+  -
+    use_module: Kanku::Handler::RemoveDomain
+notifiers:
+  - 
+    use_module: Kanku::Notifier::Sendmail
+    options:
+      from: kanku@suse.de
+      to: fschreiner@suse.de
+    states: failed, skipped
