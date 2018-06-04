@@ -47,9 +47,8 @@ jobs:
     use_module: Kanku::Handler::ExecuteCommandViaSSH
     options:
       commands:
-        - zypper -n ar obs://home:M0ses:Perl home:M0ses:Perl
-        #- zypper -n ar obs://home:M0ses:kanku:staging home:M0ses:kanku:staging
-        - zypper -n ar http://download.suse.de/ibs/home:/M0ses:/kanku:/staging/openSUSE_Leap_42.3/home:M0ses:kanku:staging.repo
+        - zypper -n ar obs://devel:kanku:perl devel:kanku:perl
+        - zypper -n ar obs://devel:kanku:staging devel:kanku:staging
         - zypper --gpg-auto-import-keys ref -s
         - zypper -n in kanku vim-data curl make apache2 systemd-bash-completion sqlite3
         #- make -C /tmp/kanku install 2>&1 |tee /tmp/make.log
@@ -79,14 +78,13 @@ jobs:
       # Please have a look at
       # https://build.opensuse.org/project/show/home:M0ses:kanku:Images
       # to find more official Images
-      project: home:M0ses:kanku:Images
-      repository: images_leap_42_3
-      package: openSUSE-Leap-42.3-JeOS
+      project: devel:kanku:images
+      repository: images_leap_15_0
+      package: openSUSE-Leap-15.0-JeOS
   -
     use_module: Kanku::Handler::ImageDownload
     options:
       use_cache: 1
-
   -
     use_module: Kanku::Handler::CreateDomain
     options:
@@ -99,9 +97,8 @@ jobs:
     use_module: Kanku::Handler::ExecuteCommandViaSSH
     options:
       commands:
-        - zypper -n ar obs://home:M0ses:Perl home:M0ses:Perl
-        #- zypper -n ar obs://home:M0ses:kanku:staging home:M0ses:kanku:staging
-        - zypper -n ar http://download.suse.de/ibs/home:/M0ses:/kanku:/staging/openSUSE_Leap_42.3/home:M0ses:kanku:staging.repo
+        - zypper -n ar obs://devel:kanku:perl devel:kanku:perl
+        - zypper -n ar obs://devel:kanku:staging devel:kanku:staging
         - zypper --gpg-auto-import-keys ref -s
         # Only for development
         - zypper -n in vim-data curl make apache2 systemd-bash-completion sqlite3
@@ -139,9 +136,9 @@ jobs:
       # Please have a look at
       # https://build.opensuse.org/project/show/home:M0ses:kanku:Images
       # to find more official Images
-      project: home:M0ses:kanku:Images
-      repository: images_leap_42_3
-      package: openSUSE-Leap-42.3-JeOS
+      project: devel:kanku:images
+      repository: images_leap_15_0
+      package: openSUSE-Leap-15.0-JeOS
   -
     use_module: Kanku::Handler::ImageDownload
     options:
@@ -160,9 +157,8 @@ jobs:
     use_module: Kanku::Handler::ExecuteCommandViaSSH
     options:
       commands:
-        - zypper -n ar obs://home:M0ses:Perl home:M0ses:Perl
-        - zypper -n ar obs://home:M0ses:kanku:staging home:M0ses:kanku:staging
-        #- zypper -n ar http://download.suse.de/ibs/home:/M0ses:/kanku:/staging/openSUSE_Leap_42.3/home:M0ses:kanku:staging.repo
+        - zypper -n ar obs://devel:kanku:perl devel:kanku:perl
+        - zypper -n ar obs://devel:kanku:staging devel:kanku:staging
         - zypper --gpg-auto-import-keys ref -s
         - zypper -n in vim-data curl make apache2 systemd-bash-completion sqlite3
         - zypper -n in kanku-cli
