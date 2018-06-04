@@ -21,6 +21,11 @@ use Path::Class qw/file/;
 use Sys::Virt;
 use IPC::Run qw/run timeout/;
 use Path::Class qw/dir file/;
+use Carp;
+use English qw/-no_match_vars/;
+use Const::Fast;
+
+const my $MAX_NETWORK_NUMBER => 255;
 
 requires 'setup';
 
@@ -74,6 +79,12 @@ has _distributed => (
   default => 0,
 );
 
+has interactive => (
+  isa     => 'Bool',
+  is      => 'rw',
+  lazy    => 1,
+  default => 0,
+);
 
 sub _configure_libvirtd_access {
   my ($self) = @_;
@@ -81,23 +92,24 @@ sub _configure_libvirtd_access {
 
   $self->_configure_qemu_config if $self->_devel;
 
-  my $choice = $self->_query_interactive(
-    '
+  my $choice = $self->_query_interactive(<<'EOF'
+
 Should libvirt be reconfigured to run with unix sockets?
 This might be required to control VM`s without entering a password.
 
 Your choice (Y|n)?
-',
+EOF
+,
     1,
     'Bool',
   );
 
   return unless $choice;
 
-  my $conf = file("/etc/libvirt/qemu.conf");
+  my $conf = file('/etc/libvirt/qemu.conf');
   $self->_backup_config_file($conf);
 
-  my $dconf = file("/etc/libvirt/libvirtd.conf");
+  my $dconf = file('/etc/libvirt/libvirtd.conf');
 
   my @lines = $dconf->slurp;
   my $defaults = {
@@ -109,22 +121,22 @@ Your choice (Y|n)?
     auth_unix_rw            => 'none',
   };
   my $seen={};
-  my $regex = "^#?((".join('|',keys(%$defaults)).").*)";
-  foreach my $line ( splice(@lines) ) {
+  my $regex = '^#?(('.join(q{|}, keys %{$defaults}).').*)';
+  for my $line (splice @lines) {
     if ( $line =~ s/$regex/$1/ ) {
       $seen->{$2} = 1;
     }
     push @lines, $line;
   }
 
-  for my $key (keys(%{$defaults})) {
-    push(@lines,"$key = \"$defaults->{$key}\"\n") unless $seen->{$key};
+  for my $key (keys %{$defaults}) {
+    push @lines, "$key = \"$defaults->{$key}\"\n" unless $seen->{$key};
   }
 
   $dconf->spew(\@lines);
 
-  system("systemctl enable libvirtd");
-  system("systemctl restart libvirtd");
+  system 'systemctl enable libvirtd' || print $OS_ERROR;
+  system 'systemctl restart libvirtd' || print $OS_ERROR;
 
   return;
 }
@@ -134,12 +146,13 @@ sub _configure_qemu_config {
   my $logger = $self->logger;
   my $user   = $self->user;
 
-  my $choice = $self->_query_interactive(
-    "Should libvirt be reconfigured run qemu under your user ($user)?
+  my $choice = $self->_query_interactive(<<'EOF'
+Should libvirt be reconfigured run qemu under your user ($user)?
 This is required for shared folder to work smoothly between host and guest.
 
 Your choice (Y|n)?
-",
+EOF
+,
     1,
     'Bool',
   );
@@ -148,13 +161,13 @@ Your choice (Y|n)?
 
   my $conf = file('/etc/libvirt/qemu.conf');
 
-  $logger->debug("Setting user ".$user." in ". $conf->stringify);
+  $logger->debug("Setting user $user in ". $conf->stringify);
   $self->_backup_config_file($conf);
   my @lines = $conf->slurp;
 
-  foreach my $line ( splice(@lines) ) {
+  for my $line (splice @lines) {
     $line =~ s/^#?(user\s*=\s*).*/$1"$user"/;
-    push(@lines,$line);
+    push @lines, $line;
   }
 
   $conf->spew(\@lines);
@@ -172,37 +185,39 @@ sub _create_default_pool {
   for my $pool (@pools) {
     if ($pool->get_name eq 'default') {
       $logger->info('Found pool default - enabling autostart');
-      $choice = $self->_query_interactive(
-        'Should autostart for libvirt pool "default" be enabled?
+      $choice = $self->_query_interactive(<<'EOF'
+Should autostart for libvirt pool "default" be enabled?
 
 Your choice (Y|n)?
-',
+EOF
+,
         1,
         'Bool',
       );
-      return unless $choice;
+      return 0 unless $choice;
       $pool->set_autostart(1);
       return 1;
     }
   }
 
   $logger->info('No pool named "default" found - creating');
-  $choice = $self->_query_interactive(
-    'Should libvirt pool "default" be created?
+  $choice = $self->_query_interactive(<<'EOF'
+Should libvirt pool "default" be created?
 
 Your choice (Y|n)?
-',
+EOF
+,
     1,
     'Bool',
   );
 
-  return unless $choice;
-  my $xml = file($self->_tt_config->{INCLUDE_PATH},"pool-default.xml")->slurp;
+  return 0 unless $choice;
+  my $xml = file($self->_tt_config->{INCLUDE_PATH},'pool-default.xml')->slurp;
   my $pool = $vmm->define_storage_pool($xml);
   $pool->create();
   $pool->set_autostart(1);
 
-  return;
+  return 0;
 }
 
 sub _create_default_network {
@@ -215,11 +230,12 @@ sub _create_default_network {
   for my $net (@networks) {
     if ($net->get_name eq $nn) {
       $logger->info("Found network '$nn' - enabling autostart");
-      my $choice = $self->_query_interactive(
-        "Should autostart for libvirt net '$nn' be enabled and started?
+      my $choice = $self->_query_interactive(<<'EOF'
+Should autostart for libvirt net '$nn' be enabled and started?
 
 Your choice (Y|n)?
-",
+EOF
+,
         1,
         'Bool',
       );
@@ -233,40 +249,43 @@ Your choice (Y|n)?
   my $ttf = "net-$nn.xml.tt2";
   $logger->info("No network named '$nn' found - creating using '$ttf'");
 
-  my $choice = $self->_query_interactive(
+  my $choice = $self->_query_interactive(<<'EOF'
     "Should libvirt net '$nn' be created?
 
 Your choice (Y|n)?
-",
+EOF
+,
     1,
     'Bool',
   );
 
   return unless $choice;
 
-  my $sn = int(rand(255));
+  my $rnd = rand $MAX_NETWORK_NUMBER;
+  my $sn  = int $rnd;
   my $xml = $self->_create_config_from_template($ttf, undef, {subnet=>$sn});
   my $net = $vmm->define_network($xml);
   $net->set_autostart(1);
   $net->create();
+
+  return;
 }
 
 sub _create_config_from_template {
   my ($self, $tt_file, $cfg_file, $vars) = @_;
   my $template  = Template->new($self->_tt_config);
-  my $output = '';
+  my $output = q{};
 
   # process input template, substituting variables
   if ($cfg_file) {
     $template->process($tt_file, $vars, $cfg_file)
-               || die $template->error()->as_string();
+               || croak($template->error()->as_string());
     $self->logger->info("Created config file $cfg_file");
   } else {
     $template->process($tt_file, $vars, \$output)
-               || die $template->error()->as_string();
-    return $output;
+               || croak($template->error()->as_string());
   }
-
+  return $output;
 }
 
 sub _run_system_cmd {
@@ -277,22 +296,23 @@ sub _run_system_cmd {
   my ($in,$out,$err);
   run [$cmd, @opts] , \$in, \$out , $err;
 
-  if ($?) {
-    $logger->error("Execution of command failed: '".( $err || '' )."'");
+  if ($CHILD_ERROR) {
+    $logger->error('Execution of command failed: "'.($err || q{}).q{"});
   }
 
-  return $?
+  return $CHILD_ERROR;
 }
 
 sub _chown {
-  my  $self = shift;
+  my  ($self, @opts) = @_;
+  my ($login,$pass,$uid,$gid) = getpwnam $self->user
+        || croak($self->user." not in passwd file\n");
 
-  my ($login,$pass,$uid,$gid) = getpwnam($self->user)
-        or die $self->user." not in passwd file\n";
-
-  while (my $fn = shift(@_)) {
-    chown $uid, $gid, $fn;
+  while (my $fn = shift @opts) {
+    chown $uid, $gid, $fn || croak($OS_ERROR);
   }
+
+  return;
 }
 
 sub _set_sudoers {
@@ -300,27 +320,28 @@ sub _set_sudoers {
   my $user          = $self->user;
   my $logger        = $self->logger;
 
-  my $choice = $self->_query_interactive(
-    "Should we add user $user to the sudoers to be able to execute iptables/netstat as root?
+  my $choice = $self->_query_interactive(<<'EOF'
+Should we add user $user to the sudoers to be able to execute iptables/netstat as root?
 This is required if you want to use portforwarding from host to guests!
 (Y|n)
-",
+EOF
+,
     1,
     'Bool',
   );
 
   if ($choice) {
-    my $sudoers_file  = file("/etc/sudoers.d/kanku");
+    my $sudoers_file  = file('/etc/sudoers.d/kanku');
     $self->_backup_config_file($sudoers_file);
     $logger->info("Adding commands for user $user in " . $sudoers_file->stringify);
     $sudoers_file->spew("$user ALL=NOPASSWD: /usr/sbin/iptables, /bin/netstat\n");
   }
 
-  return undef;
+  return;
 }
 
 sub _setup_database {
-  my $self = shift;
+  my ($self) = @_;
 
   # create Template object
   my $template  = Template->new($self->_tt_config);
@@ -329,33 +350,32 @@ sub _setup_database {
   my $vars = {
     dsn           => $self->dsn,
     start_tag     => '[%',
-    end_tag       => '%]'
+    end_tag       => '%]',
   };
 
-  my $output = '';
+  my $output = q{};
   my $cfg_file = "$FindBin::Bin/../config.yml";
 
   # process input template, substituting variables
   $template->process('config.yml.tt2', $vars, $cfg_file)
-               || die $template->error()->as_string();
+               || croak($template->error()->as_string());
 
   $self->logger->info("Created config file $cfg_file");
 
-  $self->logger->debug("Using dsn: ".$self->dsn);
+  $self->logger->debug('Using dsn: '.$self->dsn);
   # prepare database setup
   my $migration = DBIx::Class::Migration->new(
     schema_class   => 'Kanku::Schema',
     schema_args    => [$self->dsn],
-    target_dir     => "$FindBin::Bin/../share"
+    target_dir     => "$FindBin::Bin/../share",
   );
 
   # setup database if needed
-  $migration->install_if_needed(
-    default_fixture_sets => ['install']
-  );
+  $migration->install_if_needed(default_fixture_sets => ['install']);
 
   $self->_chown($self->_dbfile);
 
+  return;
 }
 
 sub _query_interactive {
@@ -380,7 +400,7 @@ sub _query_interactive {
 sub _backup_config_file {
   my ($self, $rc) = @_;
   my $src = file($rc);
-  my $dst = file("$rc.kanku-bak".time().'.'.$$);
+  my $dst = file("$rc.kanku-bak".time().q{.}.$PID);
   if (-e $src) {
     $src->copy_to($dst);
     $self->logger->debug("Create backup of config $src -> $dst");
