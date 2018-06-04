@@ -145,21 +145,22 @@ post '/job/trigger/:name.:format' => require_any_role [qw/Admin User/] =>  sub {
   my $self = shift;
   my $name = param('name');
 
-  debug("active jobs:\n");
-  # search for active jobs
-  my @active = schema('default')->resultset('JobHistory')->search({
-    name  => $name,
-    state => {
-      'not in' => [qw/skipped succeed failed/]
-    }
-  });
+  if ( $name ne 'remove-domain') {
+    # search for active jobs
+    my @active = schema('default')->resultset('JobHistory')->search({
+      name  => $name,
+      state => {
+        'not in' => [qw/skipped succeed failed/]
+      }
+    });
 
-  if (@active) {
-    return {
-      state => 'warning',
-      msg   => "Skipped triggering job '$name'."
-               . " Another job is already running"
-    };
+    if (@active) {
+      return {
+        state => 'warning',
+        msg   => "Skipped triggering job '$name'."
+                 . " Another job is already running"
+      };
+    }
   }
 
   my $args = $self->app->request->body;

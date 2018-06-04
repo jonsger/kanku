@@ -121,7 +121,7 @@
                <i class="{{comments_icon}} fa-comments"/>
           </a>
         {{/comments_icon}}
-	<a class="pull-right" href="[% request.uri_base %]/job_result/{{ id }}" style="margin-left:5px;"><span class="glyphicon glyphicon-link"/></a>
+	<a class="pull-right" href="[% request.uri_base %]/job_result/{{ id }}" style="margin-left:5px;"><i class="fas fa-link"/></a>
 	<span class="glyphicon glyphicon-download pull-right"/>
       </div>
     </div>

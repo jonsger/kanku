@@ -13,6 +13,9 @@
       </div>
       <div class="col-md-2">
 	<a class="pull-right" href="[% request.uri_base %]/guest#{{ id }}"><span class="glyphicon glyphicon-link"/></a>
+	[% IF roles.Admin %]
+        <a class="pull-right" href="#" onClick=trigger_remove_domain("{{ id }}")><span class="far fa-trash-alt"/></a>
+        [% END %]
       </div>
     </div>
   </div>
