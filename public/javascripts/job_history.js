@@ -29,13 +29,15 @@ function save_job_comment (job_id) {
   console.log("job_id   : " + job_id);
   console.log("text     : " + comment);
   console.log("user_id  : " + user_id);
-
-  $.post(
-    uri_base + "/rest/job/comment/" + job_id + ".json",
+  var comment =JSON.stringify(
     {
       "job_id"   : job_id,
       "message"  : comment
     }
+  );
+  $.post(
+    uri_base + "/rest/job/comment/" + job_id + ".json",
+    comment
   );
 
   update_comments(job_id);
