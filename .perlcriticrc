@@ -4,3 +4,6 @@ exclude = (Modules::RequireVersionVar|CodeLayout::RequireTidyCode|ControlStructu
 [InputOutput::RequireCheckedSyscalls]
 functions = :builtins
 exclude_functions = print sleep system
+
+[Variables::ProhibitPunctuationVars]
+allow = $@ $! $$

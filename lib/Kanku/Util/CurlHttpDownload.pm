@@ -28,12 +28,6 @@ use Path::Class::Dir;
 use Kanku::Config;
 with 'Kanku::Roles::Logger';
 
-use feature 'say';
-
-# http://download.opensuse.org/repositories/OBS:/Server:/Unstable/images/
-#
-
-
 has output_dir => (
   is        => 'rw',
   isa       => 'Str',
@@ -72,6 +66,12 @@ has cache_dir => (
 has [qw/username password/] => (
   is        => 'rw',
   isa       => 'Str',
+);
+
+has [qw/etag/] => (
+  is        => 'rw',
+  isa       => 'Str|Undef',
+  default   => q{},
 );
 
 sub download {
@@ -114,6 +114,8 @@ sub download {
 
   ( -d $file->parent ) || $file->parent->mkpath;
 
+  my $res;
+
   if ( $self->offline ) {
     $self->logger->warn("Skipping download from $url in offline mode");
   } else {
@@ -129,7 +131,12 @@ sub download {
         $request{request}->authorization_basic($self->username,$self->password);
       }
 
-      my $res = $ua->mirror(url => $url, file=> $file->stringify,%request);
+      $res = $ua->mirror(
+        url  => $url,
+        file => $file->stringify,
+        etag => $self->etag,
+        %request,
+      );
 
       if ( $res->code == 200 ) {
         $self->logger->debug("  download succeed");
@@ -147,7 +154,7 @@ sub download {
 
   chown $uid, $gid, $file->stringify;
 
-  return $file->stringify;
+  return ($file->stringify, $res->header('ETag'));
 }
 
 __PACKAGE__->meta->make_immutable;

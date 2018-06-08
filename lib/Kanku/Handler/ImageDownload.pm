@@ -68,7 +68,10 @@ sub execute {
     }
   }
 
-  my $curl =  Kanku::Util::CurlHttpDownload->new(url => $self->url);
+  my $curl =  Kanku::Util::CurlHttpDownload->new(
+    url => $self->url,
+    etag => $self->get_etag
+  );
 
   $curl->output_file($self->_calc_output_file());
 
@@ -85,9 +88,10 @@ sub execute {
   $ctx->{vm_image_file} = $curl->output_file;
 
   my $tmp_file;
+  my $etag;
 
   try {
-    $tmp_file = $curl->download();
+    ($tmp_file, $etag) = $curl->download();
   } catch {
     my $e = $_;
 
@@ -107,7 +111,7 @@ sub execute {
       $curl->username($ctx->{obs_username}) if $ctx->{obs_username};
       $curl->password($ctx->{obs_password}) if $ctx->{obs_password};
     }
-    $tmp_file = $curl->download();
+    ($tmp_file, $etag) = $curl->download();
 
 
     if ($ctx->{public_api} ) {
@@ -140,7 +144,7 @@ sub execute {
     [$tmp_file,$ctx->{vm_image_file}]
   );
 
-  $self->update_history($tmp_file);
+  $self->update_history($tmp_file, $etag);
 
   return {
     state => 'succeed',
@@ -166,17 +170,27 @@ sub _calc_output_file {
 }
 
 sub update_history {
-  my $self = shift;
+  my ($self, $vm_image_file, $etag) = @_;
 
   my $rs = $self->schema->resultset('ImageDownloadHistory')->update_or_create(
     {
       vm_image_url    => $self->url,
-      vm_image_file   => shift,
-      download_time   => time()
+      vm_image_file   => $vm_image_file,
+      download_time   => time(),
+      etag            => $etag,
     },
     { key => 'primary' }
   );
+}
 
+sub get_etag {
+  my ($self) = @_;
+  my $ctx = $self->job->context;
+  my $filter = {vm_image_url => $ctx->{vm_image_url}};
+  my $rs = $self->schema->resultset('ImageDownloadHistory')->find($filter);
+
+  return q{} unless $rs;
+  return $rs->etag;
 }
 
 sub get_from_history {

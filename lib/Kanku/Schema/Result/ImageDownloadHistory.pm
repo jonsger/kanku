@@ -47,6 +47,8 @@ __PACKAGE__->add_columns(
   { data_type => "text", is_nullable => 1 },
   "download_time",
   { data_type => "integer", is_nullable => 1 },
+  "etag",
+  { data_type => "text", is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
