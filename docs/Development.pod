@@ -19,7 +19,7 @@
 =head3 For production environment
 
  # In server mode
- export KANKU_DSN=dbi:SQLite:/opt/kanku/share/kanku-schema.db
+ export KANKU_DSN=dbi:SQLite:/opt/kanku/var/db/kanku-schema.db
  # In developer mode
  # export KANKU_DSN=dbi:SQLite:$HOME/.kanku/kanku-schema.db
  export KANKU_PATH=/opt/kanku
@@ -30,6 +30,10 @@
  export KANKU_DSN=dbi:SQLite:./tmp/test.db
  export KANKU_PATH=.
  export PERL5LIB=./lib
+
+=head2 Show status of current database deployment
+
+ dbic-migration status -S Kanku::Schema --dsn $KANKU_DSN --dir share 
 
 =head2 Create and populate a database
 
