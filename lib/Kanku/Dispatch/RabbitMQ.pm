@@ -204,13 +204,17 @@ sub run_task {
     module      => $opts{module},
     final_args  => {%{$opts{options} || {}},%{$opts{args} || {}}},
   );
+  
+  # trigger_user is only set if a non-Admin triggered a job
+  # then domain name should look like "$trigger_user-$domain_name"
+  # to avoid overwriting
+  my $un = $defaults{job}->context->{trigger_user};
+  $defaults{final_args}->{domain_name} =~ s{^($un-)?}{$un-}smx if ($un && exists $defaults{final_args}->{domain_name});
 
   my $task = Kanku::Task->new(
     %defaults,
-    options      => $opts{options} || {},
     schema       => $self->schema,
     scheduler    => $opts{scheduler},
-    args         => $opts{args},
     notify_queue => $self->notify_queue
   );
 

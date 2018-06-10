@@ -24,28 +24,30 @@
  # export KANKU_DSN=dbi:SQLite:$HOME/.kanku/kanku-schema.db
  export KANKU_PATH=/opt/kanku
  export PERL5LIB=$KANKU_PATH/lib
+ export SHARE_DIR=$KANKU_PATH/share
 
 =head3 For development environment
 
  export KANKU_DSN=dbi:SQLite:./tmp/test.db
  export KANKU_PATH=.
  export PERL5LIB=./lib
+ export SHARE_DIR=$KANKU_PATH/share
 
 =head2 Show status of current database deployment
 
- dbic-migration status -S Kanku::Schema --dsn $KANKU_DSN --dir share 
+ dbic-migration status -S Kanku::Schema --dsn $KANKU_DSN --dir $SHARE_DIR
 
 =head2 Create and populate a database
 
- cd /opt/kanku 
+ cd /opt/kanku
 
- dbic-migration install -S Kanku::Schema --dsn $KANKU_DSN --dir share
+ dbic-migration install -S Kanku::Schema --dsn $KANKU_DSN --dir $SHARE_DIR
 
- dbic-migration populate -S Kanku::Schema --dsn $KANKU_DSN --fixture_set install --dir share
+ dbic-migration populate -S Kanku::Schema --dsn $KANKU_DSN --fixture_set install --dir $SHARE_DIR
 
 =head2 Upgrade database
 
- dbic-migration upgrade -S Kanku::Schema --dsn $KANKU_DSN --database SQLite --dir share
+ dbic-migration upgrade -S Kanku::Schema --dsn $KANKU_DSN --database SQLite --dir $SHARE_DIR
 
 =head2 Create a database migration
 
@@ -55,7 +57,7 @@
 
 =head3 Populate database
 
- dbic-migration populate -S Kanku::Schema --dsn $KANKU_DSN --fixture_set install --dir share
+ dbic-migration populate -S Kanku::Schema --dsn $KANKU_DSN --fixture_set install --dir $SHARE_DIR
 
 =head3 Make you changes in Schema
 
@@ -67,11 +69,11 @@
 
 =head3 Create migration files
 
- dbic-migration prepare -S Kanku::Schema --dsn $KANKU_DSN --database SQLite --dir share
+ dbic-migration prepare -S Kanku::Schema --dsn $KANKU_DSN --database SQLite --dir $SHARE_DIR
 
  or overwrite if already exists
 
- dbic-migration prepare -S Kanku::Schema --dsn $KANKU_DSN --database SQLite --dir share -O
+ dbic-migration prepare -S Kanku::Schema --dsn $KANKU_DSN --database SQLite --dir $SHARE_DIR -O
 
 =head3 Create install fixtures set
 

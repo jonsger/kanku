@@ -60,20 +60,6 @@ has 'scheduler'  => (is=>'rw',isa=>'Object');
 
 has 'module'     => (is=>'rw',isa=>'Str');
 
-=head2 options   - options for the Handler from config file
-
-=cut
-
-has 'options'    => (is=>'rw',isa=>'HashRef',default=>sub {{}});
-
-=head2 args      - arguments for the Handler from e.g. webfrontend
-
-optional arguments which could be used to overwrite options from the config file
-
-=cut
-
-has 'args'       => (is=>'rw',isa=>'HashRef',default=>sub {{}} );
-
 =head2 result      - Result of task in text form json encoded
 
 =cut
@@ -142,16 +128,8 @@ sub run {
 
     my $mod = $handler;
     die "Now use_module definition in config (job: $job)" if ( ! $mod );
-    my $mod_args = $self->args();
-
-    die "args for $mod not a HashRef" if ( ref($mod_args) ne 'HASH' );
 
     $self->load_module($mod);
-
-    my %final_args = (%{$self->{options}},%{$mod_args});
-
-    $logger->trace("final args for $mod:\n".Dumper(\%final_args));
-
 
     my $last_run_result={};
 

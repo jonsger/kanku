@@ -163,13 +163,23 @@ post '/job/trigger/:name.:format' => require_any_role [qw/Admin User/] =>  sub {
     }
   }
 
-  my $args = $self->app->request->body;
+  my $args = decode_json($self->app->request->body);
+  my $defaults = get_defaults_for_views();
+  my $un = $defaults->{logged_in_user}->{username};
+  if (! $defaults->{roles}->{Admin}) {
+    unshift @{$args},
+      {
+        use_module => 'Kanku::Handler::SetJobContext' ,
+        options=>{trigger_user => $defaults->{logged_in_user}->{id}},
+      };
+  }
+
 
   my $jd = {
     name => param('name'),
     state => 'triggered',
     creation_time => time(),
-    args => $args
+    args => encode_json($args),
   };
 
   my $job = schema('default')->resultset('JobHistory')->create($jd);
