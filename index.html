@@ -55,16 +55,6 @@ a.faq {
   <li>
     <a href='#faq'                  id='faq-btn'                  class="btn_dark nav_btn"        onclick=switch_to('faq')>FAQ / Known Issues</a>
   </li>
-  <li>
-    <select id="os_version" onchange=change_os_version()>
-      <option value='<YOUR_OS_VERSION_ID_HERE>'>Please choose your OS</option>
-      <option value="openSUSE_Tumbleweed">openSUSE Tumbleweed</option>
-      <option value="openSUSE_Leap_42.3">openSUSE Leap 15.0</option>
-      <option value="openSUSE_Leap_42.3">openSUSE Leap 42.3</option>
-      <option value="openSUSE_Leap_42.2">openSUSE Leap 42.2</option>
-      <option value="SLE_12_SP3">SLES 12 SP3</option>
-    </select>
-  </li>
 </ul>
 <!-- About --> 
 <div id=about-div class="page_container show_content">
@@ -269,18 +259,6 @@ kanku ssh -u root
     </section>
 <script src="https://cdn.jsdelivr.net/foundation/6.2.4/foundation.min.js"></script>
 <script>
-function change_os_version() {
-  var os_version_id = $('#os_version option:selected').val();
-  var ymp_link_address = "http://download.opensuse.org/repositories/devel:/kanku/" + os_version_id + "/kanku.ymp";
-  console.log(os_version_id)
-  $(".os_version_id").each(function() {
-	$(this).text(os_version_id)
-    }
-  );
-
-  $("#ymp_link").attr('href',ymp_link_address);
-
-}
 function switch_to(container_id) {
 
   var t_btn = $(this);
@@ -334,7 +312,6 @@ $(document).foundation();
 
 // document.ready()
 $(function() {
-  change_os_version();
   switch_to_anchor();
 });
 </script>
