@@ -62,10 +62,10 @@ sub run_job {
       module      => $sub_task->{use_module},
       final_args  => {%{$sub_task->{options} || {}},%{$task_args}},
     );
-
-    my $un = $defaults{job}->context->{trigger_user};
+    my $un = $job->trigger_user;
+    $logger->debug("--- trigger_user $un");
     $defaults{final_args}->{domain_name} =~ s{^($un-)?}{$un-}smx if ($un && exists $defaults{final_args}->{domain_name});
-
+    $logger->debug('--- final_args'.Dumper($defaults{final_args}));
 
     $task = Kanku::Task->new(
       %defaults,

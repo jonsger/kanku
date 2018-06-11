@@ -192,24 +192,28 @@ sub run_job {
 sub run_task {
   my $self = shift;
   my %opts = @_;
+  my $job  = $self->job;
   my $mod  = $opts{module};
   my $distributable = $self->check_task($mod);
+  my $logger = $self->logger;
 
-  $self->logger->debug("Starting with new task");
+  $logger->debug("Starting with new task");
 
-  $self->logger->trace(Dumper(\%opts));
+  $logger->trace(Dumper(\%opts));
 
   my %defaults = (
     job         => $opts{job},
     module      => $opts{module},
     final_args  => {%{$opts{options} || {}},%{$opts{args} || {}}},
   );
-  
+
   # trigger_user is only set if a non-Admin triggered a job
   # then domain name should look like "$trigger_user-$domain_name"
   # to avoid overwriting
-  my $un = $defaults{job}->context->{trigger_user};
+  my $un = $job->trigger_user;
+  $logger->debug("--- trigger_user $un");
   $defaults{final_args}->{domain_name} =~ s{^($un-)?}{$un-}smx if ($un && exists $defaults{final_args}->{domain_name});
+  $logger->debug('--- final_args'.Dumper($defaults{final_args}));
 
   my $task = Kanku::Task->new(
     %defaults,
@@ -225,8 +229,6 @@ sub run_task {
       %defaults,
       schema          => $self->schema
     );
-
-
   } elsif ( $distributable == 1 ) {
     $tr = Kanku::Task::Remote->new(
       %defaults,
@@ -234,7 +236,6 @@ sub run_task {
       queue     => $opts{queue},
       daemon	=> $self,
     );
-
   } elsif ( $distributable == 2 ) {
 
     $tr = Kanku::Task::RemoteAll->new(
@@ -242,7 +243,6 @@ sub run_task {
       kmq => $opts{kmq},
       local_job_queue_name => $opts{kmq}->queue_name,
     );
-
   } else {
     die "Unknown distributable value '$distributable' for module $mod\n"
   }

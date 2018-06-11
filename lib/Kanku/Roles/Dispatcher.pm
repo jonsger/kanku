@@ -251,13 +251,14 @@ sub get_todo_list {
     push (
       @$todo,
       Kanku::Job->new(
-        db_object => $ds,
-        id        => $ds->id,
-        state     => $ds->state,
-        name      => $ds->name,
-        skipped   => 0,
-        scheduled => ( $ds->state eq 'scheduled' ) ? 1 : 0,
-        triggered => ( $ds->state eq 'triggered' ) ? 1 : 0,
+        db_object    => $ds,
+        id           => $ds->id,
+        state        => $ds->state,
+        name         => $ds->name,
+        skipped      => 0,
+        scheduled    => ( $ds->state eq 'scheduled' ) ? 1 : 0,
+        triggered    => ( $ds->state eq 'triggered' ) ? 1 : 0,
+        trigger_user => $ds->trigger_user,
       )
     );
   }
@@ -276,7 +277,8 @@ sub start_job {
 }
 
 sub end_job {
-  my ($self,$job,$task) = @_;
+  my ($self, $job, $task) = @_;
+  $job = $self->job;
 
   $job->state(($job->skipped) ? 'skipped' : $task->state);
   $job->end_time(time());

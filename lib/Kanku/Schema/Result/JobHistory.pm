@@ -108,6 +108,8 @@ __PACKAGE__->add_columns(
   { data_type => "text", is_nullable => 1 },
   "masterinfo",
   { data_type => "text", is_nullable => 1 },
+  "trigger_user",
+  { data_type => "text", is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY

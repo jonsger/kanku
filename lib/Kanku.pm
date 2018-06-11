@@ -457,4 +457,16 @@ websocket_on_open sub {
 
 __PACKAGE__->meta->make_immutable();
 
-true;
+1;
+
+__END__
+
+=head1 NAME
+
+Kanku - Bridging the gap between OBS and developers
+
+=head1 DOCUMENTATION
+
+=head2 L<Kanku::Handler>
+
+=cut

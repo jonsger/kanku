@@ -29,7 +29,7 @@ has "context" => (
 );
 
 has id => ( is  => 'rw', isa => 'Int' );
-has [qw/name state result workerinfo masterinfo/] => ( is => 'rw', isa => 'Str' );
+has [qw/name state result workerinfo masterinfo trigger_user/] => ( is => 'rw', isa => 'Str' );
 has [qw/skipped scheduled triggered/] => ( is => 'rw', isa => 'Bool' );
 has [qw/creation_time start_time end_time last_modified/] => ( is  => 'rw', isa => 'Int' );
 has db_object => ( is => 'rw', isa => 'Object' );
@@ -41,7 +41,7 @@ has 'json_keys' => (
   isa     => 'ArrayRef',
   default => sub {[qw/
     name state result workerinfo skipped scheduled triggered creation_time
-    start_time end_time last_modified id context masterinfo
+    start_time end_time last_modified id context masterinfo trigger_user
   /
   ]});
 
@@ -49,7 +49,7 @@ sub update_db {
   my $self = shift;
   my $ds = { last_modified => time() };
 
-  foreach my $key ( qw/id name state start_time end_time result workerinfo masterinfo/ ) {
+  foreach my $key ( qw/id name state start_time end_time result workerinfo masterinfo trigger_user/ ) {
     my $value = $self->$key();
     $ds->{$key} = $value if ( $value );
   }
