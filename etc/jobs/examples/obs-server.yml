@@ -19,6 +19,7 @@ tasks:
       project: OBS:Server:Unstable
       package: OBS-Appliance-qcow2
       skip_all_checks: 1
+      preferred_extension: qcow2
   -
     use_module: Kanku::Handler::ImageDownload
   -
