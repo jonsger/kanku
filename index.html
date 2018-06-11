@@ -139,11 +139,10 @@ a.faq {
     <a id="installation" class="anchor" href="#installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation</h1>
 
     <h2>
-    <a id="automatic-installation-with-yast-one-click-install" class="anchor" href="#automatic-installation-with-yast-one-click-install" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Automatic installation with yast one-click-install</h2>
+    <a id="automatic-installation-with-yast-one-click-install" class="anchor" href="#automatic-installation-with-yast-one-click-install" aria-hidden="true">
+      <span aria-hidden="true" class="octicon octicon-link"></span></a>Automatic installation with yast one-click-install</h2>
 
-    <p>You can find a yast one-click-install file in the download repositories</p>
-
-    <p><a id=ymp_link href="#">http://download.opensuse.org/repositories/devel:/kanku/<span class=os_version_id></span>/kanku.ymp</a></p>
+    <p>Simply search on <a id=ymp_link href="https://software.opensuse.org/package/kanku">software.opensuse.org</a> for your distribution and install the package</p>
 
     <h2>
     <a id="manual-installation" class="anchor" href="#manual-installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Manual installation</h2>
@@ -174,7 +173,6 @@ sudo zypper ref -s
 sudo shutdown -r now
 </code></pre>
 
-    After successful reboot, login, start terminal and change into your kanku home
 
     <h2>
     <a id="preparing-a-new-project" class="anchor" href="#preparing-a-new-project" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Preparing a new Project</h2>
@@ -189,7 +187,7 @@ mkdir MyProject
 # cd in project's directory
 cd MyProject
 
-kanku init --memory=512
+kanku init --memory=1024 --domain_name my-project
     </code></pre>
 
     <h1>
