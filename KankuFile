@@ -34,7 +34,10 @@ jobs:
     use_module: Kanku::Handler::ImageDownload
     options:
       use_cache: 1
-
+  -
+    use_module: Kanku::Handler::ResizeImage
+    options:
+      disk_size: 25G
   -
     use_module: Kanku::Handler::CreateDomain
     options:
@@ -50,9 +53,11 @@ jobs:
         - zypper -n ar obs://devel:kanku:perl devel:kanku:perl
         - zypper -n ar obs://devel:kanku:staging devel:kanku:staging
         - zypper --gpg-auto-import-keys ref -s
-        - zypper -n in kanku vim-data curl make apache2 systemd-bash-completion sqlite3
+        - zypper -n in kanku rabbitmq-server rabbitmq-server-plugins apache2
         #- make -C /tmp/kanku install 2>&1 |tee /tmp/make.log
-        - /opt/kanku/bin/kanku setup --server --apache 2>&1 |tee /tmp/setup-server.log
+        - /opt/kanku/bin/kanku setup --server --apache --distributed --ssl 2>&1 |tee /tmp/setup-server.log
+        - chown kankurun /opt/kanku/var/db/kanku-schema.db
+        - zypper -n in kanku vim-data curl make apache2 systemd-bash-completion sqlite3
         - cp /opt/kanku/etc/jobs/examples/obs-server.yml /opt/kanku/etc/jobs/
         - systemctl start kanku-web  
         - systemctl enable kanku-web  
@@ -103,9 +108,10 @@ jobs:
         # Only for development
         - zypper -n in vim-data curl make apache2 systemd-bash-completion sqlite3
         - zypper -n in kanku rabbitmq-server rabbitmq-server-plugins openvswitch openvswitch-switch
-        - make -C /tmp/kanku install 2>&1 |tee /tmp/make.log
-        - /opt/kanku/bin/kanku setup --distributed --apache 2>&1 |tee /tmp/setup-server.log
-        - cp /opt/kanku/etc/jobs/examples/obs-server.yml /opt/kanku/etc/jobs/
+        - make -C /tmp/kanku install_full_dirs 2>&1 |tee /tmp/make.log
+        - /opt/kanku/bin/kanku setup --apache --distributed --ssl 2>&1 |tee /tmp/setup-server.log
+        #- cp /opt/kanku/etc/jobs/examples/obs-server.yml /opt/kanku/etc/jobs/
+        - cp /tmp/kanku/etc/jobs/examples/obs-server.yml /opt/kanku/etc/jobs/
         - systemctl start kanku-web  
         - systemctl enable kanku-web  
         - systemctl start kanku-worker
