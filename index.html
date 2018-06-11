@@ -59,6 +59,7 @@ a.faq {
     <select id="os_version" onchange=change_os_version()>
       <option value='<YOUR_OS_VERSION_ID_HERE>'>Please choose your OS</option>
       <option value="openSUSE_Tumbleweed">openSUSE Tumbleweed</option>
+      <option value="openSUSE_Leap_42.3">openSUSE Leap 15.0</option>
       <option value="openSUSE_Leap_42.3">openSUSE Leap 42.3</option>
       <option value="openSUSE_Leap_42.2">openSUSE Leap 42.2</option>
       <option value="SLE_12_SP3">SLES 12 SP3</option>
@@ -147,7 +148,7 @@ a.faq {
 
     <p>You can find a yast one-click-install file in the download repositories</p>
 
-    <p><a id=ymp_link href="#">http://download.opensuse.org/repositories/home:/M0ses:/kanku/<span class=os_version_id></span>/kanku.ymp</a></p>
+    <p><a id=ymp_link href="#">http://download.opensuse.org/repositories/devel:/kanku/<span class=os_version_id></span>/kanku.ymp</a></p>
 
     <h2>
     <a id="manual-installation" class="anchor" href="#manual-installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Manual installation</h2>
@@ -156,8 +157,8 @@ a.faq {
     <a id="configuration-of-software-respositories" class="anchor" href="#configuration-of-software-respositories" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Configuration of software respositories</h3>
 
     <pre><code>
-sudo zypper ar http://download.opensuse.org/repositories/home:/M0ses:/Perl/<span class=os_version_id></span>/home:M0ses:Perl.repo
-sudo zypper ar http://download.opensuse.org/repositories/home:/M0ses:/kanku/<span class=os_version_id></span>/home:M0ses:kanku.repo
+sudo zypper ar obs://devel:kanku devel:kanku
+sudo zypper ar obs://devel:kanku:perl devel:kanku:perl
 sudo zypper ref -s
     </code></pre>
 
@@ -171,6 +172,9 @@ sudo zypper ref -s
     <a id="setup-your-environment" class="anchor" href="#setup-your-environment" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Setup your environment</h1>
 
     <pre><code>sudo /opt/kanku/bin/kanku setup --devel
+# if you would like to have more control about the modifications on your system
+# please use:
+# sudo /opt/kanku/bin/kanku setup --devel --interactive
 
 sudo shutdown -r now
 </code></pre>
@@ -241,7 +245,7 @@ kanku ssh -u root
     </h2>
     <div class="faq-div hidden_faq" id=div-where_can_i_find_images>
         Have a look at 
-          <a href="https://build.opensuse.org/project/show/home:M0ses:kanku:Images">home:M0ses:kanku:Images</a>
+          <a href="https://build.opensuse.org/project/show/devel:kanku:images">devel:kanku:images</a>
         to get an overview of official kanku images. Keep in mind how to configure the selected image in kanku
       <pre>
         <code>
@@ -249,10 +253,10 @@ kanku ssh -u root
   use_module: Kanku::Handler::OBSCheck
   options:
     api_url: https://api.opensuse.org
-    project: home:M0ses:Kanku:Images
-    # package e.g. openSUSE-Leap-42.2-JeOS
+    project: devel:kanku:images
+    # package e.g. openSUSE-Leap-15.0-JeOS
     package: &lt;package name&gt;
-    # e.g. images_leap_42_2
+    # e.g. images_leap_15_0
     repository: &lt;repository name&gt;
 
         </code>
@@ -274,7 +278,7 @@ kanku ssh -u root
 <script>
 function change_os_version() {
   var os_version_id = $('#os_version option:selected').val();
-  var ymp_link_address = "http://download.opensuse.org/repositories/home:/M0ses:/kanku/" + os_version_id + "/kanku.ymp";
+  var ymp_link_address = "http://download.opensuse.org/repositories/devel:/kanku/" + os_version_id + "/kanku.ymp";
   console.log(os_version_id)
   $(".os_version_id").each(function() {
 	$(this).text(os_version_id)
