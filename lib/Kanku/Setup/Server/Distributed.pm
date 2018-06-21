@@ -66,14 +66,7 @@ sub setup {
   $logger->debug("Running server setup");
 
 
-  $self->_dbfile(
-    file(
-      $self->app_root,
-      "var",
-      "db",
-      "kanku-schema.db"
-    )->stringify
-  );
+  $self->_dbfile('/var/lib/kanku/db/kanku-schema.db');
 
   $self->user("kankurun");
 
@@ -100,8 +93,8 @@ sub setup {
   $self->_setup_ovs_hooks;
 
   $self->_create_config_from_template(
-    "etc/config.yml.tt2",
-    "/opt/kanku/etc/config.yml",
+    "kanku-config.yml.tt2",
+    "/etc/kanku/kanku-config.yml",
     {
        db_file        => $self->_dbfile,
        use_publickey  => 1,
@@ -359,7 +352,7 @@ sub _setup_ovs_hooks {
 
   file("/etc/libvirt/hooks/network")->spew("#!/bin/bash
 
-/usr/bin/perl /opt/kanku/bin/kanku-network-setup.pl \$@
+/usr/bin/perl /usr/lib/kanku/network-setup.pl \$@
 ");
 
   chmod oct(755), "/etc/libvirt/hooks/network";

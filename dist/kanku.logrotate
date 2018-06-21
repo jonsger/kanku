@@ -1,5 +1,5 @@
-/opt/kanku/var/log/kanku.log 
-/opt/kanku/var/log/kanku-web.log 
+/var/log/kanku/kanku.log 
+/var/log/kanku/kanku-web.log 
 {
   daily
   rotate 7

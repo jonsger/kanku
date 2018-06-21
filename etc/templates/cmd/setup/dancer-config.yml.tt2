@@ -23,6 +23,12 @@ behind_proxy : 1
 #log: debug
 #traces: 1
 
+public_dir: /usr/share/kanku/public
+static_handler: 1
+views: /usr/share/kanku/views
+
+
+
 #template: "simple"
 session: "YAML"
 
@@ -31,7 +37,7 @@ session: "YAML"
 engines:
   session:
     YAML:
-      session_dir: "/opt/kanku/var/sessions"
+      session_dir: "/var/lib/kanku/sessions"
   template:
     template_toolkit:
       start_tag: '[% start_tag %]'

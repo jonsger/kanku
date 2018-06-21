@@ -35,7 +35,7 @@ has _tt_config => (
   lazy => 1,
   default => sub {
     {
-      INCLUDE_PATH => "$FindBin::Bin/../etc/templates/cmd/setup",
+      INCLUDE_PATH => "/etc/kanku/templates/cmd/setup",
       INTERPOLATE  => 1,               # expand "$var" in plain text
     };
   },
@@ -46,13 +46,6 @@ has logger => (
   is    => 'rw',
   lazy  => 1,
   default => sub { Log::Log4perl->get_logger },
-);
-
-has app_root => (
-  isa   => 'Object',
-  is    => 'rw',
-  lazy  => 1,
-  default => sub { dir($FindBin::Bin)->parent; },
 );
 
 has user => (
@@ -84,6 +77,11 @@ has interactive => (
   is      => 'rw',
   lazy    => 1,
   default => 0,
+);
+
+has dns_domain_name => (
+    isa           => 'Str',
+    is            => 'rw',
 );
 
 sub _configure_libvirtd_access {
@@ -261,9 +259,19 @@ EOF
 
   return unless $choice;
 
+  my $dns_domain_name = $self->_query_interactive(<<'EOF'
+    "Should libvirt net '$nn' be created?
+
+Your choice ?
+EOF
+,
+    $self->dns_domain_name,
+    'Str',
+  );
+
   my $rnd = rand $MAX_NETWORK_NUMBER;
   my $sn  = int $rnd;
-  my $xml = $self->_create_config_from_template($ttf, undef, {subnet=>$sn});
+  my $xml = $self->_create_config_from_template($ttf, undef, {subnet=>$sn,dns_domain_name=>($dns_domain_name)});
   my $net = $vmm->define_network($xml);
   $net->set_autostart(1);
   $net->create();
@@ -305,10 +313,11 @@ sub _run_system_cmd {
 
 sub _chown {
   my  ($self, @opts) = @_;
-  my ($login,$pass,$uid,$gid) = getpwnam $self->user
-        || croak($self->user." not in passwd file\n");
+  my ($login,$pass,$uid,$gid) = getpwnam $self->user;
+  $login || croak($self->user." not in passwd file\n");
 
   while (my $fn = shift @opts) {
+    $self->logger->debug("_chown '$fn' ($uid/$gid)");
     chown $uid, $gid, $fn || croak($OS_ERROR);
   }
 
@@ -354,10 +363,10 @@ sub _setup_database {
   };
 
   my $output = q{};
-  my $cfg_file = "$FindBin::Bin/../config.yml";
+  my $cfg_file = '/etc/kanku/dancer/config.yml';
 
   # process input template, substituting variables
-  $template->process('config.yml.tt2', $vars, $cfg_file)
+  $template->process('dancer-config.yml.tt2', $vars, $cfg_file)
                || croak($template->error()->as_string());
 
   $self->logger->info("Created config file $cfg_file");
@@ -367,7 +376,7 @@ sub _setup_database {
   my $migration = DBIx::Class::Migration->new(
     schema_class   => 'Kanku::Schema',
     schema_args    => [$self->dsn],
-    target_dir     => "$FindBin::Bin/../share",
+    target_dir     => '/usr/share/kanku',
   );
 
   # setup database if needed

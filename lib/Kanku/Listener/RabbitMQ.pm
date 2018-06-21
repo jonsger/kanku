@@ -6,15 +6,12 @@ use Data::Dumper;
 use JSON::XS;
 use Log::Log4perl;
 use Kanku::Config;
-use FindBin;
 
 with 'Kanku::Roles::Logger';
-
 
 has config => ( is => 'rw', isa => 'HashRef');
 
 has daemon => ( is => 'rw', isa => 'Object');
-
 
 sub connect_listener {
   my ($self) = @_;

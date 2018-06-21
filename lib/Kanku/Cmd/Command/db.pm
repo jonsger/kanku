@@ -14,16 +14,12 @@
 # Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 #
-package Kanku::Cmd::Command::dbinit;
+package Kanku::Cmd::Command::db;
 
 use Moose;
-use Template;
-use FindBin;
 use Path::Class qw/file dir/;
-use FindBin;
 use File::HomeDir;
 use Term::ReadKey;
-use Template;
 use Kanku::Schema;
 use Cwd;
 use DBIx::Class::Migration;
@@ -35,43 +31,63 @@ has server => (
     traits        => [qw(Getopt)],
     isa           => 'Bool',
     is            => 'rw',
-    #cmd_aliases   => 'X',
-    documentation => 'Run dbinit in server mode',
+    cmd_aliases   => 's',
+    documentation => 'Use database from system (/var/lib/kanku/db/kanku-schema.db',
 );
 
 has devel => (
     traits        => [qw(Getopt)],
     isa           => 'Bool',
     is            => 'rw',
-    #cmd_aliases   => 'X',
-    documentation => 'Run dbinit in developer mode',
+    cmd_aliases   => 'd',
+    documentation => 'Use database in your $HOME/.kanku/kanku-schema.db directory',
 );
 
 has dsn => (
     traits        => [qw(Getopt)],
     isa           => 'Str',
     is            => 'rw',
-    #cmd_aliases   => 'X',
     documentation => 'dsn for global database',
     lazy          => 1,
     default       => sub {
-      # dbi:SQLite:dbname=/home/frank/Projects/kanku/share/kanku-schema.db
-      return "dbi:SQLite:dbname=".$_[0]->_dbfile;
+      return "dbi:SQLite:dbname=".$_[0]->dbfile;
     }
 );
 
-has _dbfile => (
+has upgrade => (
+    traits        => [qw(Getopt)],
+    isa           => 'Bool',
+    is            => 'rw',
+    cmd_aliases   => 'u',
+    documentation => 'Run database upgrade',
+);
+
+has install => (
+    traits        => [qw(Getopt)],
+    isa           => 'Bool',
+    is            => 'rw',
+    cmd_aliases   => 'i',
+    documentation => 'Run database installation',
+);
+
+has dbfile => (
+  traits        => [qw(Getopt)],
   isa 	=> 'Str',
   is  	=> 'rw',
   lazy  => 1,
-  default => sub {$_[0]->homedir."/.kanku/kanku-schema.db"}
+  default => sub {
+    my ($self) = @_;
+    return $self->server 
+      ? '/var/lib/kanku/db/kanku-schema.db'
+      : $self->homedir."/.kanku/kanku-schema.db"
+  },
 );
 
 has _dbdir => (
 	isa 	=> 'Object',
 	is  	=> 'rw',
 	lazy	=> 1,
-	default => sub { file($_[0]->_dbfile)->parent; }
+	default => sub { return file($_[0]->dbfile)->parent; }
 );
 
 has homedir => (
@@ -80,6 +96,19 @@ has homedir => (
     is            => 'rw',
     #cmd_aliases   => 'X',
     documentation => 'home directory for user',
+    lazy          => 1,
+    default       => sub {
+      # dbi:SQLite:dbname=/home/frank/Projects/kanku/share/kanku-schema.db
+      return File::HomeDir->users_home($ENV{USER});
+    }
+);
+
+has share_dir => (
+    traits        => [qw(Getopt)],
+    isa           => 'Str',
+    is            => 'rw',
+    #cmd_aliases   => 'X',
+    documentation => 'directory where migrations and fixtures are stored',
     lazy          => 1,
     default       => sub {
       # dbi:SQLite:dbname=/home/frank/Projects/kanku/share/kanku-schema.db
@@ -102,27 +131,28 @@ sub execute {
   my $self    = shift;
   my $logger  = $self->logger;
 
-  $self->logger->debug("Server mode: ". $self->server );
-  if ( $self->server ) {
-    $self->_dbfile('/opt/kanku/share/kanku-schema.db');
-  }
-
-  my $base_dir = dir($FindBin::Bin)->parent;
 
   $logger->debug("Using dsn: ".$self->dsn);
-  $logger->debug("Using _dbdir: ".$self->_dbdir);
-
-  $self->_dbdir->mkpath unless -d $self->_dbdir;
-
+  $logger->debug("Using share_dir: ".$self->share_dir);
   # prepare database setup
   my $migration = DBIx::Class::Migration->new(
     schema_class   => 'Kanku::Schema',
     schema_args	   => [$self->dsn],
-    target_dir	   => "$FindBin::Bin/../share"
+    target_dir	   => $self->share_dir
   );
 
   # setup database if needed
-  $migration->install_if_needed(default_fixture_sets => ['install']);
+  if ($self->install) {
+    if (! -d $self->_dbdir) {
+      $logger->debug('Creating _dbdir: '.$self->_dbdir);
+      $self->_dbdir->mkpath;
+    }
+    $migration->install_if_needed(default_fixture_sets => ['install']);
+  } elsif ($self->upgrade) {
+    $migration->upgrade();
+  } else {
+    $self->logger->error("Please specify one of the commands (--install|--upgrade)");
+  }
 }
 
 __PACKAGE__->meta->make_immutable();

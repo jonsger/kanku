@@ -88,3 +88,19 @@
  dbicdump -o dump_directory=./lib -o skip_load_external=1 -o debug=1 Kanku::Schema $KANKU_DSN
 
 =cut
+
+=head1 PATH HIRARCHIE
+
+  /etc/kanku/			- configuration files
+  /usr/bin/kanku		- cli tool
+  /usr/sbin/kanku-*		- kanku daemons
+  /usr/lib/kanku/lib/		- perl modules
+  /usr/share/kanku/views	- MVC views (templates)
+  /usr/share/kanku/public	- static content for dancer app (html/javascript/css)
+  /usr/share/kanku/fixtures	- database fixtures
+  /usr/share/kanku/migrations   - database migrations
+  /run/kanku    		- pid files/shutdown files
+  /var/lib/kanku		- variable data like database/sessions
+  /var/log/kanku		- log files
+  /var/cache/kanku		- cached files like downloaded images for VMs or cached git repos
+

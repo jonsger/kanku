@@ -27,7 +27,7 @@ has schema => (
   isa => 'Object',
   lazy => 1,
   default => sub {
-    my $cfg_file    = file($FindBin::Bin,'..','config.yml');
+    my $cfg_file    = file('/etc/kanku/dancer/config.yml');
     my $cfg_content = $cfg_file->slurp;
     my $cfg_yaml    = YAML::Load($cfg_content);
 

@@ -25,10 +25,9 @@ use Kanku::Config;
 
 my $lconf = (-e "$ENV{HOME}/.kanku/logging.conf" )
                ? "$ENV{HOME}/.kanku/logging.conf"
-               : "$FindBin::Bin/../etc/console-log.conf";
+               : "/etc/kanku/logging/console.conf";
 
 Log::Log4perl->init($lconf);
-Kanku::Config->initialize(class => "KankuFile");
 
 __PACKAGE__->meta->make_immutable();
 

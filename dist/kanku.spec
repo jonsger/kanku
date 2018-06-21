@@ -16,8 +16,6 @@
 #
 %define kanku_user   kankurun
 %define kanku_group  kanku
-%define kanku_prefix /opt/kanku
-%define kanku_vardir %{kanku_prefix}/var
 
 Name:           kanku
 # Version gets set by obs-service-tar_scm
@@ -98,8 +96,11 @@ Requires: kanku-dispatcher
 Requires: kanku-triggerd
 
 %description
-TODO: add some meaningful description
- to be more verbose
+kanku is designed to give you a better integration of your kiwi images built
+by the Open Build Service (OBS) in your development and testing workflow.
+
+It provides a framework for simple automation of complex setups,
+e.g. to prepare your development environment or run simple tests.
 
 %prep
 %setup -q
@@ -186,47 +187,47 @@ Conflicts: perl-DBD-SQLite-Amalgamation
 TODO:
  add a useful description
 
+%post common
+%tmpfiles_create %_tmpfilesdir/kanku
 
 %files common
 %defattr(-,root,root)
 %doc README.md TODO
 
-%dir %{kanku_prefix}
-%dir %{kanku_prefix}/lib
-%dir %{kanku_prefix}/lib/Kanku
-%dir %{kanku_prefix}/lib/Kanku/Daemon
+%dir /usr/lib/kanku
+%dir /usr/lib/kanku/Kanku
+%dir /usr/lib/kanku//Kanku/Daemon
 
 # share contains database related stuff
-%dir %{kanku_prefix}/share/
-%{kanku_prefix}/share/fixtures
-%{kanku_prefix}/share/migrations
+%dir /usr/share/kanku
+/usr/share/kanku/fixtures
+/usr/share/kanku/migrations
 
-%dir %{kanku_prefix}/bin
-%attr(755,root,root) %{kanku_prefix}/bin/kanku
-%attr(755,root,root) %{kanku_prefix}/bin/kanku-network-setup.pl
+%attr(755,root,root) /usr/bin/kanku
+%attr(755,root,root) /usr/bin/kanku-network-setup.pl
 
-%dir %{kanku_prefix}/etc/
-%ghost %{kanku_prefix}/etc/config.yml
-%config %{kanku_prefix}/etc/console-log.conf
-%config %{kanku_prefix}/etc/kanku-network-setup-logging.conf
+%dir /etc/kanku
+%ghost /etc/kanku/config.yml
+%config /etc/kanku/logging/console.conf
+%config /etc/kanku/logging/kanku-network-setup.conf
 
-%dir %{kanku_prefix}/etc/templates
-%dir %{kanku_prefix}/etc/templates/examples-vm/
-%dir %{kanku_prefix}/etc/templates/cmd
-%dir %{kanku_prefix}/etc/templates/cmd/setup
-%config %{kanku_prefix}/etc/templates/cmd/init.tt2
-%config %{kanku_prefix}/etc/templates/cmd/setup/*
-%config %{kanku_prefix}/etc/templates/examples-vm/obs-server-26.tt2
-%config %{kanku_prefix}/etc/templates/examples-vm/sles11sp3.tt2
-%config %{kanku_prefix}/etc/templates/examples-vm/obs-server.tt2
+%dir /etc/kanku/templates
+%dir /etc/kanku/templates/examples-vm/
+%dir /etc/kanku/templates/cmd
+%dir /etc/kanku/templates/cmd/setup
+%config /etc/kanku/templates/cmd/init.tt2
+%config /etc/kanku/templates/cmd/setup/*
+%config /etc/kanku/templates/examples-vm/obs-server-26.tt2
+%config /etc/kanku/templates/examples-vm/sles11sp3.tt2
+%config /etc/kanku/templates/examples-vm/obs-server.tt2
 
-%dir %{kanku_prefix}/etc/jobs
-%dir %{kanku_prefix}/etc/jobs/examples
-%config %{kanku_prefix}/etc/jobs/examples/obs-server.yml
-%config %{kanku_prefix}/etc/jobs/examples/obs-server-26.yml
-%config %{kanku_prefix}/etc/jobs/examples/sles11sp3.yml
+%dir /etc/kanku/jobs
+%dir /etc/kanku/jobs/examples
+%config /etc/kanku/jobs/examples/obs-server.yml
+%config /etc/kanku/jobs/examples/obs-server-26.yml
+%config /etc/kanku/jobs/examples/sles11sp3.yml
 
-%config(noreplace) %{kanku_prefix}/etc/log4perl.conf
+%config(noreplace) /etc/kanku/logging/default.conf
 
 %ghost /etc/sudoers.d/kanku
 
@@ -236,38 +237,41 @@ TODO:
 %exclude %dir /etc/logrotate.d/
 %config /etc/logrotate.d/kanku-common
 
-%dir %{kanku_prefix}/lib/Kanku/NotifyQueue/
-%{kanku_prefix}/lib/Kanku/NotifyQueue/*.pm
-%{kanku_prefix}/lib/Kanku/Handler/
-%{kanku_prefix}/lib/Kanku/Roles/
-%{kanku_prefix}/lib/Kanku/Schema/
-%{kanku_prefix}/lib/Kanku/Setup/
-%{kanku_prefix}/lib/Kanku/Util/
-%{kanku_prefix}/lib/Kanku/Task/
-%{kanku_prefix}/lib/OpenStack/
-%{kanku_prefix}/lib/Kanku/Config.pm
-%{kanku_prefix}/lib/Kanku/Handler.pod
-%{kanku_prefix}/lib/Kanku/Notifier
-%{kanku_prefix}/lib/Kanku/Job.pm
-%{kanku_prefix}/lib/Kanku/RabbitMQ.pm
-%{kanku_prefix}/lib/Kanku/Schema.pm
-%{kanku_prefix}/lib/Kanku/JobList.pm
-%{kanku_prefix}/lib/Kanku/Task.pm
-%{kanku_prefix}/lib/Kanku/Airbrake.pm
-%{kanku_prefix}/lib/Kanku/NotifyQueue.pm
+%exclude %dir %_tmpfilesdir
+%_tmpfilesdir/kanku 
 
-%dir %{kanku_prefix}/lib/Kanku/WebSocket
-%{kanku_prefix}/lib/Kanku/WebSocket/Notification.pm
-%{kanku_prefix}/lib/Kanku/WebSocket/Session.pm
+%dir %perl_sitelib/Kanku/NotifyQueue/
+%perl_sitelib/Kanku/NotifyQueue/*.pm
+%perl_sitelib/Kanku/Handler/
+%perl_sitelib/Kanku/Roles/
+%perl_sitelib/Kanku/Schema/
+%perl_sitelib/Kanku/Setup/
+%perl_sitelib/Kanku/Util/
+%perl_sitelib/Kanku/Task/
+%perl_sitelib/OpenStack/
+%perl_sitelib/Kanku/Config.pm
+%perl_sitelib/Kanku/Handler.pod
+%perl_sitelib/Kanku/Notifier
+%perl_sitelib/Kanku/Job.pm
+%perl_sitelib/Kanku/RabbitMQ.pm
+%perl_sitelib/Kanku/Schema.pm
+%perl_sitelib/Kanku/JobList.pm
+%perl_sitelib/Kanku/Task.pm
+%perl_sitelib/Kanku/Airbrake.pm
+%perl_sitelib/Kanku/NotifyQueue.pm
 
-%dir %{kanku_prefix}/lib/Kanku/Airbrake
-%{kanku_prefix}/lib/Kanku/Airbrake/Dummy.pm
+%dir %perl_sitelib/Kanku/WebSocket
+%perl_sitelib/Kanku/WebSocket/Notification.pm
+%perl_sitelib/Kanku/WebSocket/Session.pm
 
-%dir %{kanku_prefix}/lib/Kanku/LibVirt
-%{kanku_prefix}/lib/Kanku/LibVirt/HostList.pm
+%dir %perl_sitelib/Kanku/Airbrake
+%perl_sitelib/Kanku/Airbrake/Dummy.pm
 
-%dir %{kanku_prefix}/lib/Kanku/Dispatch/
-%{kanku_prefix}/lib/Kanku/Dispatch/Local.pm
+%dir %perl_sitelib/Kanku/LibVirt
+%perl_sitelib/Kanku/LibVirt/HostList.pm
+
+%dir %perl_sitelib/Kanku/Dispatch/
+%perl_sitelib/Kanku/Dispatch/Local.pm
 
 
 %package cli
@@ -283,12 +287,12 @@ Command line client for kanku, mainly used for setup tasks
 and in developer mode
 
 %files cli
-%dir %{kanku_prefix}/views/cli/
-%dir %{kanku_prefix}/views/cli/rjob
-%{kanku_prefix}/views/cli/*.tt
-%{kanku_prefix}/views/cli/rjob/*.tt
-%{kanku_prefix}/lib/Kanku/Cmd/
-%{kanku_prefix}/lib/Kanku/Cmd.pm
+%dir /usr/share/kanku/views/cli/
+%dir /usr/share/kanku/views/cli/rjob
+/usr/share/kanku/views/cli/*.tt
+/usr/share/views/cli/rjob/*.tt
+%perl_sitelib/Kanku/Cmd/
+%perl_sitelib/Kanku/Cmd.pm
 
 %package common-server
 Summary: Common server files or settings for kanku
@@ -307,11 +311,9 @@ exit 0
 
 %files common-server
 %defattr(-, root, root)
-%dir %{kanku_prefix}/var
-%dir %attr(755, kankurun, kanku) %{kanku_prefix}/var/log
-%dir %attr(755, kankurun, kanku) %{kanku_prefix}/var/cache
-%dir %attr(755, kankurun, kanku) %{kanku_prefix}/var/run
-%dir %attr(755, kankurun, kanku) %{kanku_prefix}/var/db
+%dir %attr(755, kankurun, kanku) /var/log/kanku
+%dir %attr(755, kankurun, kanku) /run/kanku
+%dir %attr(755, kankurun, kanku) /var/lib/kanku
 
 %package web
 Summary: WebUI for kanku
@@ -342,38 +344,38 @@ TODO:
 %service_del_postun kanku-web.service
 
 %files web
-%attr(755,root,root) %{kanku_prefix}/bin/kanku-app.psgi
-%dir %attr(755, kankurun, kanku) %{kanku_prefix}/var/sessions
-%dir %{kanku_prefix}/views/
+%attr(755,root,root) /usr/lib/kanku/kanku-app.psgi
+%dir %attr(755, kankurun, kanku) /var/lib/kanku/sessions
+%dir /usr/share/kanku/views/
 %{_unitdir}/kanku-web.service
 %{_sbindir}/rckanku-web
-%{kanku_prefix}/views/admin.tt
-%{kanku_prefix}/views/guest.tt
-%{kanku_prefix}/views/index.tt
-%{kanku_prefix}/views/job.tt
-%{kanku_prefix}/views/notify.tt
-%{kanku_prefix}/views/notify_disabled.tt
-%{kanku_prefix}/views/job_history.tt
-%{kanku_prefix}/views/job_result.tt
-%dir %{kanku_prefix}/views/layouts
-%{kanku_prefix}/views/layouts/main.tt
-%{kanku_prefix}/views/login.tt
-%dir %{kanku_prefix}/views/login
-%{kanku_prefix}/views/login/denied.tt
-%{kanku_prefix}/views/admin.tt
-%{kanku_prefix}/views/settings.tt
-%{kanku_prefix}/views/signup.tt
-%{kanku_prefix}/views/pwreset.tt
-%{kanku_prefix}/views/reset_password.tt
+/usr/share/kanku/views/admin.tt
+/usr/share/kanku/views/guest.tt
+/usr/share/kanku/views/index.tt
+/usr/share/kanku/views/job.tt
+/usr/share/kanku/views/notify.tt
+/usr/share/kanku/views/notify_disabled.tt
+/usr/share/kanku/views/job_history.tt
+/usr/share/kanku/views/job_result.tt
+%dir /usr/share/kanku/views/layouts
+/usr/share/kanku/views/layouts/main.tt
+/usr/share/kanku/views/login.tt
+%dir /usr/share/kanku/views/login
+/usr/share/kanku/views/login/denied.tt
+/usr/share/kanku/views/admin.tt
+/usr/share/kanku/views/settings.tt
+/usr/share/kanku/views/signup.tt
+/usr/share/kanku/views/pwreset.tt
+/usr/share/kanku/views/reset_password.tt
 
 %dir /etc/apache2
 %dir /etc/apache2/conf.d
 %ghost %config (noreplace) /etc/apache2/conf.d/kanku.conf
 
 # public contains css/js/bootstrap/jquery etc
-%{kanku_prefix}/public/
-%{kanku_prefix}/lib/Kanku.pm
-%{kanku_prefix}/lib/Kanku/REST.pm
+/usr/share/kanku/public/
+%perl_sitelib/Kanku.pm
+%perl_sitelib/Kanku/REST.pm
 
 %package worker
 Summary: Worker daemon for kanku
@@ -404,8 +406,8 @@ A simple remote worker for kanku based on RabbitMQ
 %files worker
 %{_unitdir}/kanku-worker.service
 %{_sbindir}/rckanku-worker
-%{kanku_prefix}/bin/kanku-worker
-%{kanku_prefix}/lib/Kanku/Daemon/Worker.pm
+%{_sbindir}/kanku-worker
+%perl_sitelib/Kanku/Daemon/Worker.pm
 
 %package dispatcher
 Summary: Dispatcher daemon for kanku
@@ -434,10 +436,10 @@ A simple dispatcher for kanku based on RabbitMQ
 %files dispatcher
 %{_unitdir}/kanku-dispatcher.service
 %{_sbindir}/rckanku-dispatcher
-%{kanku_prefix}/bin/kanku-dispatcher
-%{kanku_prefix}/lib/Kanku/Daemon/Dispatcher.pm
-%{kanku_prefix}/lib/Kanku/Dispatch/RabbitMQ.pm
-%{kanku_prefix}/views/notifier/
+%{_sbindir}/kanku-dispatcher
+%{perl_sitelib}/Kanku/Daemon/Dispatcher.pm
+%{perl_sitelib}/Kanku/Dispatch/RabbitMQ.pm
+/usr/share/kanku/views/notifier/
 
 %package scheduler
 Summary: Scheduler daemon for kanku
@@ -460,8 +462,8 @@ A simple scheduler for kanku based on RabbitMQ
 %service_del_postun kanku-scheduler.service
 
 %files scheduler
-%attr(755,root,root) %{kanku_prefix}/bin/kanku-scheduler
-%{kanku_prefix}/lib/Kanku/Daemon/Scheduler.pm
+%attr(755,root,root) %{_sbindir}/kanku-scheduler
+%{perl_sitelib}/Kanku/Daemon/Scheduler.pm
 %{_unitdir}/kanku-scheduler.service
 %{_sbindir}/rckanku-scheduler
 
@@ -486,12 +488,12 @@ A simple triggerd for kanku based on RabbitMQ
 %service_del_postun kanku-triggerd.service
 
 %files triggerd
-%attr(755,root,root) %{kanku_prefix}/bin/kanku-triggerd
-%dir %{kanku_prefix}/lib/Kanku/Listener
-%{kanku_prefix}/lib/Kanku/Daemon/TriggerD.pm
-%{kanku_prefix}/lib/Kanku/Listener/RabbitMQ.pm
+%attr(755,root,root) %{_sbindir}/kanku-triggerd
 %{_unitdir}/kanku-triggerd.service
 %{_sbindir}/rckanku-triggerd
+%dir %{perl_sitelib}/Kanku/Listener
+%{perl_sitelib}/Kanku/Daemon/TriggerD.pm
+%{perl_sitelib}/Kanku/Listener/RabbitMQ.pm
 
 
 %package doc

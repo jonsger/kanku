@@ -61,8 +61,6 @@ sub setup {
 
   $self->_setup_database();
 
-  $self->_modify_path_in_bashrc();
-
   $self->_create_osc_rc();
 
   # add user to group libvirt
@@ -159,43 +157,6 @@ sub _create_local_settings_dir {
   (-d $dir ) || $dir->mkpath();
 
   return $self->_chown($dir);
-}
-
-sub _modify_path_in_bashrc {
-  my $self      = shift;
-
-  my $choice = $self->_query_interactive(<<'EOF'
-Modification of your '.bashrc'!
-Should the following entries be added to your .bashrc
-(if no already there)?
-
-export PATH=\"$FindBin::Bin\:\$PATH\"
-
-Your choice (Y|n)?
-EOF
-,
-     1,
-     'Bool',
-  );
-
-  if ($choice) {
-    my $rc        = file($self->homedir,'.bashrc');
-    $self->_backup_config_file($rc);
-    my @lines = $rc->slurp;
-    my $found = 0;
-
-
-    foreach my $line (@lines) {
-      $found = 1 if $line =~ m{^\s*(export\s)?\s*PATH=.*$FindBin::Bin};
-    }
-
-    if ( ! $found ) {
-      $self->logger->debug('modifying '.$rc->stringify);
-      push @lines, "export PATH=$FindBin::Bin\:\$PATH\n";
-      $rc->spew(\@lines);
-    }
-  }
-  return 0;
 }
 
 sub _ask_for_user {

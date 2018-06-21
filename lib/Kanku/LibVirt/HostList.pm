@@ -2,14 +2,13 @@ package Kanku::LibVirt::HostList;
 
 use Moose;
 use YAML qw/LoadFile/;
-use FindBin;
 use URI::Escape;
 
 has cfg_file => (
   is      => 'rw',
   isa     => 'Str',
   lazy    => 1,
-  default => "$FindBin::Bin/../etc/config.yml"
+  default => '/etc/kanku/kanku-config.yml'
 );
 
 has cfg => (

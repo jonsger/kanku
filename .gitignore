@@ -23,4 +23,4 @@ t/tmp
 home:M0ses:kanku
 tmp/
 t/tmp.db
-.perlcritic.status.checkout
+.perlcritic.cache

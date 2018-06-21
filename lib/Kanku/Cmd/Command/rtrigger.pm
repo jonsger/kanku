@@ -29,6 +29,7 @@ extends qw(MooseX::App::Cmd::Command);
 
 with 'Kanku::Cmd::Roles::Remote';
 with 'Kanku::Cmd::Roles::RemoteCommand';
+with 'Kanku::Cmd::Roles::View';
 
 has job => (
   traits        => [qw(Getopt)],
@@ -56,6 +57,7 @@ sub description {
 
 sub execute {
   my $self  = shift;
+  Kanku::Config->initialize();
   my $logger  = Log::Log4perl->get_logger;
 
   if ( $self->job ) {
@@ -66,28 +68,13 @@ sub execute {
       exit 1;
     };
 
-    my $response = $kr->post_json(
+    my $data = $kr->post_json(
       # path is only subpath, rest is added by post_json
       path => "job/trigger/".$self->job,
       data => $self->config || '[]'
     );
 
-    # some useful options (see below for full list)
-    my $template_path = Kanku::Config->instance->app_base_path->stringify . '/views/cli/';
-    my $config = {
-          INCLUDE_PATH  => $template_path,
-          INTERPOLATE   => 1,               # expand "$var" in plain text
-          POST_CHOMP    => 1,
-          PLUGIN_BASE   => 'Template::Plugin',
-    };
-
-    # create Template object
-    my $template  = Template->new($config);
-    my $input     = 'rtrigger.tt';
-    my $output    = '';
-    # process input template, substituting variables
-    $template->process($input, $response)
-                             || die $template->error()->as_string();
+    $self->view('rtrigger.tt', $data); 
   } else {
 	$logger->error("You must at least specify a job name to trigger");
   }

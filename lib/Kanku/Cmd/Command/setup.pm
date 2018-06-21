@@ -17,10 +17,7 @@
 package Kanku::Cmd::Command::setup;
 
 use Moose;
-use Template;
-use FindBin;
 use Path::Class qw/file dir/;
-use FindBin;
 use File::HomeDir;
 use Term::ReadKey;
 use Cwd;
@@ -43,7 +40,6 @@ has server => (
     traits        => [qw(Getopt)],
     isa           => 'Bool',
     is            => 'rw',
-    #cmd_aliases   => 'X',
     documentation => 'Run setup in server mode',
 );
 
@@ -114,7 +110,6 @@ has ssl => (
     traits        => [qw(Getopt)],
     isa           => 'Bool',
     is            => 'rw',
-    #cmd_aliases   => 'X',
     lazy          => 1,
     documentation => 'Configure apache with ssl',
     default       => 0
@@ -124,7 +119,6 @@ has apache => (
     traits        => [qw(Getopt)],
     isa           => 'Bool',
     is            => 'rw',
-    #cmd_aliases   => 'X',
     lazy          => 1,
     documentation => 'Configure apache',
     default       => 0
@@ -179,6 +173,15 @@ has interactive => (
     default       => 0,
 );
 
+has dns_domain_name => (
+    traits        => [qw(Getopt)],
+    isa           => 'Str|Undef',
+    is            => 'rw',
+    lazy          => 1,
+    documentation => 'DNS domain name to use in libvirt network configuration',
+    default       => 'kanku.site',
+);
+
 sub abstract { "Setup local environment to work as server or developer mode." }
 
 sub description { "
@@ -207,35 +210,37 @@ sub execute {
 
   if ($self->distributed) {
     $setup = Kanku::Setup::Server::Distributed->new(
-      images_dir   => $self->images_dir,
-      apiurl       => $self->apiurl,
-      _ssl         => $self->ssl,
-      _apache      => $self->apache,
-      _devel       => 0,
-      mq_user      => $self->mq_user,
-      mq_vhost     => $self->mq_vhost,
-      mq_pass      => $self->mq_pass,
+      images_dir      => $self->images_dir,
+      apiurl          => $self->apiurl,
+      _ssl            => $self->ssl,
+      _apache         => $self->apache,
+      _devel          => 0,
+      mq_user         => $self->mq_user,
+      mq_vhost        => $self->mq_vhost,
+      mq_pass         => $self->mq_pass,
+      dns_domain_name => $self->dns_domain_name,
     );
   } elsif ($self->server) {
     $setup = Kanku::Setup::Server::Standalone->new(
-      images_dir  => $self->images_dir,
-      apiurl      => $self->apiurl,
-      _ssl        => $self->ssl,
-      _apache     => $self->apache,
-      _devel      => 0,
+      images_dir      => $self->images_dir,
+      apiurl          => $self->apiurl,
+      _ssl            => $self->ssl,
+      _apache         => $self->apache,
+      _devel          => 0,
+      dns_domain_name => $self->dns_domain_name,
     );
   } elsif ($self->devel) {
     $setup = Kanku::Setup::Devel->new(
-      #homedir     => $self->homedir,
-      user        => $self->user,
-      images_dir  => $self->images_dir,
-      apiurl      => $self->apiurl,
-      osc_user    => $self->osc_user,
-      osc_pass    => $self->osc_pass,
-      _ssl        => $self->ssl,
-      _apache     => $self->apache,
-      _devel      => 1,
-      interactive => $self->interactive
+      user            => $self->user,
+      images_dir      => $self->images_dir,
+      apiurl          => $self->apiurl,
+      osc_user        => $self->osc_user,
+      osc_pass        => $self->osc_pass,
+      _ssl            => $self->ssl,
+      _apache         => $self->apache,
+      _devel          => 1,
+      interactive     => $self->interactive,
+      dns_domain_name => $self->dns_domain_name,
     );
   } else {
     die "No valid setup mode found";

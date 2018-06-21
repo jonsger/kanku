@@ -165,7 +165,7 @@ sub process_template {
   my ($self,$disk_xml) = @_;
 
   # some useful options (see below for full list)
-  my $template_path = Kanku::Config->instance->app_base_path->stringify . '/etc/templates/';
+  my $template_path = '/etc/kanku/templates/';
   my $config = {
     INCLUDE_PATH => $template_path,
     INTERPOLATE  => 1,               # expand "$var" in plain text

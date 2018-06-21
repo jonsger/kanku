@@ -6,15 +6,15 @@ tasks:
       vm_template_file: obs-server.tt2 
       host_interface: eth0
       vm_image_dir: /var/lib/libvirt/images
-      cache_dir: /opt/kanku/var/cache
-      privatekey_path: /opt/kanku/etc/ssh/id_rsa
-      publickey_path: /opt/kanku/etc/ssh/id_rsa.pub
+      cache_dir: /var/cache/kanku
+      privatekey_path: /etc/kanku/ssh/id_rsa
+      publickey_path: /etc/kanku/ssh/id_rsa.pub
       login_user: root
       login_pass: opensuse
   -
     use_module: Kanku::Handler::OBSCheck
     options:
-      base_url: http://192.168.129.1
+      # base_url: http://192.168.129.1
       api_url: https://api.opensuse.org/public
       project: OBS:Server:Unstable
       package: OBS-Appliance-qcow2
@@ -42,7 +42,7 @@ tasks:
       login_user: root
       login_pass: opensuse
       public_key_files:
-        - /opt/kanku/etc/ssh/id_rsa.pub
+        - /etc/kanku/ssh/id_rsa.pub
   -
     use_module: Kanku::Handler::GIT
     options:

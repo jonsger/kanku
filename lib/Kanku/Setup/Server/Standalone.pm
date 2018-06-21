@@ -33,8 +33,8 @@ sub setup {
   $self->_configure_libvirtd_access();
 
   $self->_create_config_from_template(
-    "etc/config.yml.tt2",
-    "/opt/kanku/etc/config.yml",
+    "etc/kanku-config.yml.tt2",
+    "/etc/kanku/kanku-config.yml",
     {
        db_file => $self->_dbfile,
        use_publickey => 1

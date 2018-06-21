@@ -20,13 +20,13 @@ use Moose::Role;
 use Getopt::Long;
 use Path::Class::File;
 use Path::Class::Dir;
-use POSIX ":sys_wait_h";
-use FindBin;
+use POSIX ':sys_wait_h';
 use Log::Log4perl;
 use Data::Dumper;
 use JSON::XS;
 use Sys::Hostname;
 use Net::Domain qw/hostfqdn/;
+use Carp;
 
 use Kanku::Config;
 use Kanku::Airbrake;
@@ -45,31 +45,31 @@ has daemon_options => (
     GetOptions(
       $opts,
       'stop',
-      'foreground|f'
-    ) || die $self->print_usage();
+      'foreground|f',
+    ) || croak($self->print_usage());
     return $opts;
-  }
+  },
 );
 
 has daemon_basename => (
   is => 'rw',
   isa => 'Str',
-  default => sub { Path::Class::File->new($0)->basename }
+  default => sub { Path::Class::File->new($0)->basename },
 );
 
 has logger_conf => (
   is => 'rw',
   isa => 'Str',
-  default => "$FindBin::Bin/../etc/log4perl.conf"
+  default => '/etc/kanku/logging/default.conf',
 );
 
 has run_dir => (
   is => 'rw',
   isa => 'Object',
   default => sub {
-    my $rd = Path::Class::Dir->new("$FindBin::Bin/../var/run");
-    return $rd
-  }
+    my $rd = Path::Class::Dir->new('/run/kanku');
+    return $rd;
+  },
 );
 
 has pid_file => (
@@ -78,8 +78,8 @@ has pid_file => (
   lazy    => 1,
   default => sub {
     my ($self) = @_;
-    Path::Class::File->new($self->run_dir,$self->daemon_basename.".pid");
-  }
+    Path::Class::File->new($self->run_dir,$self->daemon_basename.'.pid');
+  },
 );
 
 has shutdown_file => (
@@ -88,15 +88,15 @@ has shutdown_file => (
   lazy    => 1,
   default => sub {
     my ($self) = @_;
-    Path::Class::File->new($self->run_dir,$self->daemon_basename.".shutdown");
-  }
+    Path::Class::File->new($self->run_dir,$self->daemon_basename.'.shutdown');
+  },
 );
 
 has airbrake => (
   is      => 'rw',
   isa     => 'Object',
   lazy    => 1,
-  default => sub  { Kanku::Airbrake->instance() }
+  default => sub  { Kanku::Airbrake->instance() },
 );
 
 has notify_queue => (
@@ -110,7 +110,7 @@ has notify_queue => (
     );
     $q->prepare;
     return $q;
-  }
+  },
 );
 
 sub print_usage {
@@ -132,12 +132,12 @@ sub prepare_and_run {
     exit 0;
   }
 
-  $self->check_pid if ( -f $self->pid_file );
+  $self->check_pid if -e $self->pid_file;
 
-  $self->logger->info("Starting service ".ref(__PACKAGE__));
+  $self->logger->info("Starting service " . ref __PACKAGE__);
 
   my $hn  = hostfqdn() || hostname();
-  my $ref = ref($self);
+  my $ref = ref $self;
   my $notification = {
     type    => 'daemon_change',
     event   => 'start',
@@ -148,13 +148,13 @@ sub prepare_and_run {
   $self->notify_queue->send($notification);
 
   $SIG{'INT'} = $SIG{'TERM'} = sub {
-    $self->logger->info("Initializing shutdown");
-    $self->initialize_shutdown
+    $self->logger->info('Initializing shutdown');
+    $self->initialize_shutdown;
   };
 
   # daemonize
   if (! $self->daemon_options->{foreground}) {
-    exit 0 if fork();
+    exit 0 if fork;
   }
 
   $self->pid_file->spew("$$");
@@ -172,7 +172,7 @@ sub setup_logging {
   my ($self) = @_;
 
   if ( $self->daemon_options->{foreground} ) {
-    $self->logger_conf("$FindBin::Bin/../etc/console-log.conf");
+    $self->logger_conf('/etc/kanku/logging/console.conf');
   }
   Log::Log4perl->init($self->logger_conf);
 }
@@ -181,8 +181,8 @@ sub initialize_shutdown {
   my ($self) = @_;
 
   # nothing should be running if no pid_file exists
-  if (! -f  $self->pid_file) {
-    $self->logger->debug("No pidfile found, exiting");
+  if (! -e  $self->pid_file) {
+    $self->logger->debug('No pidfile found, exiting');
     exit 0;
   }
 
@@ -202,16 +202,16 @@ sub initialize_shutdown {
 sub finalize_shutdown {
   my ($self) = @_;
 
-  $self->logger->trace("Removing shutdown file: ". $self->shutdown_file->stringify);
+  $self->logger->trace('Removing shutdown file: '. $self->shutdown_file->stringify);
   $self->shutdown_file->remove() or
       $self->logger->error('Unable to remove \''.$self->shutdown_file."': $!");
-  $self->logger->trace("Removing PID file: ". $self->pid_file->stringify);
+  $self->logger->trace('Removing PID file: '. $self->pid_file->stringify);
   $self->pid_file->remove() or
       $self->logger->error('Unable to remove \''.$self->pid_file."': $!");
 
-  $self->logger->info("Shutting down service ".ref(__PACKAGE__));
+  $self->logger->info('Shutting down service '.ref(__PACKAGE__));
 
-  my $hn  = hostfqdn();
+  my $hn  = hostfqdn() || 'localhost';
   my $ref = ref($self);
   my $notification = {
     type    => 'daemon_change',

@@ -18,7 +18,6 @@ package Kanku::Cmd::Command::init;
 
 use Moose;
 use Template;
-use FindBin;
 
 extends qw(MooseX::App::Cmd::Command);
 with "Kanku::Cmd::Roles::Schema";
@@ -82,14 +81,9 @@ sub execute {
     exit 1;
   }
 
-
   my $config = {
-    INCLUDE_PATH => $FindBin::Bin."/../etc/templates/cmd/",
+    INCLUDE_PATH => '/etc/kanku/templates/cmd/',
     INTERPOLATE  => 1,               # expand "$var" in plain text
-    #POST_CHOMP   => 1,               # cleanup whitespace
-    #PRE_PROCESS  => 'header',        # prefix each template
-    #EVAL_PERL    => 1,               # evaluate Perl code blocks
-    #RELATIVE     => 1
   };
 
   # create Template object
@@ -110,14 +104,11 @@ sub execute {
   $template->process('init.tt2', $vars, "KankuFile")
                || die $template->error()->as_string();
 
-
-  ( -d ".kanku" ) || mkdir ".kanku";
-
-  $logger->info("KankuFile written");
-  $logger->info("Now you can make your modifications");
-  $logger->info("Or start you new VM:");
-  $logger->info("");
-  $logger->info("kanku up");
+  $logger->info('KankuFile written');
+  $logger->info('Now you can make your modifications');
+  $logger->info('Or start you new VM:');
+  $logger->info(q{});
+  $logger->info('kanku up');
 }
 
 __PACKAGE__->meta->make_immutable;

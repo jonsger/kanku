@@ -87,6 +87,7 @@ sub description { "start the job defined in KankuFile" }
 sub execute {
   my $self    = shift;
   my $logger  = Log::Log4perl->get_logger;
+  Kanku::Config->initialize(class => "KankuFile");
   my $cfg     = Kanku::Config->instance();
 
   my $schema  = $self->schema;

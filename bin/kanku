@@ -2,11 +2,12 @@
 
 use strict;
 use warnings;
-use FindBin;
-use lib "$FindBin::Bin/../lib";
+
+BEGIN {
+  unshift @::INC, ($ENV{KANKU_LIB_DIR} || '/usr/lib/kanku/lib');
+}
 
 use Kanku::Cmd;
-
 
 Kanku::Cmd->run;
 

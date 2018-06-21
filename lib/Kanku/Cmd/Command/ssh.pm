@@ -35,7 +35,7 @@ has domain_name => (
     lazy          => 1,
     default       => sub {
       Kanku::Config->instance()->config->{domain_name};
-    }
+    },
 );
 
 has user => (
@@ -44,7 +44,7 @@ has user => (
   is            => 'rw',
   cmd_aliases   => 'u',
   documentation => 'Login user to use for ssh (default: kanku)',
-  default => 'kanku'
+  default       => 'kanku',
 );
 
 has login_user => (
@@ -53,10 +53,10 @@ has login_user => (
     is            => 'rw',
     cmd_aliases   => 'l',
     documentation => 'user to login',
-        lazy              => 1,
-        default           => sub {
-          return Kanku::Config->instance()->config()->{login_user} || '';
-        }
+    lazy              => 1,
+    default           => sub {
+      return Kanku::Config->instance()->config()->{login_user} || '';
+    },
 );
 
 has login_pass => (
@@ -65,25 +65,26 @@ has login_pass => (
     is            => 'rw',
     cmd_aliases   => 'p',
     documentation => 'password to login',
-        lazy              => 1,
-        default           => sub {
-          return Kanku::Config->instance()->config()->{login_pass} || '';
-        }
+    lazy              => 1,
+    default           => sub {
+      return Kanku::Config->instance()->config()->{login_pass} || '';
+    },
 );
 
-sub abstract { "open ssh connection to vm" }
+sub abstract { return 'open ssh connection to vm'; }
 
-sub description { "open ssh connection to vm" }
+sub description { return 'open ssh connection to vm'; }
 
 
 sub execute {
   my $self  = shift;
+  Kanku::Config->initialize(class => 'KankuFile');
   my $cfg   = Kanku::Config->instance();
   my $vm    = Kanku::Util::VM->new(
                 domain_name         => $self->domain_name,
 		login_user  => $self->login_user,
                 login_pass  => $self->login_pass,
-                management_network  => $cfg->config->{management_network} || ''
+                management_network  => $cfg->config->{management_network} || q{}
               );
   my $state = $vm->state;
 
@@ -99,10 +100,10 @@ sub execute {
     system("ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -l $user $ip");
     exit 0;
   } elsif ($state eq 'off') {
-    $self->logger->warn("VM is off - use 'kanku startvm' to start VM and try again");
+    $self->logger->warn('VM is off - use \'kanku startvm\' to start VM and try again');
     exit 1;
   } else {
-    $self->logger->fatal("No VM found or VM in state 'unknown'");
+    $self->logger->fatal('No VM found or VM in state \'unknown\'');
     exit 2;
   }
 

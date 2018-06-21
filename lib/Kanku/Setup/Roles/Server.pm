@@ -28,6 +28,13 @@ sub _configure_apache {
 
   $logger->debug("Enabling apache modules proxy, rewrite, headers");
 
+  my @mod_list = qw/proxy proxy_http proxy_wstunnel rewrite headers/;
+
+  if ($self->_ssl) {
+    push @mod_list, 'proxy_https';
+    $self->_run_system_cmd("a2enflag", 'SSL');
+  }
+
   for my $mod (qw/proxy rewrite headers/) {
     $self->_run_system_cmd("a2enmod", $mod);
   }
@@ -45,12 +52,14 @@ sub _configure_apache {
 }
 
 sub _create_ssh_keys {
-  my ($self)    = @_;
-  if (! -f '/opt/kanku/etc/ssh/id_rsa' ) {
-    -d '/opt/kanku/etc/ssh/' || mkdir '/opt/kanku/etc/ssh/';
-    `ssh-keygen -b 2048 -t rsa -f /opt/kanku/etc/ssh/id_rsa -q -N ""`
+  my ($self)  = @_;
+  my $ssh_dir = '/etc/kanku/ssh';
+  my $id_rsa  = "$ssh_dir/id_rsa";
+  if (! -f $id_rsa ) {
+    -d $ssh_dir || mkdir $ssh_dir;
+    `ssh-keygen -b 2048 -t rsa -f $id_rsa -q -N ""`
   }
-  $self->_chown("/opt/kanku/etc/ssh/id_rsa", "/opt/kanku/etc/ssh/id_rsa.pub");
+  $self->_chown($id_rsa, "$id_rsa.pub");
 }
 
 sub _configure_apache_ssl {

@@ -26,6 +26,7 @@ extends qw(MooseX::App::Cmd::Command);
 
 with 'Kanku::Cmd::Roles::Remote';
 with 'Kanku::Cmd::Roles::RemoteCommand';
+with 'Kanku::Cmd::Roles::View';
 
 sub abstract { "list guests on your remote kanku instance" }
 
@@ -37,6 +38,7 @@ sub description {
 
 sub execute {
   my $self  = shift;
+  Kanku::Config->initialize;
   my $logger  = Log::Log4perl->get_logger;
 
   if ( $self->list ) {
@@ -57,25 +59,7 @@ sub _list {
   };
 
   my $data = $kr->get_json( path => "guest/list" );
-
-  # some useful options (see below for full list)
-  my $template_path = Kanku::Config->instance->app_base_path->stringify . '/views/cli/';
-  my $config = {
-    INCLUDE_PATH  => $template_path,
-    INTERPOLATE   => 1,               # expand "$var" in plain text
-    POST_CHOMP    => 1,
-    PLUGIN_BASE   => 'Template::Plugin::Filter',
-  };
-
-  # create Template object
-  my $template  = Template->new($config);
-  my $input 	= 'guests.tt';
-  my $output 	= '';
-  # process input template, substituting variables
-  $template->process($input, $data)
-               || die $template->error()->as_string();
-
-
+  $self->view('guests.tt', $data);
 }
 
 sub save_settings {

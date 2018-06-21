@@ -1,2 +1,1 @@
-export PATH=/opt/kanku/bin:$PATH
-export PERL5LIB=/opt/kanku/lib:$PERL5LIB
+export PERL5LIB=/usr/lib/kanku/lib:$PERL5LIB

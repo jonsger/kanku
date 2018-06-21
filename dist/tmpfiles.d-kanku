@@ -1,0 +1,2 @@
+# create a directory with permissions 0770 owned by user foo and group bar
+d /run/kanku 0770 kankurun kanku

@@ -27,23 +27,24 @@ has domain_name => (
     is            => 'rw',
     cmd_aliases   => 'd',
     documentation => 'name of domain to open console',
-	lazy		  => 1,
-	default		  => sub {
-          return Kanku::Config->instance()->config()->{domain_name};
-	}
+    lazy		  => 1,
+    default		  => sub {
+      return Kanku::Config->instance()->config()->{domain_name};
+    },
 );
 
-sub abstract { "Open a serial console to vm" }
+sub abstract { return 'Open a serial console to vm'; }
 
-sub description { "Open a serial console to vm" }
+sub description { return 'Open a serial console to vm' }
 
 sub execute {
   my $self    = shift;
+  Kanku::Config->initialize(class => 'KankuFile');
   my $logger  = Log::Log4perl->get_logger;
   my $cfg     = Kanku::Config->instance();
 
 
-  my $cmd = "virsh -c qemu:///system console ".$self->domain_name;
+  my $cmd = 'virsh -c qemu:///system console '.$self->domain_name;
 
   exec($cmd);
 }

@@ -18,7 +18,6 @@ package Kanku::Cmd::Command::stopui;
 
 use Moose;
 use Log::Log4perl;
-use FindBin;
 
 
 extends qw(MooseX::App::Cmd::Command);
@@ -43,13 +42,9 @@ sub execute {
     unlink($pid_file);
 
     $logger->info("Stopped webserver with pid: $pid");
-
   } else {
-
     $logger->warn("No pid file found.");
-
   }
-
 }
 
 1;
