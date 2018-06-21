@@ -4,8 +4,6 @@ use Moose;
 
 our $VERSION = "0.0.1";
 
-use FindBin;
-use lib "$FindBin::Bin/lib";
 use POSIX;
 use JSON::XS;
 use Try::Tiny;

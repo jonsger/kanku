@@ -6,9 +6,9 @@ After=local-fs.target network.target
 [Service]
 Type=forking
 User=kankurun
-PIDFile=/opt/kanku/var/run/kanku-triggerd.pid
-ExecStart=/opt/kanku/bin/kanku-triggerd
-ExecStop=/opt/kanku/bin/kanku-triggerd --stop
+PIDFile=/run/kanku/kanku-triggerd.pid
+ExecStart=/usr/sbin/kanku-triggerd
+ExecStop=/usr/sbin/kanku-triggerd --stop
 
 [Install]
 WantedBy=multi-user.target

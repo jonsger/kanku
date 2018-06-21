@@ -1,12 +1,10 @@
-PREFIX				=	/opt/kanku
-VERSION				=	$(shell grep VERSION lib/Kanku.pm |perl -p -e "s/.*'([\d.]+)'.*/\$$1/")
 CONFIG_FILES = \
 	templates/cmd/init.tt2\
-	templates/cmd/setup/config.yml.tt2\
 	templates/cmd/setup/kanku.conf.mod_perl.tt2\
 	templates/cmd/setup/kanku.conf.mod_proxy.tt2\
 	templates/cmd/setup/openssl.cnf.tt2\
-	templates/cmd/setup/etc/config.yml.tt2\
+	templates/cmd/setup/dancer-config.yml.tt2\
+	templates/cmd/setup/kanku-config.yml.tt2\
 	templates/cmd/setup/net-default.xml.tt2\
 	templates/cmd/setup/net-kanku-ovs.xml.tt2\
         templates/cmd/setup/pool-default.xml\
@@ -14,64 +12,77 @@ CONFIG_FILES = \
 	templates/examples-vm/obs-server-26.tt2\
 	templates/examples-vm/sles11sp3.tt2\
 	templates/examples-vm/obs-server.tt2\
-	console-log.conf\
 	jobs/examples/obs-server.yml\
 	jobs/examples/sles11sp3.yml\
 	jobs/examples/obs-server-26.yml\
-	log4perl.conf\
-	kanku-network-setup-logging.conf
+	logging/default.conf\
+	logging/console.conf\
+        logging/network-setup.conf
 
 FULL_DIRS			= bin share/migrations share/fixtures public views
 CONFIG_DIRS		= \
-	etc\
-	etc/templates\
-	etc/templates/cmd\
-	etc/templates/cmd/setup\
-	etc/templates/cmd/setup/etc\
-	etc/templates/examples-vm/\
-	etc/jobs\
-	etc/jobs/examples
+	etc/kanku/templates\
+	etc/kanku/templates/cmd\
+	etc/kanku/templates/cmd/setup\
+	etc/kanku/templates/cmd/setup/etc\
+	etc/kanku/templates/examples-vm/\
+	etc/kanku/jobs\
+	etc/kanku/jobs/examples\
+	etc/kanku/logging
 DOCDIR = $(DESTDIR)/usr/share/doc/packages/kanku/
 PERL_CRITIC_READY := bin/*
 
 all:
 
-install: install_dirs install_full_dirs install_services install_docs
+install: install_dirs install_full_dirs install_services install_docs configs
 	install -m 644 ./dist/kanku.logrotate $(DESTDIR)/etc/logrotate.d/kanku-common
 	install -m 644 dist/profile.d-kanku.sh $(DESTDIR)/etc/profile.d/kanku.sh
+	install -m 644 dist/tmpfiles.d-kanku $(DESTDIR)/usr/lib/tmpfiles.d/kanku
+
+configs:
 	#
 	for i in $(CONFIG_DIRS);do \
-		mkdir -p $(DESTDIR)$(PREFIX)/$$i ; \
+		mkdir -p $(DESTDIR)/$$i ; \
 	done
 	#
 	for i in $(CONFIG_FILES);do \
-		cp -av ./etc/$$i $(DESTDIR)$(PREFIX)/etc/$$i ;\
+		cp -av ./etc/$$i $(DESTDIR)/etc/kanku/$$i ;\
 	done
 
 install_full_dirs: lib
-	#
-	for i in $(FULL_DIRS) ;do \
-		cp -av ./$$i `dirname $(DESTDIR)$(PREFIX)/$$i` ;\
-	done
+	install -m 755 bin/network-setup.pl $(DESTDIR)/usr/lib/kanku/network-setup.pl
+	install -m 755 bin/kanku $(DESTDIR)/usr/bin/kanku
+	install -m 755 bin/kanku-app.psgi $(DESTDIR)/usr/lib/kanku/kanku-app.psgi
+	install -m 755 sbin/kanku-worker $(DESTDIR)/usr/sbin/kanku-worker
+	install -m 755 sbin/kanku-dispatcher $(DESTDIR)/usr/sbin/kanku-dispatcher
+	install -m 755 sbin/kanku-scheduler $(DESTDIR)/usr/sbin/kanku-scheduler
+	install -m 755 sbin/kanku-triggerd $(DESTDIR)/usr/sbin/kanku-triggerd
+	cp -av share/migrations $(DESTDIR)/usr/share/kanku/
+	cp -av share/fixtures $(DESTDIR)/usr/share/kanku/
+	cp -av views  $(DESTDIR)/usr/share/kanku/
+	cp -av public $(DESTDIR)/usr/share/kanku/
 
 lib:
-	cp -av ./lib $(DESTDIR)$(PREFIX)
+	cp -av ./lib/ $(DESTDIR)/usr/lib/kanku/
 
 install_dirs:
-	install -m 755 -d $(DESTDIR)$(PREFIX)
-	install -m 755 -d $(DESTDIR)$(PREFIX)/etc
-	install -m 755 -d $(DESTDIR)$(PREFIX)/var/log
-	install -m 755 -d $(DESTDIR)$(PREFIX)/var/cache
-	install -m 755 -d $(DESTDIR)$(PREFIX)/var/run
-	install -m 755 -d $(DESTDIR)$(PREFIX)/var/db
-	install -m 755 -d $(DESTDIR)$(PREFIX)/var/sessions
-	install -m 755 -d $(DESTDIR)$(PREFIX)/share
-	install -m 755 -d $(DESTDIR)/etc/logrotate.d/
-	install -m 755 -d $(DESTDIR)/etc/apache2/conf.d
-	install -m 755 -d $(DESTDIR)/etc/profile.d
-	install -m 755 -d $(DESTDIR)/usr/lib/systemd/system
-	install -m 755 -d $(DESTDIR)/usr/sbin
-	install -m 755 -d $(DESTDIR)/usr/share/doc/packages/kanku/contrib/libvirt-configs
+	[ -d $(DESTDIR)/etc/logrotate.d/ ]       || mkdir -p $(DESTDIR)/etc/logrotate.d/
+	[ -d $(DESTDIR)/etc/apache2/conf.d ]     || mkdir -p $(DESTDIR)/etc/apache2/conf.d
+	[ -d $(DESTDIR)/etc/profile.d ]          || mkdir -p $(DESTDIR)/etc/profile.d
+	[ -d $(DESTDIR)/etc/kanku ]              || mkdir -p $(DESTDIR)/etc/kanku
+	[ -d $(DESTDIR)/var/log/kanku ]          || mkdir -p $(DESTDIR)/var/log/kanku
+	[ -d $(DESTDIR)/run/kanku ]              || mkdir -p $(DESTDIR)/run/kanku
+	[ -d $(DESTDIR)/var/cache/kanku ]        || mkdir -p $(DESTDIR)/var/cache/kanku
+	[ -d $(DESTDIR)/var/lib/kanku ]          || mkdir -p $(DESTDIR)/var/lib/kanku
+	[ -d $(DESTDIR)/var/lib/kanku/db ]       || mkdir -p $(DESTDIR)/var/lib/kanku/db
+	[ -d $(DESTDIR)/var/lib/kanku/sessions ] || mkdir -p $(DESTDIR)/var/lib/kanku/sessions
+	[ -d $(DESTDIR)/usr/lib/systemd/system ] || mkdir -p $(DESTDIR)/usr/lib/systemd/system
+	[ -d $(DESTDIR)/usr/bin ]                || mkdir -p $(DESTDIR)/usr/bin
+	[ -d $(DESTDIR)/usr/sbin ]               || mkdir -p $(DESTDIR)/usr/sbin
+	[ -d $(DESTDIR)/usr/share/doc/packages/kanku/contrib/libvirt-configs ] || mkdir -p $(DESTDIR)/usr/share/doc/packages/kanku/contrib/libvirt-configs
+	[ -d $(DESTDIR)/usr/share/kanku ]        || mkdir -p $(DESTDIR)/usr/share/kanku
+	[ -d $(DESTDIR)/usr/lib/kanku ]          || mkdir -p $(DESTDIR)/usr/lib/kanku
+	[ -d $(DESTDIR)/usr/lib/tmpfiles.d ]     || mkdir -p $(DESTDIR)/usr/lib/tmpfiles.d
 
 install_services: install_dirs
 	install -m 644 ./dist/systemd/kanku-worker.service $(DESTDIR)/usr/lib/systemd/system/kanku-worker.service
@@ -90,24 +101,6 @@ install_docs:
 	install -m 644 docs/README.rabbitmq.md $(DOCDIR)/contrib/
 	install -m 644 docs/README.setup-ovs.md $(DOCDIR)/contrib/
 	install -m 644 docs/README.setup-worker.md $(DOCDIR)/contrib/
-
-dist_dirs:
-	mkdir kanku-$(VERSION)
-	mkdir kanku-$(VERSION)/share
-	for i in $(CONFIG_DIRS);do \
-		mkdir -p kanku-$(VERSION)/$$i ;\
-	done
-
-dist_config_files: dist_dirs
-	for i in $(CONFIG_FILES);do \
-		cp -av ./etc/$$i kanku-$(VERSION)/etc/$$i ;\
-	done
-
-dist: dist_config_files
-	cp -av etc bin lib var public Makefile dist README.md TODO kanku-$(VERSION)
-	cp -av share/fixtures share/migrations kanku-$(VERSION)/share/
-	tar cvJf kanku-$(VERSION).tar.xz kanku-$(VERSION)
-	rm -rf kanku-$(VERSION)
 
 clean:
 	rm -rf kanku-*.tar.xz

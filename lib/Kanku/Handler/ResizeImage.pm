@@ -96,7 +96,7 @@ Here is an example how to configure the module in your jobs file or KankuFile
   -
     use_module: Kanku::Handler::ResizeImage
     options:
-      disk_size: 100GB
+      disk_size: 100G
 
 =head1 DESCRIPTION
 

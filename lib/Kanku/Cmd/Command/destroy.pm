@@ -31,24 +31,25 @@ has domain_name => (
     cmd_aliases   => 'X',
     documentation => 'name of domain to create',
     lazy          => 1,
-    default       => sub { $_[0]->cfg->config->{domain_name} }
+    default       => sub { $_[0]->cfg->config->{domain_name} },
 );
 
 has cfg => (
     isa           => 'Object',
     is            => 'rw',
     lazy          => 1,
-    default       => sub { Kanku::Config->instance(); }
+    default       => sub { Kanku::Config->instance(); },
 );
 
-sub abstract { "Remove domain completely" }
+sub abstract { return 'Remove domain completely'; }
 
-sub description { "meaningfull description" }
+sub description { return 'Remove domain completely'; }
 
 
 
 sub execute {
   my $self    = shift;
+  Kanku::Config->initialize(class => 'KankuFile');
   my $vm      = Kanku::Util::VM->new(domain_name => $self->domain_name);
   my $logger  = Log::Log4perl->get_logger;
   my $dom;
@@ -58,7 +59,7 @@ sub execute {
   };
 
   if ( $@ or ! $dom ) {
-    $logger->fatal("Error: ".$self->domain_name." not found\n");
+    $logger->fatal('Error: '.$self->domain_name." not found\n");
     exit 1;
   }
 
@@ -67,7 +68,7 @@ sub execute {
   };
 
   if ( $@ ) {
-    $logger->fatal("Error while removing domain: ".$self->domain_name.":\n");
+    $logger->fatal('Error while removing domain: '.$self->domain_name."\n");
     $logger->fatal($@);
     exit 1;
   }
@@ -75,7 +76,7 @@ sub execute {
   my $ipt = Kanku::Util::IPTables->new(domain_name=>$self->domain_name);
   $ipt->cleanup_rules_for_domain();
 
-  $logger->info("Removed domain ".$self->domain_name." successfully");
+  $logger->info('Removed domain '.$self->domain_name.' successfully');
 }
 
 __PACKAGE__->meta->make_immutable;

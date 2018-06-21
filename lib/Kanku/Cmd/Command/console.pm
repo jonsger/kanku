@@ -14,7 +14,7 @@
 # Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 #
-package Kanku::Cmd::Command::console;
+package Kanku::Cmd::Command::console;     ## no critic (NamingConventions::Capitalization)
 
 use Moose;
 use Kanku::Config;
@@ -27,25 +27,28 @@ has domain_name => (
     is            => 'rw',
     cmd_aliases   => 'd',
     documentation => 'name of domain to open console',
-	lazy		  => 1,
-	default		  => sub {
-          return Kanku::Config->instance()->config()->{domain_name};
-	}
+    lazy		  => 1,
+    default		  => sub {
+      return Kanku::Config->instance()->config()->{domain_name};
+    },
 );
 
-sub abstract { "Open a serial console to vm" }
+sub abstract { return 'Open a serial console to vm'; }       ## no critic (NamingConventions::ProhibitAmbiguousNames)
 
-sub description { "Open a serial console to vm" }
+sub description { return 'Open a serial console to vm' }
 
 sub execute {
   my $self    = shift;
+  Kanku::Config->initialize(class => 'KankuFile');
   my $logger  = Log::Log4perl->get_logger;
   my $cfg     = Kanku::Config->instance();
 
 
-  my $cmd = "virsh -c qemu:///system console ".$self->domain_name;
+  my $cmd = 'virsh -c qemu:///system console '.$self->domain_name;
 
-  exec($cmd);
+  system $cmd || croak("Failed to execute '$cmd': $!");
+
+  return;
 }
 
 __PACKAGE__->meta->make_immutable;

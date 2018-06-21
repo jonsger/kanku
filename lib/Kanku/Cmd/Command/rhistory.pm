@@ -28,7 +28,7 @@ extends qw(MooseX::App::Cmd::Command);
 
 with 'Kanku::Cmd::Roles::Remote';
 with 'Kanku::Cmd::Roles::RemoteCommand';
-
+with 'Kanku::Cmd::Roles::View';
 
 has full => (
   traits        => [qw(Getopt)],
@@ -51,9 +51,6 @@ has page => (
   documentation => 'show page X of job history',
 );
 
-
-
-
 sub abstract { "list job history on your remote kanku instance" }
 
 sub description {
@@ -64,6 +61,7 @@ sub description {
 
 sub execute {
   my $self  = shift;
+  Kanku::Config->initialize;
   my $logger  =	Log::Log4perl->get_logger;
 
   if ( $self->list ) {
@@ -92,15 +90,6 @@ sub _list {
 
   my $data = $kr->get_json( path => "jobs/list" , params => \%params );
 
-  # some useful options (see below for full list)
-  my $template_path = Kanku::Config->instance->app_base_path->stringify . '/views/cli/';
-  my $config = {
-    INCLUDE_PATH  => $template_path,
-    INTERPOLATE   => 1,               # expand "$var" in plain text
-    POST_CHOMP    => 1,
-    PLUGIN_BASE   => 'Template::Plugin',
-  };
-
   foreach my $job ( @{$data->{jobs}} ) {
     if ( $job->{start_time} ) {
       my $et = ($job->{end_time}) ? $job->{end_time} : time();
@@ -110,72 +99,52 @@ sub _list {
     }
   }
 
-  # create Template object
-  my $template  = Template->new($config);
-  my $input 	= 'jobs.tt';
-  my $output 	= '';
-  # process input template, substituting variables
-  $template->process($input, $data)
-               || die $template->error()->as_string();
+  $self->view('jobs.tt', $data);
 
 };
 
 sub _details {
-	my $self 	= shift;
-	my $logger 	= Log::Log4perl->get_logger;
-      if ( ! $self->details ) {
-        $logger->error("No job id given");
-        return 1;
+  my $self   = shift;
+  my $logger = Log::Log4perl->get_logger;
+  if ( ! $self->details ) {
+    $logger->error("No job id given");
+    return 1;
+  }
+
+  my $kr;
+  try {
+    $kr = $self->connect_restapi();
+  } catch {
+    exit 1;
+  };
+
+  my $data = $kr->get_json( path => "job/".$self->details );
+
+  $self->_truncate_result($data) if ! $self->full;
+
+  $self->view('job.tt', $data);
+}
+
+sub _truncate_result {
+  my ($self, $data) = @_;
+  foreach my $task (@{$data->{subtasks}}) {
+    if ( $task->{result}->{error_message} ) {
+      my @lines = split(/\n/,$task->{result}->{error_message});
+      my $max_lines = 10;
+      if ( @lines > $max_lines ) {
+	my $ml = $max_lines;
+	my @tmp;
+	while ($max_lines) {
+	  my $line = pop(@lines);
+	  push(@tmp,$line);
+	  $max_lines--;
+	}
+	push(@tmp,"","...","TRUNCATING to $ml lines - use --full to see full output");
+	$task->{result}->{error_message} = join("\n",reverse @tmp) . "\n";
+
       }
-
-      my $kr;
-	  try {
-		$kr = $self->connect_restapi();
-	  } catch {
-		exit 1;
-	  };
-
-      my $data = $kr->get_json( path => "job/".$self->details );
-
-      if ( ! $self->full ) {
-        foreach my $task (@{$data->{subtasks}}) {
-          if ( $task->{result}->{error_message} ) {
-            my @lines = split(/\n/,$task->{result}->{error_message});
-            my $max_lines = 10;
-            if ( @lines > $max_lines ) {
-              my $ml = $max_lines;
-              my @tmp;
-              while ($max_lines) {
-                my $line = pop(@lines);
-                push(@tmp,$line);
-                $max_lines--;
-              }
-              push(@tmp,"","...","TRUNCATING to $ml lines - use --full to see full output");
-              $task->{result}->{error_message} = join("\n",reverse @tmp) . "\n";
-
-            }
-          }
-        }
-      }
-
-      # some useful options (see below for full list)
-      my $template_path = Kanku::Config->instance->app_base_path->stringify . '/views/cli/';
-      my $config = {
-        INCLUDE_PATH  => $template_path,
-        INTERPOLATE   => 1,               # expand "$var" in plain text
-        POST_CHOMP    => 1,
-        PLUGIN_BASE   => 'Template::Plugin',
-      };
-
-      #print Dumper($data);
-      # create Template object
-      my $template  = Template->new($config);
-      my $input     = 'job.tt';
-      my $output    = '';
-      # process input template, substituting variables
-      $template->process($input, $data)
-                   || die $template->error()->as_string();
-
+    }
+  }
 }
 
 sub duration {
@@ -190,7 +159,6 @@ sub duration {
   my $s = $t - ( $m * 60 );
 
   return sprintf("%02d:%02d:%02d",$h,$m,$s);
-
 }
 
 __PACKAGE__->meta->make_immutable;

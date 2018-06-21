@@ -4,7 +4,7 @@ Kanku::Util::IPTables:
 
 
 domain_name: kanku-devel
-default_job: kanku-server
+default_job: kanku-dist
 
 #qemu:
 #  user: 
@@ -91,6 +91,10 @@ jobs:
     options:
       use_cache: 1
   -
+    use_module: Kanku::Handler::ResizeImage
+    options:
+      disk_size: 25G
+  -
     use_module: Kanku::Handler::CreateDomain
     options:
       memory: 6G
@@ -103,15 +107,21 @@ jobs:
     options:
       commands:
         - zypper -n ar obs://devel:kanku:perl devel:kanku:perl
-        - zypper -n ar obs://devel:kanku:staging devel:kanku:staging
+        #- zypper -n ar obs://devel:kanku:staging devel:kanku:staging
         - zypper --gpg-auto-import-keys ref -s
         # Only for development
         - zypper -n in vim-data curl make apache2 systemd-bash-completion sqlite3
-        - zypper -n in kanku rabbitmq-server rabbitmq-server-plugins openvswitch openvswitch-switch
-        - make -C /tmp/kanku install_full_dirs 2>&1 |tee /tmp/make.log
-        - /opt/kanku/bin/kanku setup --apache --distributed --ssl 2>&1 |tee /tmp/setup-server.log
+        #- zypper -n in kanku rabbitmq-server rabbitmq-server-plugins openvswitch openvswitch-switch
+        - zypper -n in rabbitmq-server rabbitmq-server-plugins openvswitch openvswitch-switch
+        - zypper -n in perl-Dancer2 perl-Moose perl-Log-Log4perl perl-MooseX-Singleton perl-MooseX-App-Cmd perl-Path-Class perl-Term-ReadKey perl-libwww-perl perl-JSON-XS perl-File-HomeDir perl-DBIx-Class-Migration perl-Sys-Virt perl-Sys-CPU perl-Sys-LoadAvg perl-Sys-MemInfo perl-UUID perl-Net-AMQP-RabbitMQ perl-Expect perl-Net-IP perl-XML-XPath perl-File-LibMagic perl-IPC-Run perl-Const-Fast perl-Net-SSH2 libvirt sudo perl-Dancer2-Plugin-DBIC perl-Dancer2-Plugin-Auth-Extensible perl-Dancer2-Plugin-WebSocket perl-Dancer2-Plugin-REST perl-Twiggy perl-Dancer2-Plugin-Auth-Extensible-Provider-DBIC perl-Template-Plugin-Filter-ANSIColor  perl-Net-OBS-Client perl-Archive-Cpio perl-LWP-Protocol-https qemu-kvm
+        - getent group kanku >/dev/null || groupadd -r kanku
+        - getent passwd kankurun >/dev/null || useradd -r -g kanku -G libvirt -d /opt/kanku/var -s /sbin/nologin -c "user for kanku" kankurun
+        - make -C /tmp/kanku install 2>&1 |tee /tmp/make.log
+        - chown kankurun:kanku -R /var/lib/kanku /var/log/kanku /var/cache/kanku/
+        - systemd-tmpfiles --create /usr/lib/tmpfiles.d/kanku
+        - /usr/bin/kanku setup --apache --distributed --ssl 2>&1 |tee /tmp/setup-server.log
         #- cp /opt/kanku/etc/jobs/examples/obs-server.yml /opt/kanku/etc/jobs/
-        - cp /tmp/kanku/etc/jobs/examples/obs-server.yml /opt/kanku/etc/jobs/
+        - cp /tmp/kanku/etc/jobs/examples/obs-server.yml /etc/kanku/jobs/
         - systemctl start kanku-web  
         - systemctl enable kanku-web  
         - systemctl start kanku-worker

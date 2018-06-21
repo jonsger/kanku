@@ -30,6 +30,7 @@ has "context" => (
 
 has id => ( is  => 'rw', isa => 'Int' );
 has [qw/name state result workerinfo masterinfo trigger_user/] => ( is => 'rw', isa => 'Str' );
+has 'trigger_user' => ( is => 'rw', isa => 'Str|Undef' );
 has [qw/skipped scheduled triggered/] => ( is => 'rw', isa => 'Bool' );
 has [qw/creation_time start_time end_time last_modified/] => ( is  => 'rw', isa => 'Int' );
 has db_object => ( is => 'rw', isa => 'Object' );

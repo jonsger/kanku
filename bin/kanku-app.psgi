@@ -2,15 +2,23 @@
 
 use strict;
 use warnings;
-use FindBin;
+
+BEGIN { 
+  unshift @::INC, ($::ENV{KANKU_LIB_DIR} || '/usr/lib/kanku/lib');
+  $::ENV{DANCER_CONFDIR} ||= '/etc/kanku/dancer';
+}
+
 use Plack::Builder;
-use lib "$FindBin::Bin/../lib";
 use Log::Log4perl;
 
 use Kanku;
 use Kanku::REST;
 
-Log::Log4perl->init("$FindBin::Bin/../etc/log4perl.conf");
+my $conf_dir = $::ENV{KANKU_ETC_DIR} || '/etc/kanku';
+
+Log::Log4perl->init("$conf_dir/logging/default.conf");
+
+my $logger = Log::Log4perl->get_logger();
 
 builder {
   mount '/kanku/rest' => Kanku::REST->to_app;

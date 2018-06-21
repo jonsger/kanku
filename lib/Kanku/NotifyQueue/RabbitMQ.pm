@@ -34,7 +34,6 @@ package Kanku::NotifyQueue::RabbitMQ;
 =cut
 
 use Moose;
-use FindBin;
 use Log::Log4perl;
 use Data::Dumper;
 use JSON::XS;

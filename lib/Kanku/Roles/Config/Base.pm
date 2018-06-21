@@ -38,25 +38,12 @@ has last_modified => (
   default   => 0
 );
 
-has app_base_path => (
-  is      => 'rw',
-  isa     => 'Object',
-  lazy    => 1,
-  default => sub {
-    my @fb = split('/',__FILE__);
-    my @nfb = splice(@fb,0,$#fb-4);
-    my $dir = Path::Class::Dir->new(@nfb);
-
-    return $dir;
-  }
-);
-
 has log_dir => (
   is      => 'rw',
   isa     => 'Object',
   lazy    => 1,
   default => sub {
-    return Path::Class::Dir->new($_[0]->app_base_path,"var","log");
+    return Path::Class::Dir->new('/var/log/kanku');
   }
 );
 
@@ -91,7 +78,7 @@ around 'config' => sub {
 
 sub job_list {
   my $self  = shift;
-  my @files = dir($self->app_base_path, 'etc', 'jobs')->children;
+  my @files = dir('/etc/kanku/jobs')->children;
   my @result;
   for my $f (@files) {
     push(@result, $1) if ($f =~ /.*\/(.*)\.yml$/);

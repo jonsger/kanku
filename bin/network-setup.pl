@@ -2,11 +2,17 @@
 
 use strict;
 use warnings;
-use FindBin;
 use Log::Log4perl;
-use lib "$FindBin::Bin/../lib";
+
+BEGIN {
+  unshift @::INC, ($ENV{KANKU_LIB_DIR} || '/usr/lib/kanku/lib');
+}
+
 use Kanku::Setup::LibVirt::Network;
-Log::Log4perl->init("$FindBin::Bin/../etc/kanku-network-setup-logging.conf");
+
+my $conf_dir = $::ENV{KANKU_ETC_DIR} || '/etc/kanku';
+
+Log::Log4perl->init("$conf_dir/logging/network-setup.conf");
 
 my $logger = Log::Log4perl->get_logger();
 
@@ -37,7 +43,6 @@ if ( $action eq 'stopped' ) {
   $setup->kill_dhcp();
   $setup->cleanup_iptables;
   $setup->bridge_down;
-  # ...
 }
 
 

@@ -29,10 +29,10 @@ has domain_name => (
     is            => 'rw',
     cmd_aliases   => 'd',
     documentation => 'name of domain',
-	lazy		  => 1,
-	default		  => sub {
-          return Kanku::Config->instance()->config()->{domain_name} || '';
-	}
+    lazy		  => 1,
+    default		  => sub {
+      return Kanku::Config->instance()->config()->{domain_name} || q{};
+    },
 );
 
 has login_user => (
@@ -41,10 +41,10 @@ has login_user => (
     is            => 'rw',
     cmd_aliases   => 'u',
     documentation => 'user to login',
-	lazy		  => 1,
-	default		  => sub {
-          return Kanku::Config->instance()->config()->{login_user} || '';
-	}
+    lazy		  => 1,
+    default		  => sub {
+          return Kanku::Config->instance()->config()->{login_user} || q{};
+    },
 );
 
 has login_pass => (
@@ -53,20 +53,21 @@ has login_pass => (
     is            => 'rw',
     cmd_aliases   => 'p',
     documentation => 'password to login',
-	lazy		  => 1,
-	default		  => sub {
-          return Kanku::Config->instance()->config()->{login_pass} || '';
-	}
+    lazy		  => 1,
+    default		  => sub {
+      return Kanku::Config->instance()->config()->{login_pass} || q{};
+    },
 );
 
 
-sub abstract { "Show ip address of kanku vm" }
+sub abstract { 'Show ip address of kanku vm' }
 
-sub description { "Show ip address of kanku vm" }
+sub description { 'Show ip address of kanku vm' }
 
 sub execute {
   my $self    = shift;
   my $logger  = Log::Log4perl->get_logger;
+  Kanku::Config->initialize(class => 'KankuFile');
   my $cfg     = Kanku::Config->instance();
 
 
@@ -80,12 +81,13 @@ sub execute {
 
   if ( $ip ) {
 
-    $logger->info("IP Address: ".$ip);
+    $logger->info("IP Address: $ip");
 
   } else {
-    $logger->error("Could not find IP Address");
+    $logger->error('Could not find IP Address');
   }
 
+  return;
 }
 
 __PACKAGE__->meta->make_immutable;

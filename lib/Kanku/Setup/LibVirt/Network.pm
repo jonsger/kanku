@@ -12,7 +12,7 @@ has cfg_file => (
   is      => 'rw',
   isa     => 'Str',
   lazy    => 1,
-  default => "$FindBin::Bin/../etc/config.yml"
+  default => "/etc/kanku/kanku-config.yml"
 );
 
 has cfg => (
@@ -41,7 +41,7 @@ has dnsmasq_pid_file => (
 	is => 'rw',
 	isa => 'Object',
 	lazy => 1,
-	default => sub { file('/var/run/libvirt/network/',$_[0]->cfg->{libvirt_network}->{name}.".pid") }
+	default => sub { file('/run/libvirt/network/',$_[0]->cfg->{libvirt_network}->{name}.".pid") }
 );
 
 has iptables_chain => (
@@ -93,13 +93,14 @@ sub prepare_ovs {
 	}
 
         # Set ip address for bridge interface
+        my @cmd;
 	my $ip = new Net::IP ($ncfg->{network});
-	my @cmd = ("ip", "addr", "add", "$ncfg->{host_ip}/".$ip->mask, 'dev', $br);
+	@cmd = ("ip", "addr", "add", "$ncfg->{host_ip}/".$ip->mask, 'dev', $br);
 	$self->logger->debug("Configuring interface with command '@cmd'");
 	system(@cmd);
 
         # Set interface mode to up
-	my @cmd = ("ip", "link", "set",$br, "up");
+	@cmd = ("ip", "link", "set",$br, "up");
 	$self->logger->debug("Configuring interface with command '@cmd'");
 	system(@cmd);
 

@@ -7,9 +7,9 @@ After=local-fs.target network.target
 [Service]
 User=kankurun
 Type=forking
-PIDFile=/opt/kanku/var/run/kanku-worker.pid
-ExecStart=/opt/kanku/bin/kanku-worker
-ExecStop=/opt/kanku/bin/kanku-worker --stop
+PIDFile=/run/kanku/kanku-worker.pid
+ExecStart=/usr/sbin/kanku-worker
+ExecStop=/usr/sbin/kanku-worker --stop
 
 [Install]
 WantedBy=multi-user.target

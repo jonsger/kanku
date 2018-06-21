@@ -1,6 +1,9 @@
 ---
 #dispatcher: Kanku::Dispatch::RabbitMQ
 
+views_dir: /usr/share/kanku/views
+log_dir: /var/log/kanku
+
 Kanku::Util::DoD:
   use_oscrc: 0
 
@@ -32,10 +35,10 @@ Kanku::LibVirt::HostList:
 #    # The following options are documented in
 #    # https://libvirt.org/remote.html#Remote_URI_parameters
 #    extraparameters:
-#      keyfile: /opt/kanku/etc/ssh/id_dsa
+#      keyfile: /etc/ssh/kanku/id_dsa
 #      no_verify: 1
 #      no_tty: 1
-#      known_hosts: /opt/kanku/etc/ssh/known_hosts
+#      known_hosts: /etc/kanku/ssh/known_hosts
 #      sshauth: privkey
 
 
@@ -89,21 +92,21 @@ Kanku::Dispatch::RabbitMQ:
 
 [% END %]
 
-#Kanku::Daemon::TriggerD:
-#  listener:
-#    -
-#      class: Kanku::Listener::RabbitMQ
-#      host: rabbit.opensuse.org
-#      port: 5671
-#      user: linux
-#      password: linux
-#      heartbeat: 5
-#      ssl:  1
-#      ssl_verify_host: 0
-#      ssl_cacert: /usr/share/pki/trust/anchors/SUSE_Trust_Root.crt.pem
-#      exchange_name: pubsub
-#      routing_prefix: opensuse.obs
-#      triggers:
+Kanku::Daemon::TriggerD:
+  listener:
+    -
+      class: Kanku::Listener::RabbitMQ
+      host: rabbit.opensuse.org
+      port: 5671
+      user: opensuse
+      password: opensuse
+      heartbeat: 5
+      ssl:  1
+      ssl_verify_host: 0
+      ssl_cacert: /etc/ssl/ca-bundle.pem
+      exchange_name: pubsub
+      routing_prefix: opensuse.obs
+      triggers:
 #        -
 #          project: OBS:Server:Unstable
 #          package: obs-server

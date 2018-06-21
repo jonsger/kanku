@@ -35,7 +35,7 @@ has _tt_config => (
   lazy => 1,
   default => sub {
     {
-      INCLUDE_PATH => "$FindBin::Bin/../etc/templates/cmd/setup",
+      INCLUDE_PATH => '/etc/kanku/templates/cmd/setup',
       INTERPOLATE  => 1,               # expand "$var" in plain text
     };
   },
@@ -46,13 +46,6 @@ has logger => (
   is    => 'rw',
   lazy  => 1,
   default => sub { Log::Log4perl->get_logger },
-);
-
-has app_root => (
-  isa   => 'Object',
-  is    => 'rw',
-  lazy  => 1,
-  default => sub { dir($FindBin::Bin)->parent; },
 );
 
 has user => (
@@ -86,7 +79,12 @@ has interactive => (
   default => 0,
 );
 
-sub _configure_libvirtd_access {
+has dns_domain_name => (
+    isa           => 'Str',
+    is            => 'rw',
+);
+
+sub _configure_libvirtd_access { ## no critic (Subroutines::ProhibitUnusedPrivateSubroutines)
   my ($self) = @_;
   my $logger        = $self->logger;
 
@@ -175,7 +173,7 @@ EOF
   return;
 }
 
-sub _create_default_pool {
+sub _create_default_pool {    ## no critic (Subroutines::ProhibitUnusedPrivateSubroutines)
   my $self    = shift;
   my $logger  = $self->logger;
   my $vmm     = Sys::Virt->new(uri => 'qemu:///system');
@@ -220,7 +218,7 @@ EOF
   return 0;
 }
 
-sub _create_default_network {
+sub _create_default_network {    ## no critic (Subroutines::ProhibitUnusedPrivateSubroutines)
   my $self     = shift;
   my $logger   = $self->logger;
   my $vmm      = Sys::Virt->new(uri => 'qemu:///system');
@@ -261,9 +259,19 @@ EOF
 
   return unless $choice;
 
+  my $dns_domain_name = $self->_query_interactive(<<'EOF'
+    "Should libvirt net '$nn' be created?
+
+Your choice ?
+EOF
+,
+    $self->dns_domain_name,
+    'Str',
+  );
+
   my $rnd = rand $MAX_NETWORK_NUMBER;
   my $sn  = int $rnd;
-  my $xml = $self->_create_config_from_template($ttf, undef, {subnet=>$sn});
+  my $xml = $self->_create_config_from_template($ttf, undef, {subnet=>$sn,dns_domain_name=>($dns_domain_name)});
   my $net = $vmm->define_network($xml);
   $net->set_autostart(1);
   $net->create();
@@ -288,7 +296,7 @@ sub _create_config_from_template {
   return $output;
 }
 
-sub _run_system_cmd {
+sub _run_system_cmd {    ## no critic (Subroutines::ProhibitUnusedPrivateSubroutines)
   my ($self, $cmd, @opts) = @_;
   my $logger = $self->logger;
 
@@ -305,17 +313,18 @@ sub _run_system_cmd {
 
 sub _chown {
   my  ($self, @opts) = @_;
-  my ($login,$pass,$uid,$gid) = getpwnam $self->user
-        || croak($self->user." not in passwd file\n");
+  my ($login,$pass,$uid,$gid) = getpwnam $self->user;
+  $login || croak($self->user." not in passwd file\n");
 
   while (my $fn = shift @opts) {
+    $self->logger->debug("_chown '$fn' ($uid/$gid)");
     chown $uid, $gid, $fn || croak($OS_ERROR);
   }
 
   return;
 }
 
-sub _set_sudoers {
+sub _set_sudoers {     ## no critic (Subroutines::ProhibitUnusedPrivateSubroutines)
   my $self          = shift;
   my $user          = $self->user;
   my $logger        = $self->logger;
@@ -340,7 +349,7 @@ EOF
   return;
 }
 
-sub _setup_database {
+sub _setup_database {    ## no critic (Subroutines::ProhibitUnusedPrivateSubroutines)
   my ($self) = @_;
 
   # create Template object
@@ -354,10 +363,10 @@ sub _setup_database {
   };
 
   my $output = q{};
-  my $cfg_file = "$FindBin::Bin/../config.yml";
+  my $cfg_file = '/etc/kanku/dancer/config.yml';
 
   # process input template, substituting variables
-  $template->process('config.yml.tt2', $vars, $cfg_file)
+  $template->process('dancer-config.yml.tt2', $vars, $cfg_file)
                || croak($template->error()->as_string());
 
   $self->logger->info("Created config file $cfg_file");
@@ -367,7 +376,7 @@ sub _setup_database {
   my $migration = DBIx::Class::Migration->new(
     schema_class   => 'Kanku::Schema',
     schema_args    => [$self->dsn],
-    target_dir     => "$FindBin::Bin/../share",
+    target_dir     => '/usr/share/kanku',
   );
 
   # setup database if needed

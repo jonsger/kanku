@@ -278,7 +278,6 @@ sub start_job {
 
 sub end_job {
   my ($self, $job, $task) = @_;
-  $job = $self->job;
 
   $job->state(($job->skipped) ? 'skipped' : $task->state);
   $job->end_time(time());

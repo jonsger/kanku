@@ -28,7 +28,6 @@ package Kanku::Roles::NotifyQueue;
 =cut
 
 use Moose::Role;
-use FindBin;
 use Log::Log4perl;
 use Data::Dumper;
 use JSON::XS;

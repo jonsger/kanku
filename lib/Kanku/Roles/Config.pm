@@ -25,7 +25,7 @@ use Try::Tiny;
 with 'Kanku::Roles::Config::Base';
 
 sub file {
-    return Path::Class::File->new($_[0]->app_base_path,'etc','config.yml' . $_[0]->mode);
+    return Path::Class::File->new('/etc/kanku/kanku-config.yml');
 }
 
 has config => (
@@ -36,13 +36,13 @@ has config => (
 has last_modified => (
   is        => 'rw',
   isa       => "Int",
-  default   => 0
+  default   => 0,
 );
 
-has mode => (
+has views_dir => (
   is        => 'rw',
   isa       => "Str",
-  default   => ''
+  default   => '/usr/share/kanku/views',
 );
 
 sub _build_config {
@@ -119,7 +119,7 @@ sub notifiers_config {
 sub job_config_plain {
   my $self      = shift;
   my $job_name  = shift;
-  my $conf_file = Path::Class::File->new($self->app_base_path,'etc','jobs',$job_name.'.yml' . $self->mode);
+  my $conf_file = Path::Class::File->new("/etc/kanku/jobs/$job_name.yml");
   my $content   = $conf_file->slurp();
 
   return $content;

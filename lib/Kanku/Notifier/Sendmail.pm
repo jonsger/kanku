@@ -16,7 +16,7 @@ sub notify {
     job_id  => $self->job_id,
   };
 
-  my $template_path = Kanku::Config->instance->app_base_path->stringify . '/views/notifier/';
+  my $template_path = Kanku::Config->instance->{views_dir} . '/cli/';
 
   my $config = {
     INCLUDE_PATH  => $template_path,

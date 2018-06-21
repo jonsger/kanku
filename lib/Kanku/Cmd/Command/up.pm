@@ -17,16 +17,18 @@
 package Kanku::Cmd::Command::up;
 
 use Moose;
+use Data::Dumper;
+use Carp;
+
 use Kanku::Config;
 use Kanku::Job;
 use Kanku::JobList;
 use Kanku::Dispatch::Local;
 use Kanku::Util::VM;
-use Data::Dumper;
 
 extends qw(MooseX::App::Cmd::Command);
 
-with "Kanku::Cmd::Roles::Schema";
+with 'Kanku::Cmd::Roles::Schema';
 
 has offline => (
     traits        => [qw(Getopt)],
@@ -50,10 +52,10 @@ has domain_name => (
     is            => 'rw',
     #cmd_aliases   => 'X',
     documentation => 'name of domain to create',
-	lazy		  => 1,
-	default		  => sub {
-          return Kanku::Config->instance()->config()->{domain_name};
-	}
+    lazy		  => 1,
+    default		  => sub {
+      return Kanku::Config->instance()->config()->{domain_name};
+    },
 );
 
 has skip_all_checks => (
@@ -80,45 +82,43 @@ has skip_check_package => (
     documentation => 'Skip checks if package is ready when downloading from OBS',
 );
 
-sub abstract { "start the job defined in KankuFile" }
+sub abstract { return 'start the job defined in KankuFile'; }
 
-sub description { "start the job defined in KankuFile" }
+sub description { return 'start the job defined in KankuFile'; }
 
 sub execute {
   my $self    = shift;
   my $logger  = Log::Log4perl->get_logger;
+  Kanku::Config->initialize(class => 'KankuFile');
   my $cfg     = Kanku::Config->instance();
 
   my $schema  = $self->schema;
 
-  die "Could not connect to database\n" if (! $schema);
+  croak("Could not connect to database\n") if ! $schema;
 
-  $logger->debug(__PACKAGE__ . "->execute()");
+  $logger->debug(__PACKAGE__ . '->execute()');
 
-  if (! $self->job_name ) {
-    $self->job_name($cfg->config->{default_job});
-  }
-
-  my $vm = Kanku::Util::VM->new(domain_name=>$self->domain_name);
-  $logger->debug("Searching for domain: ".$self->domain_name);
+  $self->job_name($cfg->config->{default_job}) if ! $self->job_name;
+  my $dn = $self->domain_name;
+  my $vm = Kanku::Util::VM->new(domain_name => $dn);
+  $logger->debug("Searching for domain: $dn");
   if ($vm->dom) {
-    $logger->fatal("Domain ".$self->domain_name." already exists");
-	exit 1;
+    $logger->fatal("Domain $dn already exists");
+    exit 1;
   }
 
-  $logger->debug("offline mode: " . ( $self->offline   || 0    ));
-  $logger->debug("job_name: "     . ( $self->job_name  || ''   ));
-
+  $logger->debug('offline mode: ' . ($self->offline   || 0));
+  $logger->debug('job_name: '     . ($self->job_name  || q{}));
 
   my $job_config = $cfg->job_config($self->job_name);
 
-  die "No such job found\n" if (! $job_config);
+  croak("No such job found\n") if ! $job_config;
 
   my $ds = $schema->resultset('JobHistory')->create({
       name          => $self->job_name,
-      creation_time => time(),
-      last_modified => time(),
-      state         => 'triggered'
+      creation_time => time,
+      last_modified => time,
+      state         => 'triggered',
   });
 
   my $job = Kanku::Job->new(
@@ -130,7 +130,7 @@ sub execute {
         scheduled => 0,
         triggered => 0,
         context   => {
-          domain_name        => $self->domain_name,
+          domain_name        => $dn,
           login_user         => $cfg->config->{login_user},
           login_pass         => $cfg->config->{login_pass},
           use_cache          => $cfg->config->{use_cache},
@@ -138,25 +138,24 @@ sub execute {
           skip_all_checks    => $self->skip_all_checks    || 0,
           skip_check_project => $self->skip_check_project || 0,
           skip_check_package => $self->skip_check_package || 0,
-        }
+        },
   );
 
   my $dispatch = Kanku::Dispatch::Local->new(schema=>$schema);
   my $result   = $dispatch->run_job($job);
-
-  if ( $result->state eq "succeed" ) {
-      $logger->info("domain_name : " . ( $job->context->{domain_name} || ''));
-      $logger->info("ipaddress   : " . ( $job->context->{ipaddress}   || ''));
-  } elsif ( $result->state eq "skipped" ) {
-    $logger->warn("Job was skipped");
-    $logger->warn("Please see log to find out why");
+  my $ctx      = $job->context;
+  if ( $result->state eq 'succeed' ) {
+      $logger->info('domain_name : ' . ( $ctx->{domain_name} || q{}));
+      $logger->info('ipaddress   : ' . ( $ctx->{ipaddress}   || q{}));
+  } elsif ( $result->state eq 'skipped' ) {
+    $logger->warn('Job was skipped');
+    $logger->warn('Please see log to find out why');
   } else {
-      $logger->error("Failed to create domain: " . ( $job->context->{domain_name} || ''));
-      if ( $job->context->{ipaddress} ) {
-        $logger->error("ipaddress   : " . $job->context->{ipaddress});
-      }
+      $logger->error('Failed to create domain: ' . ( $ctx->{domain_name} || q{}));
+      $logger->error("ipaddress   : $ctx->{ipaddress}") if $ctx->{ipaddress};
   };
 
+  return;
 }
 
 __PACKAGE__->meta->make_immutable;

@@ -18,8 +18,6 @@ package Kanku::Cmd::Command::startui;
 
 use Moose;
 use Log::Log4perl;
-use FindBin;
-
 
 extends qw(MooseX::App::Cmd::Command);
 
