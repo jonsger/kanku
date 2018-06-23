@@ -11,7 +11,7 @@
       <div class="col-md-10">
         <span class="badge">{{ id }} ({{ host  }})</span>
       </div>
-      <div class="col-md-2">
+      <div class="col-md-2" id="guest_action_div_{{ id }}">
 	<a class="pull-right" href="[% request.uri_base %]/guest#{{ id }}"><span class="glyphicon glyphicon-link"/></a>
 	[% IF roles.Admin %]
         <a class="pull-right" href="#" onClick=trigger_remove_domain("{{ id }}")><span class="far fa-trash-alt"/></a>

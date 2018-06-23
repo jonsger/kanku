@@ -19,6 +19,12 @@ Mustache.parse(template_formgroup.text);
 Mustache.parse(template_formgroup.checkbox);
 
 
+
+prefix_domain_name = '';
+if (active_roles.User && !active_roles.Admin) {
+  prefix_domain_name = user_name + '-';
+}
+
 // preload global gui_config
 var gui_config;
 //
@@ -190,15 +196,17 @@ $( document ).ready(
                       var final_jobid = this.param + "_" +job_id + "_" + subtask_id + "_" + param_id;
                       //console.log("              value: "+ obj[final_jobid]);
                       var value = obj[final_jobid] || defaults[this.param];
+                      console.log("param: "+ this.param + " " + prefix_domain_name);
                       task_list_task_args.push(
                         Mustache.render(
                                   tmpl,
                                   {
-                                    label       : this.label,
-                                    param       : this.param,
-                                    id          : final_jobid,
-                                    value       : value,
-                                    checked     : ( ( (this.type == "checkbox" ) && value == 1 ) ? "checked" : "" )
+                                    prefix_domain_name : ((this.param == "domain_name") ? prefix_domain_name : ''),
+                                    label              : this.label,
+                                    param              : this.param,
+                                    id                 : final_jobid,
+                                    value              : value,
+                                    checked            : ( ( (this.type == "checkbox" ) && value == 1 ) ? "checked" : "" )
                                   }
 
                         )

@@ -53,7 +53,7 @@
             type=text
             name="{{ param }}"
             id="{{ id }}"
-            value="{{ value }}"
+            value="{{ prefix_domain_name }}{{ value }}"
     >
   </div>
 </script>

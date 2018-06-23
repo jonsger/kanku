@@ -335,6 +335,7 @@ Requires: perl(Twiggy)
 Requires: perl(Mail::Message::Body::String)
 Requires: perl(Mail::Transport::Send)
 Requires: perl(Net::AMQP::RabbitMQ)
+Requires: perl(Template::Plugin::JSON::Escape)
 Requires: perl(UUID)
 Requires: smtp_daemon
 

@@ -73,13 +73,19 @@ Mustache.parse(href_guest);
             var r_guest_panel = Mustache.render(
                         guest_panel_template,
                         {
-                          id          : domain_name,
-                          host        : guest_data.host,
-                          guest_class : ( guest_data.state == 1 ) ? "success" : "warning"
+                          id                   : domain_name,
+                          host                 : guest_data.host,
+                          guest_class          : ( guest_data.state == 1 ) ? "success" : "warning",
                         }
             );
 
             $("#guest_list").append(r_guest_panel);
+
+            if (active_roles.User && !active_roles.Admin && domain_name.match(user_name+'-.*')) {
+              $("#guest_action_div_"+domain_name).append(
+                '<a class="pull-right" href="#" onClick=trigger_remove_domain("'+domain_name+'")><span class="far fa-trash-alt"/></a>'
+              );
+            }
 
             $.each(
               guest_data.nics,

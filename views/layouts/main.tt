@@ -19,11 +19,16 @@
 <script defer src="[% request.uri_base %]/font-awesome/on-server/js/fontawesome-all.min.js"></script>
 
 <script type="text/javascript">
-// This is used to bring uri_base into js on a
-// centralized place
-var uri_base = "[% request.uri_base %]";
-var ws_url   = "[% ws_url %]";
-var user_id  = "[% user_id %]";
+[% USE JSON.Escape() %]
+  // This is used to bring uri_base into js on a
+  // centralized place
+
+  var uri_base     = "[% request.uri_base %]";
+  var ws_url       = "[% ws_url %]";
+  var user_id      = "[% user_id %]";
+  var user_name    = "[% logged_in_user.username %]";
+  var active_roles = [% roles.json || "{}" %];
+
 </script>
 
 </head>
