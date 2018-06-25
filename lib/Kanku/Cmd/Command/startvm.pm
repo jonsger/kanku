@@ -14,7 +14,7 @@
 # Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 #
-package Kanku::Cmd::Command::startvm;
+package Kanku::Cmd::Command::startvm;    ## no critic (NamingConventions::Capitalization)
 
 use Moose;
 use Kanku::Config;
@@ -22,9 +22,6 @@ use Try::Tiny;
 use Log::Log4perl;
 use XML::XPath;
 use Data::Dumper;
-
-#use Kanku::Util::VM;
-#use Kanku::Util::IPTables;
 
 extends qw(MooseX::App::Cmd::Command);
 
@@ -35,34 +32,38 @@ has domain_name => (
     cmd_aliases   => 'X',
     documentation => 'name of domain to create',
     lazy          => 1,
-    default       => sub { $_[0]->cfg->config->{domain_name} }
+    default       => sub { $_[0]->cfg->config->{domain_name} },
 );
 
 has cfg => (
     isa           => 'Object',
     is            => 'rw',
     lazy          => 1,
-    default       => sub { Kanku::Config->instance(); }
+    default       => sub { Kanku::Config->instance(); },
 );
 
-sub abstract { "Start kanku VM" }
+sub abstract { return 'Start kanku VM'; }    ## no critic (NamingConventions::ProhibitAmbiguousNames)
 
-sub description { "This command can be used to start an already existing VM" }
+sub description { return 'This command can be used to start an already existing VM'; }
 
 sub execute {
   my $self    = shift;
+  Kanku::Config->initialize(class => 'KankuFile');
   my $logger  = Log::Log4perl->get_logger;
+  my $dn      = $self->domain_name;
+  my $vm      = Kanku::Util::VM->new(domain_name => $dn);
 
-  my $vm = Kanku::Util::VM->new(domain_name=>$self->domain_name);
-  $logger->debug("Searching for domain: ".$self->domain_name);
+  $logger->debug("Searching for domain: $dn");
+
   if ($vm->dom) {
-    $logger->info("Starting domain: ".$self->domain_name);
+    $logger->info("Starting domain: $dn");
     $vm->dom->create();
   } else {
-    $logger->fatal("Domain ".$self->domain_name." already exists");
+    $logger->fatal("Domain $dn already exists");
     exit 1;
   }
 
+  return;
 }
 
 __PACKAGE__->meta->make_immutable;

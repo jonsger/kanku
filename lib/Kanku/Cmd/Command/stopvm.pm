@@ -14,7 +14,7 @@
 # Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 #
-package Kanku::Cmd::Command::stopvm;
+package Kanku::Cmd::Command::stopvm;     ## no critic (NamingConventions::Capitalization)
 
 use Moose;
 use Kanku::Config;
@@ -22,9 +22,6 @@ use Try::Tiny;
 use Log::Log4perl;
 use XML::XPath;
 use Data::Dumper;
-
-#use Kanku::Util::VM;
-#use Kanku::Util::IPTables;
 
 extends qw(MooseX::App::Cmd::Command);
 
@@ -35,14 +32,14 @@ has domain_name => (
     cmd_aliases   => 'd',
     documentation => 'name of domain to create',
     lazy          => 1,
-    default       => sub { $_[0]->cfg->config->{domain_name} }
+    default       => sub { $_[0]->cfg->config->{domain_name} },
 );
 
 has cfg => (
     isa           => 'Object',
     is            => 'rw',
     lazy          => 1,
-    default       => sub { Kanku::Config->instance(); }
+    default       => sub { Kanku::Config->instance(); },
 );
 
 has force => (
@@ -53,18 +50,20 @@ has force => (
     documentation => 'destroy domain instead of shutdown',
 );
 
-sub abstract { "Stop kanku VM" }
+sub abstract { return 'Stop kanku VM'; }    ## no critic (NamingConventions::ProhibitAmbiguousNames)
 
-sub description { "This command can be used to stop/shutdown a running VM" }
+sub description { return 'This command can be used to stop/shutdown a running VM'; }
 
 sub execute {
   my $self    = shift;
+  Kanku::Config->initialize(class => 'KankuFile');
   my $logger  = Log::Log4perl->get_logger;
+  my $dn      = $self->domain_name;
 
-  my $vm = Kanku::Util::VM->new(domain_name=>$self->domain_name);
-  $logger->debug("Searching for domain: ".$self->domain_name);
+  my $vm = Kanku::Util::VM->new(domain_name => $dn);
+  $logger->debug("Searching for domain: $dn");
   if ($vm->dom) {
-    $logger->info("Stopping domain: ".$self->domain_name);
+    $logger->info("Stopping domain: $dn");
     if ($self->force) {
       $vm->dom->destroy();
     } else {
@@ -73,12 +72,12 @@ sub execute {
     while ($vm->state eq 'on') {
       sleep 1;
     }
-    $logger->info("Stopped domain: ".$self->domain_name." successfully");
+    $logger->info("Stopped domain: $dn successfully");
   } else {
-    $logger->fatal("Domain ".$self->domain_name." already exists");
+    $logger->fatal("Domain $dn doesn't exists");
     exit 1;
   }
-
+  return;
 }
 
 __PACKAGE__->meta->make_immutable;
