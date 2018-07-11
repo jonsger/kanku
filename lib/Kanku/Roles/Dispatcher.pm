@@ -93,7 +93,7 @@ sub run {
           @child_pids = grep { waitpid($_,WNOHANG) == 0 } @child_pids;
           last if ( $self->detect_shutdown );
           sleep(1);
-          $self->logger->debug("ChildPids: (@child_pids) max_processes: ".$self->max_processes."\n");
+          $logger->trace("ChildPids: (@child_pids) max_processes: ".$self->max_processes."\n");
         }
       }
       last if ( $self->detect_shutdown );
@@ -108,7 +108,7 @@ sub run {
 
   while ( @child_pids ) {
     # log only every minute
-    $self->logger->debug("Waiting for childs to exit: (@child_pids)") if (! $wcnt % 60);
+    $logger->debug("Waiting for childs to exit: (@child_pids)") if (! $wcnt % 60);
     $wcnt++;
     @child_pids = grep { waitpid($_,WNOHANG) == 0 } @child_pids;
     sleep(1);
@@ -164,14 +164,14 @@ sub run_notifiers {
 
 sub execute_notifier {
   my ($self, $options, $job, $task) = @_;
-
+  my $logger    = $self->logger;
   my $state     = $job->state;
 
-  $self->logger->debug("Job state: $state // $options->{states}");
+  $logger->debug("Job state: $state // $options->{states}");
 
   my @in        = grep { $state eq $_ } (split(/\s*,\s*/,$options->{states}));
 
-  $self->logger->trace("\@in: '@in'");
+  $logger->trace("\@in: '@in'");
 
   return if (! @in);
 
@@ -191,12 +191,14 @@ sub execute_notifier {
   $notifier->short_message("Job ".$job->name." has exited with state '$state'");
   my $result;
   try {
-    $result = decode_json($task->result)->{error_message};
+    $result = decode_json($task->result)->{error_message} 
+              || 'No errors found in task result';
   } catch {
     $result = 'Error while decoding result of task from job '.
       $job->id . ":\n\n$_\nJSON:\n".$task->result."\n";
-    $self->logger->error($result);
+    $logger->error($result);
   };
+
   $notifier->full_message($result);
 
   $notifier->notify();

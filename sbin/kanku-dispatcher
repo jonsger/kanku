@@ -5,6 +5,7 @@ use warnings;
 BEGIN { unshift @::INC, ($ENV{KANKU_LIB_DIR} || '/usr/lib/kanku/lib'); }
 
 use Kanku::Daemon::Dispatcher;
-                                                                                                                                                                                                                                             Kanku::Daemon::Dispatcher->new()->prepare_and_run();
+
+Kanku::Daemon::Dispatcher->new()->prepare_and_run();
 
 exit 0;

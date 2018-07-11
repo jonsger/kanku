@@ -7,6 +7,7 @@ use Template;
 use Kanku::Config;
 
 with 'Kanku::Roles::Notifier';
+with 'Kanku::Roles::Logger';
 
 sub notify {
   my $self = shift;
@@ -16,7 +17,9 @@ sub notify {
     job_id  => $self->job_id,
   };
 
-  my $template_path = Kanku::Config->instance->{views_dir} . '/cli/';
+  my $template_path = Kanku::Config->instance->views_dir . '/notifier/';
+
+  $self->logger->debug("Using template_path: $template_path");
 
   my $config = {
     INCLUDE_PATH  => $template_path,
