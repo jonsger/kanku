@@ -16,12 +16,7 @@ sub setup {
 
 
   $self->_dbfile(
-    file(
-      $self->app_root,
-      "var",
-      "db",
-      "kanku-schema.db"
-    )->stringify
+    file('/var/lib/kanku/db/kanku-schema.db')->stringify
   );
 
   $self->user("kankurun");
@@ -33,7 +28,7 @@ sub setup {
   $self->_configure_libvirtd_access();
 
   $self->_create_config_from_template(
-    "etc/kanku-config.yml.tt2",
+    "kanku-config.yml.tt2",
     "/etc/kanku/kanku-config.yml",
     {
        db_file => $self->_dbfile,

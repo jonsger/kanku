@@ -302,7 +302,7 @@ sub _run_system_cmd {    ## no critic (Subroutines::ProhibitUnusedPrivateSubrout
 
   $logger->debug("Running command '$cmd @opts'");
   my ($in,$out,$err);
-  run [$cmd, @opts] , \$in, \$out , $err;
+  run [$cmd, @opts], \$in, \$out, \$err;
 
   if ($CHILD_ERROR) {
     $logger->error('Execution of command failed: "'.($err || q{}).q{"});
