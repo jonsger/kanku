@@ -190,7 +190,7 @@ TODO:
  add a useful description
 
 %post common
-%tmpfiles_create %_tmpfilesdir/kanku
+%tmpfiles_create %_tmpfilesdir/kanku.conf
 
 %files common
 %defattr(-,root,root)
@@ -248,7 +248,7 @@ TODO:
 %config /etc/logrotate.d/kanku-common
 
 %exclude %dir %_tmpfilesdir
-%_tmpfilesdir/kanku 
+%_tmpfilesdir/kanku.conf
 
 %dir /usr/lib/kanku/lib/Kanku/NotifyQueue/
 /usr/lib/kanku/lib/Kanku/NotifyQueue/*.pm
