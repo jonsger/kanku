@@ -5,22 +5,24 @@
 
 <h2>Your Settings</h2>
 
+<hr/>
 <a href=# v-on:click="updateUserData" class="btn btn-primary btn-sm active pull-right" role="button" aria-pressed="true">Save</a>
 <h3>User Data:</h3>
 <form class="form-horizontal">
   <div class="form-group">
-    <label class="col-sm-2 control-label" for="user_id">ID:</label>
-    <div class="col-sm-4">
-    <span class="form-control" id="user_id">
-      {{ user_details.id }}
-    </span>
-    </div>
-
+    <!-- USERNAME  -->
     <label class="col-sm-2 control-label" for="user_name">Username:</label>
-    <div class="col-sm-4">
+    <div class="col-sm-7">
       <span class="form-control" id=user_name>
         {{ user_details.username }}
       </span>
+    </div>
+    <!-- USER ID -->
+    <label class="col-sm-1 control-label" for="user_id">ID:</label>
+    <div class="col-sm-2">
+    <span class="form-control" id="user_id">
+      {{ user_details.id }}
+    </span>
     </div>
   </div>
 
@@ -38,7 +40,7 @@
     </div>
   </div>
 </form>
-
+<hr/>
 <a href=# v-on:click="sendRoleRequest" class="btn btn-primary btn-sm active pull-right" role="button" aria-pressed="true">Send</a>
 <h3>Request Roles</h3>
 <form class="form-horizontal">
@@ -59,3 +61,4 @@
 
 </div>
 <script src="[% request.uri_base %]/javascripts/settings.js"></script>
+<hr/>
