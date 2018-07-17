@@ -20,6 +20,7 @@ use Kanku::Config;
 use Kanku::Schema;
 use Kanku::Util::IPTables;
 use Kanku::LibVirt::HostList;
+use Kanku::REST::Admin::User;
 
 our $VERSION = '0.0.2';
 
@@ -508,108 +509,46 @@ post '/admin/task/resolve.:format' => requires_role Admin => sub {
 };
 
 get '/admin/user/list.:format' => requires_role Admin => sub {
-  my @users = schema('default')->resultset('User')->search();
-  my $result = [];
+  my ($self) = @_;
+  my $uo = Kanku::REST::Admin::User->new(
+             schema => schema('default'),
+             current_user => logged_in_user,
+             app    => $self->app,
+           );
 
-  foreach my $user (@users) {
-    my $rs = {
-      id       => $user->id,
-      username => $user->username,
-      name     => $user->name,
-      deleted  => $user->deleted,
-      email    => $user->email,
-      roles    => [],
-    };
-    my @roles = $user->user_roles;
-    for my $role (@roles) {
-      push(@{$rs->{roles}}, $role->role->role);
-    }
-    push @{$result}, $rs;
-  }
-  return $result;
+  return $uo->list;
 };
 
 get '/user/:username.:format' => sub {
-  my $username = params->{username};
-  my $user     = logged_in_user;
-
-  if (! (user_has_role('Admin') || $username eq $user->{username} )) {
-    return {error => 'Permission denied!'};
-  }
-
-  my $user_o  = schema('default')->resultset('User')->find({username=>$username});
-  return { error => "No such user '$username' found!" } unless $user_o;
-
-  my $rs = {
-      id       => $user_o->id,
-      username => $user_o->username,
-      name     => $user_o->name,
-      deleted  => $user_o->deleted,
-      email    => $user_o->email,
-      roles    => [],
-  };
-  my @all_roles = schema('default')->resultset('Role')->search();
-  my @roles = $user_o->user_roles;
-  for my $role (@all_roles) {
-    my $rd = {
-      id       => $role->id,
-      role     => $role->role,
-      checked  => scalar grep { $role->role eq $_->role->role } @roles,
-    };
-    push @{$rs->{roles}}, $rd;
-  }
-  return $rs;
+  my ($self) = @_;
+  my $uo = Kanku::REST::Admin::User->new(
+             schema => schema('default'),
+             current_user => logged_in_user,
+             app    => $self->app,
+           );
+  return $uo->details;
 };
 
 put '/user/:user_id.:format' => sub {
   my ($self) = @_;
-  my $args     = decode_json($self->app->request->body);
-  my $username = params->{username};
-  my $user     = logged_in_user;
+  my $uo = Kanku::REST::Admin::User->new(
+             schema => schema('default'),
+             current_user => logged_in_user,
+             app    => $self->app,
+           );
 
-  if (! (user_has_role('Admin') || $username eq $user->{username} )) {
-    return {error => 'Permission denied!'};
-  }
-  my $user_o = schema->resultset('User')->find({id => param('user_id')});
-  if (! $user_o ) {
-    return {
-      'state'         => 'danger',
-      'msg' => 'User with id '.param('user_id').' not found!',
-    };
-  }
-
-  my $data = {
-    name  => $args->{name},
-    email => $args->{email},
-  };
-
-  if (user_has_role('Admin')) {
-    $data->{roles} = $args->{roles};
-  }
-
-  $user_o->update($data);
-
-  return {
-      'state'         => 'success',
-      'msg' => 'Updated data successfully!',
-  };
+  return $uo->update();
 };
 
 del '/admin/user/:user_id.:format' => requires_role Admin => sub {
-  my $user = schema->resultset('User')->find({id => param('user_id')});
-  if (! $user ) {
-    return {
-      'state'         => 1,
-      'message' => 'User with id '.param('user_id').' not found!',
-    };
-  }
+  my ($self) = @_;
+  my $uo = Kanku::REST::Admin::User->new(
+             schema => schema('default'),
+             current_user => logged_in_user,
+             app    => $self->app,
+           );
 
-  $user->delete;
-
-  return {
-    'state'   => 0,
-    'message' => 'Deleting user with id '.param('user_id').' succeed!',
-  };
+  return $uo->remove(param('user_id'));
 };
 
 get '/admin/role/list.:format' => requires_role Admin => sub {
