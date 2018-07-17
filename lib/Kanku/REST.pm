@@ -575,37 +575,25 @@ sub calc_changes {
     $requested_roles->{$_}     = 1 for (split(/,/, $r->roles));
     $user_roles->{$_->role_id} = 1 for (@ur_rs);
     my $ar_rs = schema->resultset('Role')->search();
+    my $actions = {
+      1 => {action => 'add',       class => 'success'},
+      2 => {action => 'remove',    class => 'danger' },
+      3 => {action => 'unchanged', class => 'default'},
+    };
     while (my $ar = $ar_rs->next) {
-      my $already_exists = $user_roles->{$ar->id};
-      my $requested      = $requested_roles->{$ar->id};
-      my $action;
-      my $class;
+      my $cur = (($user_roles->{$ar->id} || 0) << 1);
+      my $new = ($requested_roles->{$ar->id} || 0);
+      my $action_code = $cur | $new;
 
-      if (
-	( $already_exists && $requested ) ||
-	( ! $already_exists && ! $requested )
-      ) {
-	$action = 'unchanged';
-        $class  = 'default';
-      } elsif ($already_exists && ! $requested) {
-	$action = 'remove';
-        $class  = 'danger';
-      } elsif (! $already_exists && $requested) {
-	$action = 'add';
-        $class  = 'success';
-      } else {
-	$action = 'unknown';
-        $class  = q{};
-      }
-      push(@all_roles,
+      push @all_roles,
         {
           role_id => $ar->id,
           role    => $ar->role,
-          action  => $action,
-          class   => $class,
-          checked => (($requested) ? 'checked' : ''),
+          action  => $actions->{$action_code}->{action} || 'unknown',
+          class   => $actions->{$action_code}->{class} || q{},
+          checked => (($new) ? 'checked' : ''),
         }
-      );
+      ;
     }
     return \@all_roles;
 }
