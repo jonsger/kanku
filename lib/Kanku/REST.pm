@@ -28,7 +28,7 @@ prepare_serializer_for_format;
 Kanku::Config->initialize();
 
 sub get_defaults_for_views {
-  my $messagebar = session "messagebar";
+  my $messagebar = session 'messagebar';
   session  messagebar => undef;
   my $logged_in_user = logged_in_user();
   my $roles;
@@ -77,11 +77,8 @@ any '/jobs/list.:format' => sub {
 
   my $rs = schema('default')->resultset('JobHistory')->search(
 		  $search,
-                  {
-                    order_by =>{
-                      -desc  =>'id'
-                    },
-                    %opts
+                  {order_by =>{-desc  =>'id'},
+                   %opts,
                   }
               );
 
@@ -167,7 +164,7 @@ post '/job/trigger/:name.:format' => require_any_role [qw/Admin User/] =>  sub {
     name          => param('name'),
     state         => 'triggered',
     creation_time => time(),
-    args 	  => $self->app->request->body,      
+    args 	  => $self->app->request->body,
   };
 
   my $defaults = get_defaults_for_views();
@@ -329,19 +326,17 @@ get '/gui_config/job.:format' => sub {
         foreach my $opt (@$tmp) {
           $defaults->{$opt->{param}} = $sub_tasks->{options}->{$opt->{param}};
         }
-        push(@{ $job_config->{sub_tasks} },
+        push @{ $job_config->{sub_tasks} },
             {
               use_module => $mod,
               gui_config => $tmp,
               defaults   => $defaults
             }
-        );
+        ;
     }
   }
 
-  return {
-      config => \@config,
-  }
+  return {config => \@config};
 };
 
 get '/guest/list.:format' => sub {
@@ -462,21 +457,173 @@ get '/admin/task/list.:format' => requires_role Admin => sub {
   return \@req
 };
 
+post '/admin/task/resolve.:format' => requires_role Admin => sub {
+  my ($self) = @_;
+  my $args   = decode_json($self->app->request->body);
+  my $req    = schema->resultset('RoleRequest')->find($args->{req_id});
+
+  if (!$req) {
+    return {
+      result => 'failed',
+      class  => 'danger',
+      msg    => "Request with id $args->{req_id} not found!",
+    };
+  }
+
+  if ($args->{decision} == 1) {
+    my $role_changes = calc_changes($req);
+    my $user_id = $req->user_id;
+    for my $chg (@{$role_changes}) {
+      my $role_id = $chg->{role_id};
+      if ($chg->{action} eq 'add') {
+        debug "Role to add: ($user_id, $role_id)";
+        schema->resultset('UserRole')->create({
+          user_id => $user_id,
+          role_id => $role_id,
+        });
+      } elsif ($chg->{action} eq 'remove') {
+        debug "Role to remove: ($user_id, $role_id)";
+        schema->resultset('UserRole')->find({
+          user_id => $user_id,
+          role_id => $role_id,
+        })->delete;
+      } elsif ($chg->{action} eq 'unchanged') {
+        debug "Role unchanged: ($user_id, $role_id)";
+      } else {
+        error "Something wicked happend - action '$chg->{action}' is unknown";
+      }
+    }
+  }
+
+  $req->update({
+    decision => $args->{decision},
+    comment  => $args->{comment},
+  });
+
+  return {
+    result => 'success',
+    class  => 'success',
+    msg    => "Request '$args->{req_id}' processed successfully!",
+  };
+};
+
+get '/admin/user/list.:format' => requires_role Admin => sub {
+  my @users = schema('default')->resultset('User')->search();
+  my $result = [];
+
+  foreach my $user (@users) {
+    my $rs = {
+      id       => $user->id,
+      username => $user->username,
+      name     => $user->name,
+      deleted  => $user->deleted,
+      email    => $user->email,
+      roles    => [],
+    };
+    my @roles = $user->user_roles;
+    for my $role (@roles) {
+      push(@{$rs->{roles}}, $role->role->role);
+    }
+    push @{$result}, $rs;
+  }
+  return $result;
+};
+
+get '/user/:username.:format' => sub {
+  my $username = params->{username};
+  my $user     = logged_in_user;
+
+  if (! (user_has_role('Admin') || $username eq $user->{username} )) {
+    return {error => 'Permission denied!'};
+  }
+
+  my $user_o  = schema('default')->resultset('User')->find({username=>$username});
+  return { error => "No such user '$username' found!" } unless $user_o;
+
+  my $rs = {
+      id       => $user_o->id,
+      username => $user_o->username,
+      name     => $user_o->name,
+      deleted  => $user_o->deleted,
+      email    => $user_o->email,
+      roles    => [],
+  };
+  my @all_roles = schema('default')->resultset('Role')->search();
+  my @roles = $user_o->user_roles;
+  for my $role (@all_roles) {
+    my $rd = {
+      id       => $role->id,
+      role     => $role->role,
+      checked  => scalar grep { $role->role eq $_->role->role } @roles,
+    };
+    push @{$rs->{roles}}, $rd;
+  }
+  return $rs;
+};
+
+put '/user/:user_id.:format' => sub {
+  my ($self) = @_;
+  my $args     = decode_json($self->app->request->body);
+  my $username = params->{username};
+  my $user     = logged_in_user;
+
+  if (! (user_has_role('Admin') || $username eq $user->{username} )) {
+    return {error => 'Permission denied!'};
+  }
+  my $user_o = schema->resultset('User')->find({id => param('user_id')});
+  if (! $user_o ) {
+    return {
+      'state'         => 'danger',
+      'msg' => 'User with id '.param('user_id').' not found!',
+    };
+  }
+
+  my $data = {
+    name  => $args->{name},
+    email => $args->{email},
+  };
+
+  if (user_has_role('Admin')) {
+    $data->{roles} = $args->{roles};
+  }
+
+  $user_o->update($data);
+
+  return {
+      'state'         => 'success',
+      'msg' => 'Updated data successfully!',
+  };
+};
+
 del '/admin/user/:user_id.:format' => requires_role Admin => sub {
   my $user = schema->resultset('User')->find({id => param('user_id')});
   if (! $user ) {
     return {
       'state'         => 1,
-      'message' => 'User with id '.param('user_id').' not found!'
-    }
+      'message' => 'User with id '.param('user_id').' not found!',
+    };
   }
 
   $user->delete;
 
   return {
-      'state'         => 0,
-      'message' => 'Deleting user with id '.param('user_id').' succeed!'
-    }
+    'state'   => 0,
+    'message' => 'Deleting user with id '.param('user_id').' succeed!',
+  };
+};
+
+get '/admin/role/list.:format' => requires_role Admin => sub {
+  my @roles = schema('default')->resultset('Role')->search();
+  my $result = [];
+
+  foreach my $role (@roles) {
+    my $rs = {
+      id       => $role->id,
+      role     => $role->role,
+    };
+    push @{$result}, $rs;
+  }
+  return $result;
 };
 
 sub calc_changes {
@@ -509,7 +656,7 @@ sub calc_changes {
         $class  = 'success';
       } else {
 	$action = 'unknown';
-        $class  = '';
+        $class  = q{};
       }
       push(@all_roles,
         {
@@ -523,96 +670,6 @@ sub calc_changes {
     }
     return \@all_roles;
 }
-
-post '/admin/task/resolve.:format' => requires_role Admin => sub {
-  my ($self) = @_;
-  my $args = decode_json($self->app->request->body);
-  debug "request_id: ". $args->{req_id};
-  debug "decision ". $args->{decision};
-  debug "comment ". $args->{comment};
-
-  my $req = schema->resultset('RoleRequest')->find($args->{req_id});
-
-  if (!$req) {
-    return {
-      result => 'failed',
-      class  => 'danger',
-      msg    => "Request with id $args->{req_id} not found!"
-    };
-  }
-
-  if ($args->{decision} == 1) {
-    my $role_changes = calc_changes($req);
-    my $user_id = $req->user_id;
-    for my $chg (@{$role_changes}) {
-      my $role_id = $chg->{role_id};
-      if ($chg->{action} eq 'add') {
-        debug "Role to add: ($user_id, $role_id)";
-        schema->resultset('UserRole')->create({
-          user_id => $user_id,
-          role_id => $role_id
-        });
-      } elsif ($chg->{action} eq 'remove') {
-        debug "Role to remove: ($user_id, $role_id)";
-        schema->resultset('UserRole')->find({
-          user_id => $user_id,
-          role_id => $role_id
-        })->delete;
-      } elsif ($chg->{action} eq 'unchanged') {
-        debug "Role unchanged: ($user_id, $role_id)";
-      } else {
-        error "Something wicked happend - action '$chg->{action}' is unknown";
-      }
-    }
-  }
-
-  $req->update({
-    decision => $args->{decision},
-    comment  => $args->{comment}
-  });
-
-  return {
-    result => 'success',
-    class  => 'success',
-    msg    => "Request '$args->{req_id}' processed successfully!"
-  };
-};
-
-get '/admin/user/list.:format' => requires_role Admin => sub {
-  my @users = schema('default')->resultset('User')->search();
-  my $result = [];
-
-  foreach my $user (@users) {
-    my $rs = {
-      id       => $user->id,
-      username => $user->username,
-      name     => $user->name,
-      deleted  => $user->deleted,
-      email    => $user->email,
-      roles    => []
-    };
-    my @roles = $user->user_roles;
-    for my $role (@roles) {
-      push(@{$rs->{roles}}, $role->role->role);
-    }
-    push @{$result}, $rs;
-  }
-  return $result;
-};
-
-get '/admin/role/list.:format' => requires_role Admin => sub {
-  my @roles = schema('default')->resultset('Role')->search();
-  my $result = [];
-
-  foreach my $role (@roles) {
-    my $rs = {
-      id       => $role->id,
-      role     => $role->role,
-    };
-    push @{$result}, $rs;
-  }
-  return $result;
-};
 
 __PACKAGE__->meta->make_immutable();
 
