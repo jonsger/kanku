@@ -19,7 +19,7 @@ CONFIG_FILES = \
 	logging/console.conf\
         logging/network-setup.conf
 
-FULL_DIRS			= bin share/migrations share/fixtures public views
+FULL_DIRS	= bin share/migrations share/fixtures public views
 CONFIG_DIRS		= \
 	etc/kanku/templates\
 	etc/kanku/templates/cmd\
