@@ -1,6 +1,6 @@
 severity = 1
 verbose = 8
-exclude = (Modules::RequireVersionVar|CodeLayout::RequireTidyCode|ControlStructures::ProhibitPostfixControls|CodeLayout::ProhibitHardTabs)
+exclude = (Modules::RequireVersionVar|CodeLayout::RequireTidyCode|ControlStructures::ProhibitPostfixControls|CodeLayout::ProhibitHardTabs|ValuesAndExpressions::ProhibitMagicNumbers)
 
 [InputOutput::RequireCheckedSyscalls]
 functions = :builtins

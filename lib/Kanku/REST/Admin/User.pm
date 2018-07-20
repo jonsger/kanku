@@ -3,7 +3,7 @@ package Kanku::REST::Admin::User;
 use Moose;
 use JSON::MaybeXS;
 
-with 'Kanku::Roles::RESTClass';
+with 'Kanku::Roles::REST';
 
 sub list {
   my ($self) = @_;
@@ -62,7 +62,7 @@ sub details {
 }
 
 sub update {
-  my ($self) = @_;
+  my ($self)   = @_;
   my $args     = decode_json($self->app->request->body);
   my $username = $self->params->{username};
   my $user     = $self->current_user;
@@ -73,8 +73,8 @@ sub update {
   my $user_o = $self->schema->resultset('User')->find({id => $self->params->{user_id}});
   if (! $user_o ) {
     return {
-      'state'         => 'danger',
-      'msg' => 'User with id '.$self->params->{user_id}.' not found!',
+      'state' => 'danger',
+      'msg'   => 'User with id '.$self->params->{user_id}.' not found!',
     };
   }
 
@@ -82,10 +82,6 @@ sub update {
     name  => $args->{name},
     email => $args->{email},
   };
-
-  if ($self->has_role('Admin')) {
-    $data->{roles} = $args->{roles};
-  }
 
   $user_o->update($data);
 

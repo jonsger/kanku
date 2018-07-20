@@ -1,15 +1,15 @@
-package Kanku::Roles::RESTClass;
+package Kanku::Roles::REST;
 
 use Moose::Role;
 use Data::Dumper;
 
-has schema => (
+has app => (
   is => 'ro',
   isa => 'Object',
 );
 
-has app => (
-  is => 'ro',
+has schema => (
+  is  => 'ro',
   isa => 'Object',
 );
 
@@ -23,11 +23,14 @@ has params => (
 has current_user => (
   is => 'ro',
   isa => 'HashRef',
+  default => sub {{}},
 );
+
+sub rset { return $_[0]->schema->resultset($_[1]); }
 
 sub has_role {
   my ($self, $role) = @_;
-  return scalar grep { $role } keys %{$self->current_user->{role_id}};
+  return scalar grep { $role } keys %{$self->current_user->{role_id} || {}};
 }
 
 sub log {    ## no critic (Subroutines::ProhibitBuiltinHomonyms)
