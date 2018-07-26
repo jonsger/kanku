@@ -388,6 +388,15 @@ TODO:
 /usr/share/kanku/public/
 /usr/lib/kanku/lib/Kanku.pm
 /usr/lib/kanku/lib/Kanku/REST.pm
+%dir /usr/lib/kanku/lib/Kanku/REST
+%dir /usr/lib/kanku/lib/Kanku/REST/Admin
+/usr/lib/kanku/lib/Kanku/REST/Admin/Role.pm
+/usr/lib/kanku/lib/Kanku/REST/Admin/Task.pm
+/usr/lib/kanku/lib/Kanku/REST/Admin/User.pm
+/usr/lib/kanku/lib/Kanku/REST/Guest.pm
+/usr/lib/kanku/lib/Kanku/REST/Job.pm
+/usr/lib/kanku/lib/Kanku/REST/JobComment.pm
+
 
 %package worker
 Summary: Worker daemon for kanku
