@@ -179,7 +179,7 @@ jobs:
         - zypper -n in vim-data curl make apache2 systemd-bash-completion sqlite3
         - zypper -n in kanku-cli
         - make -C /tmp/kanku install
-        - /opt/kanku/bin/kanku setup --devel --user kanku --osc_user M0ses --osc_pass ZTKDu9k5UJm!
+        - /opt/kanku/bin/kanku setup --devel --user kanku
   -
     use_module: Kanku::Handler::ExecuteCommandViaSSH
     options:
