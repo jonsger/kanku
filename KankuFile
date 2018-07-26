@@ -159,7 +159,10 @@ jobs:
     use_module: Kanku::Handler::ImageDownload
     options:
       use_cache: 1
-
+  -
+    use_module: Kanku::Handler::ResizeImage
+    options:
+      disk_size: 25G
   -
     use_module: Kanku::Handler::CreateDomain
     options:
@@ -179,12 +182,12 @@ jobs:
         - zypper -n in vim-data curl make apache2 systemd-bash-completion sqlite3
         - zypper -n in kanku-cli
         - make -C /tmp/kanku install
-        - /opt/kanku/bin/kanku setup --devel --user kanku
+        - kanku setup --devel --user kanku
   -
     use_module: Kanku::Handler::ExecuteCommandViaSSH
     options:
       username: kanku
       commands:
         - mkdir prj
-        - cp /tmp/kanku/kanku-test/devel/KankuFile.obs prj/KankuFile
+        - cp /tmp/kanku/KankuFile.examples/KankuFile.simple prj/KankuFile
         - cd prj;kanku up 2>&1 | tee /tmp/kanku-up.log
