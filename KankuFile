@@ -7,10 +7,10 @@ domain_name: kanku-devel
 default_job: kanku-dist
 
 #qemu:
-#  user: 
+#  user:
 
 jobs:
- ###### JOB: 
+ ###### JOB:
  kanku-server:
   -
     use_module: Kanku::Handler::SetJobContext
@@ -44,6 +44,10 @@ jobs:
       memory: 6G
       vcpu: 1
       use_9p: 1
+      pwrand:
+        users:
+          - root
+          - kanku
   -
     use_module: Kanku::Handler::PrepareSSH
   -
@@ -57,11 +61,11 @@ jobs:
         #- make -C /tmp/kanku install 2>&1 |tee /tmp/make.log
         - mkdir -p /var/lib/kanku/db/
         - chown kankurun:kanku /var/lib/kanku/db/
-        - kanku setup --server --apache --distributed --ssl 2>&1 |tee /tmp/setup-server.log
+        - kanku setup --server --apache --standalone --ssl 2>&1 |tee /tmp/setup-server.log
         - zypper -n in kanku vim-data curl make apache2 systemd-bash-completion sqlite3
         - cp /etc/kanku/jobs/examples/obs-server.yml /etc/kanku/jobs/
-        - systemctl start kanku-web  
-        - systemctl enable kanku-web  
+        - systemctl start kanku-web
+        - systemctl enable kanku-web
         - systemctl start kanku-dispatcher
         - systemctl enable kanku-dispatcher
         - systemctl start kanku-worker
@@ -70,7 +74,7 @@ jobs:
         - kanku rtrigger -j obs-server
         - /tmp/kanku/contrib/wait_for_job.sh
 
- ###### JOB: 
+ ###### JOB:
  kanku-dist:
   -
     use_module: Kanku::Handler::SetJobContext
@@ -103,6 +107,10 @@ jobs:
       memory: 6G
       vcpu: 1
       use_9p: 1
+      pwrand:
+        users:
+          - root
+          - kanku
   -
     use_module: Kanku::Handler::PrepareSSH
   -
@@ -124,8 +132,8 @@ jobs:
         - systemd-tmpfiles --create /usr/lib/tmpfiles.d/kanku
         - /usr/bin/kanku setup --apache --distributed --ssl 2>&1 |tee /tmp/setup-server.log
         - cp /tmp/kanku/etc/jobs/examples/obs-server.yml /etc/kanku/jobs/
-        - systemctl start kanku-web  
-        - systemctl enable kanku-web  
+        - systemctl start kanku-web
+        - systemctl enable kanku-web
         - systemctl start kanku-worker
         - systemctl enable kanku-worker
         - systemctl start kanku-dispatcher
@@ -138,7 +146,7 @@ jobs:
         - kanku rtrigger -j obs-server
         - /tmp/kanku/contrib/wait_for_job.sh
 
- ###### JOB: 
+ ###### JOB:
  kanku-devel:
   -
     use_module: Kanku::Handler::SetJobContext
@@ -172,6 +180,10 @@ jobs:
       vcpu: 2
       use_9p: 1
       #forward_port_list: tcp:22,tcp:443
+      pwrand:
+        users:
+          - root
+          - kanku
   -
     use_module: Kanku::Handler::PrepareSSH
   -
