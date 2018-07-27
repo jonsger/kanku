@@ -36,6 +36,7 @@ has [qw/skipped scheduled triggered/] => ( is => 'rw', isa => 'Bool' );
 has [qw/creation_time start_time end_time last_modified/] => ( is  => 'rw', isa => 'Int' );
 has db_object => ( is => 'rw', isa => 'Object' );
 has '+workerinfo' => (default =>"localhost");
+has 'pwrand' => (is=>'rw', isa=>'Str');
 
 sub json_keys; # prototype to not break the requires in Kanku::Roles::Serialize
 has 'json_keys' => (
@@ -47,9 +48,10 @@ has 'json_keys' => (
   /
   ]});
 
-sub pwrand {
-  my ($self,$content) = @_;
-  $self->context->{pwrand} = $content if $content;
+
+sub update_db {
+  my $self = shift;
+  my $ds = { last_modified => time() };
 
   my $pwrand =(ref $self->context->{pwrand})
     ? encode_json($self->context->{pwrand})
@@ -65,12 +67,8 @@ sub pwrand {
       $pwrand = $gpg->encrypt;
     }
   }
-  return $pwrand;
-}
 
-sub update_db {
-  my $self = shift;
-  my $ds = { last_modified => time() };
+  $self->pwrand($pwrand) if $pwrand;
 
   foreach my $key ( qw/id name state start_time end_time result workerinfo masterinfo trigger_user pwrand/ ) {
     my $value = $self->$key();
