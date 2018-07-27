@@ -30,15 +30,12 @@ sub distributable { 1 }
 
 sub prepare {
   my $self = shift;
-  my $ctx  = $self->job()->context();
 
-  $self->domain_name($ctx->{domain_name}) if ( ! $self->domain_name && $ctx->{domain_name});
-  $self->login_user($ctx->{login_user})   if ( ! $self->login_user  && $ctx->{login_user});
-  $self->login_pass($ctx->{login_pass})   if ( ! $self->login_pass  && $ctx->{login_pass});
+  $self->evaluate_console_credentials;
 
   return {
     code    => 0,
-    message => "Nothing todo"
+    message => "Using login_user: ". $self->login_user,
   };
 }
 

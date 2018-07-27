@@ -22,11 +22,13 @@ use IO::Uncompress::AnyUncompress qw(anyuncompress $AnyUncompressError) ;
 use File::Copy qw/copy/;
 use Path::Class::File;
 use Data::Dumper;
+use Session::Token;
 
 use Kanku::Config;
 use Kanku::Util::VM;
 use Kanku::Util::VM::Image;
 use Kanku::Util::IPTables;
+
 
 with 'Kanku::Roles::Handler';
 
@@ -117,6 +119,13 @@ has installation => (
   isa     => 'ArrayRef',
   lazy    => 1,
   default => sub { [] }
+);
+
+has pwrand => (
+  is      => 'rw',
+  isa     => 'HashRef',
+  lazy    => 1,
+  default => sub { {} }
 );
 
 sub distributable { 1 };
@@ -271,6 +280,8 @@ sub _prepare_vm_via_console {
 
   $con->login();
 
+  $self->_randomize_passwords($con) if keys %{$self->pwrand};
+
   my $ip;
   my %opts = ();
 
@@ -311,6 +322,7 @@ sub _prepare_vm_via_console {
     }
 
   }
+
   if ( $self->wait_for_systemd ) {
     $logger->info("Waiting for system to come up!");
     $con->cmd(
@@ -319,6 +331,24 @@ sub _prepare_vm_via_console {
   }
 
   $con->logout();
+}
+
+sub _randomize_passwords {
+  my ($self, $con) = @_;
+  my $ctx  = $self->job()->context();
+  $ctx->{pwrand} = {};
+
+  $ctx->{encrypt_pwrand} = $self->pwrand->{recipients} if $self->pwrand->{recipients};
+
+  for my $user (@{$self->pwrand->{users} || []}) {
+    my $pw_length = $self->pwrand->{pw_length} || 16;
+    $self->logger->info("Setting randomized password for user: $user, lenght: $pw_length");
+    my $pw = Session::Token->new(length => $pw_length)->get;
+    $self->logger->trace("  -- New password for user $user: '$pw'");
+    # keep first character blank to hide from history
+    $con->cmd(" echo -en \"$pw\\n$pw\\n\"|passwd $user");
+    $ctx->{pwrand}->{$user} = $pw;
+  }
 }
 
 sub _setup_9p {
@@ -443,6 +473,15 @@ Here is an example how to configure the module in your jobs file or KankuFile
         -
           expect: Next Step
           send_ctrl_c: 1
+      pwrand:                   # create randomized password
+        length: 16              # password length (default: 16 characters)
+        user: 			# list of users to
+          - root
+          - kanku
+        recipients:
+          - fschreiner@suse.de  # list of recipients to encrypt for
+                                # if not specified, clear text password will
+                                # be stored
 
 =head1 DESCRIPTION
 

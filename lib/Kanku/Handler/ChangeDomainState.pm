@@ -58,8 +58,8 @@ sub prepare {
     $self->domain_name($ctx->{domain_name});
     $msg = "Set domain_name from context to '".$self->domain_name."'";
   }
-  $self->login_user($ctx->{login_user})   if ( ! $self->login_user  && $ctx->{login_user});
-  $self->login_pass($ctx->{login_pass})   if ( ! $self->login_pass  && $ctx->{login_pass});
+
+  $self->evaluate_console_credentials;
 
   return {
     code    => 0,

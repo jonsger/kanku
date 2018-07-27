@@ -74,6 +74,19 @@ sub finalize {
 
 }
 
+sub evaluate_console_credentials {
+  my ($self) = @_;
+  my $ctx  = $self->job()->context();
+
+  $self->domain_name($ctx->{domain_name}) if ( ! $self->domain_name && $ctx->{domain_name});
+  $self->login_user($ctx->{login_user})   if ( ! $self->login_user  && $ctx->{login_user});
+  $self->login_pass($ctx->{login_pass})   if ( ! $self->login_pass  && $ctx->{login_pass});
+
+  # prefer randomized password
+  $self->login_pass($ctx->{pwrand}->{$self->login_user})
+    if $ctx->{pwrand}->{$self->login_user};
+
+}
 
 1;
 

@@ -19,6 +19,7 @@ package Kanku::Job;
 use Moose;
 use Data::Dumper;
 use JSON::XS;
+use Kanku::GPG;
 with 'Kanku::Roles::Serialize';
 with 'Kanku::Roles::Logger';
 
@@ -42,15 +43,36 @@ has 'json_keys' => (
   isa     => 'ArrayRef',
   default => sub {[qw/
     name state result workerinfo skipped scheduled triggered creation_time
-    start_time end_time last_modified id context masterinfo trigger_user
+    start_time end_time last_modified id context masterinfo trigger_user pwrand
   /
   ]});
+
+sub pwrand {
+  my ($self,$content) = @_;
+  $self->context->{pwrand} = $content if $content;
+
+  my $pwrand =(ref $self->context->{pwrand})
+    ? encode_json($self->context->{pwrand})
+    : $self->context->{pwrand};
+
+  if ($self->context->{encrypt_pwrand}) {
+    # Avoid double encryption
+    if ($self->context->{pwrand} !~ /-BEGIN PGP MESSAGE-/) {
+      my $gpg = Kanku::GPG->new(
+        message    => $pwrand,
+        recipients => $self->context->{encrypt_pwrand},
+      );
+      $pwrand = $gpg->encrypt;
+    }
+  }
+  return $pwrand;
+}
 
 sub update_db {
   my $self = shift;
   my $ds = { last_modified => time() };
 
-  foreach my $key ( qw/id name state start_time end_time result workerinfo masterinfo trigger_user/ ) {
+  foreach my $key ( qw/id name state start_time end_time result workerinfo masterinfo trigger_user pwrand/ ) {
     my $value = $self->$key();
     $ds->{$key} = $value if ( $value );
   }
