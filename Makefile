@@ -49,7 +49,7 @@ configs:
 		cp -av ./etc/$$i $(DESTDIR)/etc/kanku/$$i ;\
 	done
 
-install_full_dirs: lib
+install_full_dirs: lib dbfiles
 	install -m 755 bin/network-setup.pl $(DESTDIR)/usr/lib/kanku/network-setup.pl
 	install -m 755 bin/kanku $(DESTDIR)/usr/bin/kanku
 	install -m 755 bin/kanku-app.psgi $(DESTDIR)/usr/lib/kanku/kanku-app.psgi
@@ -57,10 +57,12 @@ install_full_dirs: lib
 	install -m 755 sbin/kanku-dispatcher $(DESTDIR)/usr/sbin/kanku-dispatcher
 	install -m 755 sbin/kanku-scheduler $(DESTDIR)/usr/sbin/kanku-scheduler
 	install -m 755 sbin/kanku-triggerd $(DESTDIR)/usr/sbin/kanku-triggerd
-	cp -av share/migrations $(DESTDIR)/usr/share/kanku/
-	cp -av share/fixtures $(DESTDIR)/usr/share/kanku/
 	cp -av views  $(DESTDIR)/usr/share/kanku/
 	cp -av public $(DESTDIR)/usr/share/kanku/
+
+dbfiles:
+	cp -av share/migrations $(DESTDIR)/usr/share/kanku/
+	cp -av share/fixtures $(DESTDIR)/usr/share/kanku/
 
 lib:
 	cp -av ./lib/ $(DESTDIR)/usr/lib/kanku/
