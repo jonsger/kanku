@@ -36,7 +36,7 @@ Kanku::Config->initialize();
 # Functions
 ################################################################################
 sub app_opts {
-  return 'app'=> app, 'current_user' => logged_in_user, 'schema' => schema;
+  return 'app'=> app, 'current_user' => ( logged_in_user || {} ), 'schema' => schema;
 }
 
 ################################################################################
