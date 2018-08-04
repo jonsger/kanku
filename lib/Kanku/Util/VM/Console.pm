@@ -21,6 +21,7 @@ use Expect;
 use Data::Dumper;
 use Kanku::Config;
 use Path::Class qw/file/;
+use Carp;
 
 with 'Kanku::Roles::Logger';
 
@@ -257,6 +258,8 @@ sub cmd {
           ],
       );
 
+      $logger->debug("result1: ".Dumper(\@result));
+
       die "Error while executing command '$cmd' (timemout: $timeout): $result[1]" if $result[1];
 
       $exp->send("echo \$?\n");
@@ -278,11 +281,61 @@ sub cmd {
         ]
       );
 
+      $logger->debug("result2: ".Dumper(\@result));
       die "Error while getting return value of command '$cmd' (timeout $timeout): ".$result[1] if $result[1];
   }
 
   return $results;
 }
+
+=head1 get_ipaddress - get ip address for given interface
+
+Both arguments "interface" and "timeout" are mandatory
+
+  $con->get_ipaddress(interface=>'eth0', timeout=>60);
+
+=cut
+
+sub get_ipaddress {
+  my ($self, %opts) = @_;
+  my $logger    = $self->logger;
+  my $do_logout = 0;
+
+  croak 'Please specify an interface!' unless $opts{interface};
+  croak 'Please specify a timeout!' unless $opts{timeout};
+
+  if (! $self->user_is_logged_in ) {
+    $do_logout = 1;
+    $self->login;
+  }
+
+  my $wait = $opts{timeout};
+
+  while ( $wait > 0) {
+    my $result = $self->cmd("LANG=C ip addr show $opts{interface} 2>&1");
+    my $ipaddress  = undef;
+
+    $logger->debug("  -- Output:\n".Dumper($result));
+
+    map { $ipaddress = $1 if m/^\s+inet\s+([0-9\.]+)\// } split /\n/, $result->[0];
+
+    if ($ipaddress) {
+      return $ipaddress
+    } else {
+      $logger->debug("Could not get ip address form interface $opts{interface}.");
+      $logger->debug("Waiting another $wait seconds for network to come up");
+      $wait--;
+      sleep 1;
+    }
+  }
+
+  $self->logout;
+
+  croak "Could not get ip address for interface $opts{interface} within "
+      . "$opts{timeout} seconds.";
+
+}
+
 
 __PACKAGE__->meta->make_immutable;
 

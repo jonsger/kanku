@@ -139,6 +139,9 @@ sub prepare {
   $self->login_pass($ctx->{login_pass})   if ( ! $self->login_pass  && $ctx->{login_pass});
   $self->cache_dir($ctx->{cache_dir})     if ($ctx->{cache_dir});
 
+  $ctx->{management_interface} = $self->management_interface
+    if $self->management_interface;
+
   return {
     code    => 0,
     message => "Nothing todo"

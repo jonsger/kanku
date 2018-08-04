@@ -569,41 +569,14 @@ sub state {
 sub _get_ip_from_console {
   my $self        = shift;
   my $interface   = $self->management_interface() || 'eth0';
+  my $con         = $self->console;
 
-
-  my $con  = $self->console;
-
-  if (! $con->user_is_logged_in ) {
-    $con->login;
-  }
-
-  my $result = $con->cmd("LANG=C ip addr show $interface");
-
-  my $wait = $self->wait_for_network;
-
-  while ( $wait > 0) {
-
-    my $ipaddress  = undef;
-
-    map { if ( $_ =~ /^\s+inet\s+([0-9\.]+)\// ) { $ipaddress = $1 } } split(/\n/,$result->[0]);
-
-    if ($ipaddress) {
-      $self->ipaddress($ipaddress);
-      last;
-    } else {
-      $self->logger->debug("Could not get ip address form interface $interface.");
-      $self->logger->debug("Waiting another $wait seconds for network to come up");
-      $wait--;
-      sleep 1;
-    }
-  }
-
-  $con->logout;
-
-  if (! $self->ipaddress) {
-    die "Could not get ip address for interface $interface within "
-      . $self->wait_for_network." seconds.";
-  }
+  $self->ipaddress(
+    $con->get_ipaddress(
+      interface => $interface,
+      timeout => $self->wait_for_network
+    )
+  );
 
   return $self->ipaddress();
 }

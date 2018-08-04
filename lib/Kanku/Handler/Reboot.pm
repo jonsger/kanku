@@ -31,7 +31,8 @@ has [qw/
 /] => (is => 'rw',isa=>'Str');
 # TODO: implement wait_for_*
 has [qw/wait_for_network wait_for_console/] => (is => 'rw',isa=>'Bool',lazy=>1,default=>1);
-#has [qw/timeout/] => (is => 'rw',isa=>'Int',lazy=>1,default=>600);
+has [qw/allow_ip_change/] => (is => 'rw',isa=>'Bool',lazy=>1,default=>0);
+has [qw/timeout/] => (is => 'rw',isa=>'Int',lazy=>1,default=>600);
 
 has gui_config => (
   is => 'ro',
@@ -73,10 +74,9 @@ sub prepare {
 }
 
 sub execute {
-  my $self = shift;
-  my $ctx  = $self->job()->context();
-
-  my $cfg  = Kanku::Config->instance()->config();
+  my ($self) = @_;
+  my $ctx    = $self->job()->context();
+  my $cfg    = Kanku::Config->instance()->config();
 
   my $vm = Kanku::Util::VM->new(
       domain_name => $self->domain_name,
@@ -94,9 +94,17 @@ sub execute {
     $con->login();
     $con->logout();
   }
+
+  if ($self->allow_ip_change) {
+    $ctx->{ipaddress} = $con->get_ipaddress(
+      interface => $ctx->{management_interface},
+      timeout   => $self->timeout,
+    );
+  }
+
   return {
     code    => 0,
-    message => "Rebooted domain " . $self->domain_name ." successfully"
+    message => 'Rebooted domain '. $self->domain_name .' successfully',
   };
 }
 
