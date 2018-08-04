@@ -301,6 +301,10 @@ sub get_ipaddress {
   my $logger    = $self->logger;
   my $do_logout = 0;
 
+  my $save_timeout = $self->cmd_timeout;
+ 
+  $self->cmd_timeout(60);
+
   croak 'Please specify an interface!' unless $opts{interface};
   croak 'Please specify a timeout!' unless $opts{timeout};
 
@@ -310,17 +314,17 @@ sub get_ipaddress {
   }
 
   my $wait = $opts{timeout};
+  my $ipaddress  = undef;
 
   while ( $wait > 0) {
     my $result = $self->cmd("LANG=C ip addr show $opts{interface} 2>&1");
-    my $ipaddress  = undef;
 
     $logger->debug("  -- Output:\n".Dumper($result));
 
     map { $ipaddress = $1 if m/^\s+inet\s+([0-9\.]+)\// } split /\n/, $result->[0];
 
     if ($ipaddress) {
-      return $ipaddress
+      last
     } else {
       $logger->debug("Could not get ip address form interface $opts{interface}.");
       $logger->debug("Waiting another $wait seconds for network to come up");
@@ -331,9 +335,14 @@ sub get_ipaddress {
 
   $self->logout;
 
-  croak "Could not get ip address for interface $opts{interface} within "
+  if (! $ipaddress) { 
+    croak "Could not get ip address for interface $opts{interface} within "
       . "$opts{timeout} seconds.";
+  }
 
+  $self->cmd_timeout($save_timeout);
+
+  return $ipaddress
 }
 
 
