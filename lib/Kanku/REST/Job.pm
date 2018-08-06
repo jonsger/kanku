@@ -48,6 +48,9 @@ sub list {
         push @{$data->{comments}}, $comment->TO_JSON;
       }
     }
+
+    $data->{pwrand} = $ds->pwrand if $self->has_role('Admin');
+
     push @{$rv}, $data;
   }
 

@@ -210,6 +210,7 @@ function update_job_history (data) {
                         workerhost    : winfo[0],
                         comments_icon : comments_icon,
                         comments_as_html : comments_as_html,
+                        pwrand           : this.pwrand,
                       }
       );
       $("#job_history").append(rendered);
