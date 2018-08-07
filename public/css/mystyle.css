@@ -20,10 +20,18 @@
     cursor: pointer;
 }
 
-.state-row {
+.state-row, .event-row {
   margin-top: 20px;
   margin-bottom: 20px;
   text-align: center;
+}
+
+.notify-cb {
+  text-align: center;
+}
+
+.notify-hdr {
+  font-weight: bold;
 }
 
 .result-row {
@@ -33,7 +41,8 @@
 }
 
 .event-card {
-  padding-bottom: 50px;
+  padding-bottom: 10px;
+  margin-bottom: 5px;
   border-bottom: 1px solid grey;
 }
 
@@ -86,5 +95,9 @@ pre {
     border-radius: .25rem;
     position: relative;
     padding: .75rem 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.guest-card {
     margin-bottom: 1rem;
 }

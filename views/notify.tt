@@ -1,184 +1,193 @@
 <div class="jumbotron text-center">
  <div id=notify_settings>
   <h2>Test Notifications</h2>
-  <a href="#" class="btn btn-success btn-lg active" role="button" aria-pressed="true" id=trigger_notify_succeed>Success Notify</a>
-  <a href="#" class="btn btn-warning  btn-lg active" role="button" aria-pressed="true" id=trigger_notify_warning>Warning Notify</a>
-  <a href="#" class="btn btn-danger  btn-lg active" role="button" aria-pressed="true" id=trigger_notify_failed>Failed Notify</a>
+  <a href="#" class="btn btn-success active" role="button" aria-pressed="true" id=trigger_notify_succeed>Success Notify</a>
+  <a href="#" class="btn btn-warning active" role="button" aria-pressed="true" id=trigger_notify_warning>Warning Notify</a>
+  <a href="#" class="btn btn-danger  active" role="button" aria-pressed="true" id=trigger_notify_failed>Failed Notify</a>
  </div>
 </div>
 <form id=filters>
-<div class="form-group row">
-  <div class="col-xs-2">
-    <label for="notification_delay">Show for (seconds)</label>
-    <input class="form-control" id="notification_timeout" type="text" value=20>
+  <div class="row">
+    <div class="col-lg-2">
+       <label for="notification_delay">Show for (seconds)</label>
+    </div>
+    <div class="col-lg-10">
+      <input id="notification_timeout" type="text" value=20>
+    </div>
   </div>
-  <div class="col-xs-10">
-  </div>
-</div>
-<h2>Filters</h2>
+
+  <h4>Filters</h4>
 [% IF roles.Admin %]
-<div class="card event-card" id="admin_events">
-  <h3 class=card-header><input type=checkbox id="user_change-enable" value=1> User Events</h3>
-  <div class="card-body">
-    <div>
-      <h4>Event Types:</h4>
+  <div class="card event-card" id="admin_events">
+    <div class=card-header>
       <div class="row">
-        <div class="col-lg-6">
-          <div class="input-group">
+        <div class="col-lg-1 notify-cb">
+          <input type=checkbox id="user_change-enable" value=1> 
+        </div>
+        <div class="col-lg-11 notify-hdr">
+          User Events
+        </div>
+      </div>
+    </div>
+      <div class="card-body">
+        <h6>Event Types:</h6>
+        <div class="row event-row">
+          <div class="col-lg-1">
             <span class="input-group-addon">
               <input type="checkbox" aria-label="Checkbox for following text input" id="user_change-created">
             </span>
+          </div>
+          <div class="col-lg-5">
             <span class="form-control"><strong>User Created</strong></span>
           </div>
-        </div>
-        <div class="col-lg-6">
-          <div class="input-group">
+          <div class="col-lg-1">
             <span class="input-group-addon">
               <input type="checkbox" aria-label="Checkbox for following text input" id="user_change-requested_roles">
             </span>
+          </div>
+          <div class="col-lg-5">
             <span class="form-control"><strong>User requested a role</strong></span>
           </div>
         </div>
       </div>
     </div>
-  </div>
-</div>
 [% END %]
 [% IF roles.User || roles.Admin %]
-<div class="card event-card" id=daemon_events>
-  <h3 class=card-header><input type=checkbox id="daemon_change-enable" value=1> Daemon Events</h3>
-  <div class="card-body">
-    <div>
-      <h4>Event Types:</h4>
-      <div class="row">
-        <div class="col-lg-6">
-          <div class="input-group">
-            <span class="input-group-addon">
-              <input type="checkbox" aria-label="Daemon Start" id="daemon_change-start">
-            </span>
-            <span class="form-control"><strong>Daemon Start</strong></span>
-          </div>
-        </div>
-        <div class="col-lg-6">
-          <div class="input-group">
-            <span class="input-group-addon">
-              <input type="checkbox" aria-label="Daemon Stop" id="daemon_change-stop">
-            </span>
-            <span class="form-control"><strong>Daemon Stop</strong></span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+    <div class="card event-card" id=daemon_events>
+      <div class=card-header>
+        <div class="row">
+          <div class="col-lg-1 notify-cb">
+            <input type=checkbox id="daemon_change-enable" value=1>
+         </div>
+        <div class="col-lg-11 notify-hdr">
+           Daemon Events
+         </div>
+       </div>
+     </div>
+     <div class="card-body">
+       <h6>Event Types:</h6>
+       <div class="row event-row">
+         <div class="col-lg-1">
+           <span class="input-group-addon">
+             <input type="checkbox" aria-label="Daemon Start" id="daemon_change-start">
+           </span>
+         </div>
+         <div class="col-lg-5">
+           <span class="form-control"><strong>Daemon Start</strong></span>
+         </div>
+         <div class="col-lg-1">
+           <span class="input-group-addon">
+             <input type="checkbox" aria-label="Daemon Stop" id="daemon_change-stop">
+           </span>
+         </div>
+         <div class="col-lg-5">
+           <span class="form-control"><strong>Daemon Stop</strong></span>
+         </div>
+       </div>
+     </div>
+   </div>
 [% END %]
 [% IF roles.Guest || roles.User || roles.Admin %]
-<div class="card event-card" id=job_events>
-  <h3 class=card-header><input type=checkbox id=user_change value=1> Job Events</h3>
-  <div class="card-body">
-    <div>
-      <h4>Event Types: </h4>
+  <div class="card event-card" id=job_events>
+    <div class=card-header>
       <div class="row">
-        <div class="col-lg-6">
-          <div class="input-group">
-            <span class="input-group-addon">
-              <input type="checkbox" aria-label="Job started" id="job_change-starting">
-            </span>
-            <span class="form-control"><strong>Job started</strong></span>
-          </div>
+          <div class="col-lg-1 notify-cb">
+          <input type=checkbox id=user_change value=1> 
         </div>
-        <div class="col-lg-6">
-          <div class="input-group">
-            <span class="input-group-addon">
-              <input type="checkbox" aria-label="Job finished" id="job_change-finished">
-            </span>
-            <span class="form-control"><strong>Job finished</strong></span>
-          </div>
+        <div class="col-lg-11 notify-hdr">
+          Job Events
         </div>
       </div>
-      <h4>Result states</h4>
+    </div>
+    <div class="card-body">
+      <h6>Event Types: </h6>
+      <div class="row event-row">
+        <div class="col-lg-1">
+          <input type="checkbox" aria-label="Job started" id="job_change-starting">
+        </div>
+        <div class="col-lg-5">
+          <span class="form-control"><strong>Job started</strong></span>
+        </div>
+        <div class="col-lg-1">
+          <input type="checkbox" aria-label="Job finished" id="job_change-finished">
+        </div>
+        <div class="col-lg-5">
+          <span class="form-control"><strong>Job finished</strong></span>
+        </div>
+      </div>
+      <h6>Result states</h6>
       <div class="row state-row">
-        <div class="col-lg-4">
-          <div class="input-group">
-            <span class="input-group-addon">
-              <input type="checkbox" aria-label="Job finished" id="job_change-finished-succeed">
-            </span>
-            <span class="form-control alert-success"><strong>Succeed</strong></span>
-          </div>
+        <div class="col-lg-1">
+          <input type="checkbox" aria-label="Job finished" id="job_change-finished-succeed">
         </div>
-        <div class="col-lg-4">
-          <div class="input-group">
-            <span class="input-group-addon">
-              <input type="checkbox" aria-label="Job finished - failed" id="job_change-finished-failed">
-            </span>
-            <span class="form-control alert-danger"><strong>Failed</strong></span>
-          </div>
+        <div class="col-lg-3">
+          <span class="form-control alert-success"><strong>Succeed</strong></span>
         </div>
-        <div class="col-lg-4">
-          <div class="input-group">
-            <span class="input-group-addon">
-              <input type="checkbox" aria-label="Job finished - skipped" id="job_change-finished-skipped">
-            </span>
-            <span class="form-control alert-warning"><strong>Skipped</strong></span>
-          </div>
+        <div class="col-lg-1">
+          <input type="checkbox" aria-label="Job finished - failed" id="job_change-finished-failed">
+        </div>
+        <div class="col-lg-3">
+          <span class="form-control alert-danger"><strong>Failed</strong></span>
+        </div>
+        <div class="col-lg-1">
+          <input type="checkbox" aria-label="Job finished - skipped" id="job_change-finished-skipped">
+        </div>
+        <div class="col-lg-3">
+          <span class="form-control alert-warning"><strong>Skipped</strong></span>
         </div>
       </div>
     </div>
   </div>
-</div>
-<div class="card event-card" id=task_events>
-  <h3 class=card-header><input type=checkbox id=task_change-enable value=1> Task Events</h3>
-  <div class="card-body">
-    <div>
-      <h4>Event Types: </h4>
+  <div class="card event-card" id=task_events>
+    <div class=card-header>
       <div class="row">
-        <div class="col-lg-6">
-          <div class="input-group">
-            <span class="input-group-addon">
-              <input type="checkbox" aria-label="" id="task_change-starting">
-            </span>
-            <span class="form-control"><strong>Task started</strong></span>
-          </div>
+          <div class="col-lg-1 notify-cb">
+          <input type=checkbox id=task_change-enable value=1>
         </div>
-        <div class="col-lg-6">
-          <div class="input-group">
-            <span class="input-group-addon">
-              <input type="checkbox" aria-label="" id="task_change-finished">
-            </span>
-            <span class="form-control"><strong>Task finished</strong></span>
-          </div>
+        <div class="col-lg-11 notify-hdr">
+          Task Events
         </div>
       </div>
-      <h4>Result states</h4>
+    </div>
+    <div class="card-body">
+      <h6>Event Types: </h6>
+      <div class="row event-row">
+        <div class="col-lg-1">
+          <input type="checkbox" aria-label="" id="task_change-starting">
+        </div>
+        <div class="col-lg-5">
+          <span class="form-control"><strong>Task started</strong></span>
+        </div>
+        <div class="col-lg-1">
+          <input type="checkbox" aria-label="" id="task_change-finished">
+        </div>
+        <div class="col-lg-5">
+          <span class="form-control"><strong>Task finished</strong></span>
+        </div>
+      </div>
+      <h6>Result states</h6>
       <div class="row state-row">
-        <div class="col-lg-4">
-          <div class="input-group">
-            <span class="input-group-addon">
-              <input type="checkbox" aria-label="Job finished" id="task_change-finished-succeed">
-            </span>
-            <span class="form-control alert-success"><strong>Succeed</strong></span>
-          </div>
+        <div class="col-lg-1">
+          <input type="checkbox" aria-label="Job finished" id="task_change-finished-succeed">
         </div>
-        <div class="col-lg-4">
-          <div class="input-group">
-            <span class="input-group-addon">
-              <input type="checkbox" aria-label="Job finished - failed" id="task_change-finished-failed">
-            </span>
-            <span class="form-control alert-danger"><strong>Failed</strong></span>
-          </div>
+        <div class="col-lg-3">
+          <span class="form-control alert-success"><strong>Succeed</strong></span>
         </div>
-        <div class="col-lg-4">
-          <div class="input-group">
-            <span class="input-group-addon">
-              <input type="checkbox" aria-label="Job finished - skipped" id="task_change-finished-skipped">
-            </span>
-            <span class="form-control alert-warning"><strong>Skipped</strong></span>
-          </div>
+        <div class="col-lg-1">
+          <input type="checkbox" aria-label="Job finished - failed" id="task_change-finished-failed">
+        </div>
+        <div class="col-lg-3">
+          <span class="form-control alert-danger"><strong>Failed</strong></span>
+        </div>
+        <div class="col-lg-1">
+          <input type="checkbox" aria-label="Job finished - skipped" id="task_change-finished-skipped">
+        </div>
+        <div class="col-lg-3">
+          <span class="form-control alert-warning"><strong>Skipped</strong></span>
         </div>
       </div>
     </div>
   </div>
-</div>
 [% END %]
 </form>
 <script src="[% request.uri_base %]/javascripts/notify.js"></script>

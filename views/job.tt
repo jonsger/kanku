@@ -7,13 +7,9 @@
 
 <script id="job_panel" type="x-tmpl-mustache">
 
-<div class="card" id="job_panel{{ id }}">
+<div class="card" id="job_panel{{ id }}" style="margin-bottom:5px;">
   <div class="card-header" id='jp_header_{{ id }}' onClick=toggle_job_panel_body("{{ id }}")>
-    <div class='row'>
-      <div class="col-md-12">
         <span class="badge badge-secondary">{{ id }}</span>
-      </div>
-    </div>
   </div>
   <div class="card-body" style='display:none' id="jp_body_{{ id }}">
       <form role=form id="job_args_{{ name }}">
@@ -23,10 +19,10 @@
       </form>
   </div>
   <div class="card-footer">
-    <div class="btn btn-primary" onClick="schedule_job('{{ id }}')">
+    <div class="btn btn-success btn-sm" onClick="schedule_job('{{ id }}')">
       Trigger Job
     </div>
-    <div class="btn btn-primary" onClick="restore_defaults('{{ id }}')">
+    <div class="btn btn-primary btn-sm" onClick="restore_defaults('{{ id }}')">
       Restore Defaults
     </div>
   </div>
