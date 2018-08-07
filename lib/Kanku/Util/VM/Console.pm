@@ -303,7 +303,7 @@ sub get_ipaddress {
 
   my $save_timeout = $self->cmd_timeout;
  
-  $self->cmd_timeout(60);
+  $self->cmd_timeout(600);
 
   croak 'Please specify an interface!' unless $opts{interface};
   croak 'Please specify a timeout!' unless $opts{timeout};
