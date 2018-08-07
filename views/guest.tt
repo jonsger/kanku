@@ -5,23 +5,21 @@
 
 <script id="guest_panel" type="x-tmpl-mustache">
 
-<div class="panel panel-default panel-{{ guest_class }}" id="guest_panel{{ id }}">
-  <div class="panel-heading" id='gp_header_{{ id }}' onClick=toggle_guest_panel_body("{{ id }}")>
+<div class="card" id="guest_panel{{ id }}">
+  <div class="card-header alert alert-{{ guest_class }}" id='gp_header_{{ id }}' onClick=toggle_guest_panel_body("{{ id }}")>
     <div class='row'>
       <div class="col-md-10">
-        <span class="badge">{{ id }} ({{ host  }})</span>
+        <span class="badge badge-{{ guest_class }}">{{ id }} ({{ host  }})</span>
       </div>
       <div class="col-md-2" id="guest_action_div_{{ id }}">
-	<a class="pull-right" href="[% request.uri_base %]/guest#{{ id }}"><span class="glyphicon glyphicon-link"/></a>
+	<a class="float-right" href="[% request.uri_base %]/guest#{{ id }}">      <i class="fas fa-link"/></a>
 	[% IF roles.Admin %]
-        <a class="pull-right" href="#" onClick=trigger_remove_domain("{{ id }}")><span class="far fa-trash-alt"/></a>
+        <a class="float-right" href="#" onClick=trigger_remove_domain("{{ id }}")><i class="far fa-trash-alt"/></a>
         [% END %]
       </div>
     </div>
   </div>
-  <div class="panel-body" style='display:none;padding:5px;' id="gp_body_{{ id }}">
-  </div>
-  <div class="panel-footer">
+  <div class="card-body" style='display:none;padding:5px;' id="gp_body_{{ id }}">
   </div>
 </div>
 
@@ -35,14 +33,14 @@
 
 <script id="iface_line" type="x-tmpl-mustache">
   <div>
-    <div class="label label-primary">{{ name }}</div>
-    <div class="label label-primary">{{ hwaddr }}</div>
-    <div class="label label-primary" id="addr_for_{{ domain_name }}_{{ name }}"><!-- placeholder for next line --></div>
+    <div class="badge badge-primary">{{ name }}</div>
+    <div class="badge badge-primary">{{ hwaddr }}</div>
+    <div class="badge badge-primary" id="addr_for_{{ domain_name }}_{{ name }}"><!-- placeholder for next line --></div>
   </div>
 </script>
 
 <script id="addr_line" type="x-tmpl-mustache">
-    {{ addr }}<span class="badge"> / {{ prefix }}</span>
+    {{ addr }}<span class="badge badge-secondary"> / {{ prefix }}</span>
 </script>
 
 <!-- vim: set ft=html -->

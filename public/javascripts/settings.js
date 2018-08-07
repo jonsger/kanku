@@ -14,7 +14,7 @@ var updateMessageBar = function (p, t, s) {
 
 Vue.component('role-checkbox', {
   props: ['name', 'checked', 'value'],
-  template: '<div class="form-group">'
+  template: '<div class="form-group row">'
             + '<label class="col-sm-2 control-label">'
             + '{{ name }} '
             + '</label>'

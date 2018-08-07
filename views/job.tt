@@ -1,30 +1,28 @@
 <h1>Job</h1>
 
-<div id=schedule_result class="alert" style="display:none">
-</div>
+<div id="schedule_result" class="alert" style="display:none;"></div>
+<div id="job_list"></div>
 
-<div id=job_list>
-
-</div>
+<!-- TEMPLATES -->
 
 <script id="job_panel" type="x-tmpl-mustache">
 
-<div class="panel panel-default" id="job_panel{{ id }}">
-  <div class="panel-heading" id='jp_header_{{ id }}' onClick=toggle_job_panel_body("{{ id }}")>
+<div class="card" id="job_panel{{ id }}">
+  <div class="card-header" id='jp_header_{{ id }}' onClick=toggle_job_panel_body("{{ id }}")>
     <div class='row'>
       <div class="col-md-12">
-        <span class="badge">{{ id }}</span>
+        <span class="badge badge-secondary">{{ id }}</span>
       </div>
     </div>
   </div>
-  <div class="panel-body" style='display:none' id="jp_body_{{ id }}">
+  <div class="card-body" style='display:none' id="jp_body_{{ id }}">
       <form role=form id="job_args_{{ name }}">
 {{#task_list}}
 {{{.}}}
 {{/task_list}}
       </form>
   </div>
-  <div class="panel-footer">
+  <div class="card-footer">
     <div class="btn btn-primary" onClick="schedule_job('{{ id }}')">
       Trigger Job
     </div>
@@ -37,8 +35,9 @@
 </script>
 
 <script id="template_module_header" type="x-tmpl-mustache">
+
 <div class=job_task_list id=job_{{ name }}>
-  <h4><span class="label label-default" style="display:block;">{{ use_module }}</span></h4>
+  <h4><span class="badge badge-secondary" style="display:block;">{{ use_module }}</span></h4>
   <input type=hidden name="use_module" value="{{ use_module }}">
 {{#task_args}}
 {{{.}}}

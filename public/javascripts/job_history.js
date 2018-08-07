@@ -26,39 +26,27 @@ alert_map['dispatching']  = 'warning';
 function save_job_comment (job_id) {
 
   var comment = $("#new_comment_text_"+job_id).val();
-  console.log("job_id   : " + job_id);
-  console.log("text     : " + comment);
-  console.log("user_id  : " + user_id);
   var comment =JSON.stringify(
     {
       "job_id"   : job_id,
       "message"  : comment
     }
   );
-  $.post(
-    uri_base + "/rest/job/comment/" + job_id + ".json",
-    comment
-  );
-
-  update_comments(job_id);
+  var url = uri_base + "/rest/job/comment/" + job_id + ".json";
+  axios.post(url, comment).then(function () { update_comments(job_id); });
 }
 
 function delete_job_comment (comment_id, job_id) {
-  console.log("comment_id: "+comment_id);
-
-  $.ajax({
-    type  : 'DELETE',
-    url   : uri_base + "/rest/job/comment/" + comment_id + ".json"
-  });
-
-  update_comments(job_id);
+  var url = uri_base + "/rest/job/comment/" + comment_id + ".json";
+  axios.delete(url).then(update_comments(job_id));
 }
 
 function start_edit_job_comment (comment_id, job_id) {
-  console.log("edit comment_id: "+comment_id);
+
   var org_comment = $("#job_comment_panel_body_"+comment_id).text();
+
   $("#job_comment_panel_body_"+comment_id).empty();
-  console.log("org_comment:" + org_comment);
+
   $("#job_comment_panel_body_"+comment_id).append(
     "<textarea id='job_comment_edit_textarea_"+comment_id+"' style='width:100%;'>"
      + $.trim(org_comment) +
@@ -71,35 +59,32 @@ function start_edit_job_comment (comment_id, job_id) {
      "</button>"
   );
 }
+
 function finish_edit_job_comment (comment_id, job_id) {
-
-  $.ajax({
-    type  : 'PUT',
-    url   : uri_base + "/rest/job/comment/" + comment_id + ".json",
-    data  : {
-       message : $("#job_comment_edit_textarea_"+comment_id).val()
-    }
-  });
-
-  update_comments(job_id);
+  var url  = uri_base + "/rest/job/comment/" + comment_id + ".json";
+  var data = {message : $("#job_comment_edit_textarea_"+comment_id).val()};
+  axios.put(url, data).then(update_comments(job_id));
 }
 
 function update_comments (job_id) {
-  console.log("update_comments: "+job_id);
 
   $("#job_comment_body_"+job_id).empty();
 
-  $.get(
-    uri_base + "/rest/job/comments/"+job_id+".json",
-    function (data) {
-      console.log(data);
+  var url = uri_base + "/rest/job/comments/"+job_id+".json";  
+
+  axios.get(url).then(
+    function (xhr) {
+      var data = xhr.data;
       var comments_as_html = "";
+
       $.each(data.comments, function (idx, comment) {
-        console.log(comment);
+
         var show_mod = 0;
+
         if ( user_id == comment.user.id ) {
           show_mod = 1;
         }
+
         var rendered = Mustache.render(
           single_job_comment,
           {
@@ -121,8 +106,9 @@ function update_comments (job_id) {
   );
 }
 
-function update_job_history (data) {
+function update_job_history (xhr) {
 
+  var data = xhr.data;
   $("#job_history").empty();
 
   var rendered = Mustache.render(
@@ -174,11 +160,13 @@ function update_job_history (data) {
         if ( this.comments.length > 0 ) {
           comments_icon = 'fas';
           $.each(this.comments, function(idx, comment) {
-            console.log(comment);
+
             var show_mod = 0;
+
             if ( user_id == comment.user.id ) {
               show_mod = 1;
             }
+
             var rendered = Mustache.render(
                   single_job_comment,
                   {
@@ -219,7 +207,6 @@ function update_job_history (data) {
       });
       $("#jh_ph_link_"+this.id).click(function (ev) {
         var ev_id           = $(ev.currentTarget).attr('id');
-        console.log(ev_id);
         var job_history_id  = ev_id.replace('jh_ph_link_','');
 	toggle_job_result_body(job_history_id);
       });
@@ -227,15 +214,14 @@ function update_job_history (data) {
   );
 }
 
-function update_job_result_panel_body (data) {
-
+function update_job_result_panel_body (xhr) {
+  var data   = xhr.data;
   var job_id = data.id;
   var body   = $("#jbody_"+job_id);
 
   if ( data.result ) {
-    console.log("Data Result:"+data.result);
     var job_result = JSON.parse(data.result);
-    console.log("error_message:"+job_result.error_message);
+
     if (job_result.error_message) {
       var rendered = Mustache.render(
 	job_result_failed_template,
@@ -312,15 +298,9 @@ function toggle_job_result_body (job_history_id) {
 
   if ( css_display == "none" ) {
       element.css("display","block");
-      console.log("Reading job data");
       element.empty();
       var url = uri_base + "/rest/job/" + job_history_id + ".json";
-      console.log(url);
-      $.get(
-        url,
-        update_job_result_panel_body
-      );
-
+      axios.get(url).then(update_job_result_panel_body);
   } else {
       element.css("display","none");
   }
@@ -340,11 +320,8 @@ function toggle_subtask_result_body (subtask_id) {
 
 function get_job_history () {
   var get_append = $('form').serialize();
-
-  $.get(
-    uri_base + "/rest/jobs/list.json?" + get_append,
-    update_job_history
-  );
+  var url = uri_base + "/rest/jobs/list.json?" + get_append;
+  axios.get(url).then(update_job_history);
 }
 
 function change_page(page_counter) {

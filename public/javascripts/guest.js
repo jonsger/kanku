@@ -34,22 +34,21 @@ function trigger_remove_domain (domain_name) {
 
 $( document ).ready(
   function() {
-var guest_panel_template     = $("#guest_panel").html();
-Mustache.parse(guest_panel_template);
+    var guest_panel_template     = $("#guest_panel").html();
+    Mustache.parse(guest_panel_template);
 
-var iface_line_template = $("#iface_line").html();
-Mustache.parse(iface_line_template);
+    var iface_line_template = $("#iface_line").html();
+    Mustache.parse(iface_line_template);
 
-var addr_line_template = $("#addr_line").html();
-Mustache.parse(addr_line_template);
+    var addr_line_template = $("#addr_line").html();
+    Mustache.parse(addr_line_template);
 
-var href_guest = $("#href_guest").html();
-Mustache.parse(href_guest);
+    var href_guest = $("#href_guest").html();
+    Mustache.parse(href_guest);
 
-
-    $.get(
-      uri_base + '/rest/guest/list.json',
-      function (gc) {
+    var url = uri_base + '/rest/guest/list.json';
+    axios.get(url).then(function (xhr) {
+        var gc     = xhr.data;
         var guests = gc;
         var gl = Object.keys(gc.guest_list).sort();
         var we = gc.errors;
@@ -170,13 +169,6 @@ Mustache.parse(href_guest);
                 var element = $('#gp_body_' + vm );
                 element.css("display","block");
             }
-          }
-        );
-
-
-      }
-    );
-
-  }
-);
-
+          });
+    });
+});

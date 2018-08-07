@@ -93,11 +93,17 @@ sub update {
 
 sub remove {
   my ($self, $user_id) = @_;
+  if (!$user_id) {
+    return {
+      'state'         => 1,
+      'message' => "No user_id given!",
+    };
+  }
   my $user = $self->schema->resultset('User')->find({id => $user_id});
   if (! $user ) {
     return {
       'state'         => 1,
-      'message' => "User with id $user_id not found!",
+      'message' => "User with id '$user_id' not found!",
     };
   }
 

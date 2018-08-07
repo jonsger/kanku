@@ -1,6 +1,5 @@
-
 // prepare templates from job.tt
-//
+
 var header_template     = $("#job_panel").html();
 Mustache.parse(header_template);
 
@@ -18,8 +17,6 @@ var template_formgroup = {
 Mustache.parse(template_formgroup.text);
 Mustache.parse(template_formgroup.checkbox);
 
-
-
 prefix_domain_name = '';
 if (active_roles.User && !active_roles.Admin) {
   prefix_domain_name = user_name + '-';
@@ -27,7 +24,7 @@ if (active_roles.User && !active_roles.Admin) {
 
 // preload global gui_config
 var gui_config;
-//
+
 function toggle_job_panel_body (job_panel_id) {
 
   var element = $('#jp_body_' + job_panel_id );
@@ -35,17 +32,12 @@ function toggle_job_panel_body (job_panel_id) {
 
   if ( css_display == "none" ) {
       element.css("display","block");
-  }
-  else
-  {
+  } else {
       element.css("display","none");
   }
 }
 
-//
 function schedule_job(job_name) {
-
-  console.log("job_name: " + job_name);
 
   save_settings(job_name);
 
@@ -76,21 +68,18 @@ function schedule_job(job_name) {
     }
   );
 
-  console.log(JSON.stringify(data));
+  var url = uri_base + "/rest/job/trigger/" + job_name + ".json";
 
-  $.post(
-    uri_base + "/rest/job/trigger/" + job_name + ".json",
-    JSON.stringify(data),
-    function(response) {
+  axios.post(url, data).then(function(xhr) {
+      var response = xhr.data;
+      console.log(response);
       $("#schedule_result").removeClass("alert-success");
       $("#schedule_result").removeClass("alert-warning");
       $("#schedule_result").addClass("alert-" + response.state);
       $("#schedule_result").text(response.msg);
       $("#schedule_result").fadeIn();
       $("#schedule_result").delay(10000).fadeOut("slow");
-    }
-  );
-
+  });
 }
 
 function save_settings(job_id) {
@@ -107,8 +96,6 @@ function save_settings(job_id) {
   $.each(
     $("#job_args_" + job_id ).find("input"),
     function (element) {
-      console.log( this.name + " " + this.id + " " + this.value);
-      console.log(  );
       if ( this.type == "checkbox" ) {
         obj[this.id] = this.checked;
       } else {
@@ -117,12 +104,7 @@ function save_settings(job_id) {
     }
   );
 
-  Cookies.set(
-    "kanku_job",
-    obj
-  );
-
-
+  Cookies.set("kanku_job", obj);
 }
 
 function  restore_defaults(job_name) {
@@ -151,7 +133,6 @@ function  restore_defaults(job_name) {
         );
       }
   });
-
 }
 
 
@@ -159,10 +140,11 @@ function  restore_defaults(job_name) {
 
 $( document ).ready(
   function() {
+    
+    var url = uri_base + '/rest/gui_config/job.json';
 
-    $.get(
-      uri_base + '/rest/gui_config/job.json',
-      function (gc) { 
+    axios.get(url).then(function (xhr) {
+        var gc     = xhr.data
         gui_config = gc ;  
 
         var j_string = Cookies.get("kanku_job");
@@ -173,7 +155,6 @@ $( document ).ready(
         } else {
           obj = jQuery.parseJSON(j_string);
         }
-
 
         $.each(
           gui_config.config,
@@ -240,8 +221,6 @@ $( document ).ready(
           }
         );
 
-
-
         var j_string = Cookies.get("kanku_job");
         var obj;
 
@@ -255,10 +234,6 @@ $( document ).ready(
           obj,
           function(k,v) {
             $("#"+k).val(v);
-          }
-        );
-      }
-    );
-  }
-);
-
+        });
+    });
+});

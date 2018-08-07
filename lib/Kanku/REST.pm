@@ -132,7 +132,7 @@ put '/user/:user_id.:format' => sub {
 
 del '/admin/user/:user_id.:format' => requires_role Admin => sub {
   my $uo = Kanku::REST::Admin::User->new(app_opts());
-  return $uo->remove();
+  return $uo->remove(params->{user_id});
 };
 
 # ROUTES FOR ROLES

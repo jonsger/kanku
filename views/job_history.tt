@@ -3,48 +3,48 @@
 <form>
 <div class=row>
   <div class="col col-md-3">
-        <h4>
+        <h5>
           <input type="checkbox" name="state" value="succeed" class="cb_state" checked >
-          <span class="label label-success">succeed</span></h4>
-        </h4>
+          <span class="badge badge-success">succeed</span></h5>
+        </h5>
   </div>
   <div class="col col-md-3">
-        <h4>
+        <h5>
           <input type="checkbox" name="state" value="failed"  class="cb_state" checked >
-          <span class="label label-danger">failed</span></h4>
-        </h4>
+          <span class="badge badge-danger">failed</span></h5>
+        </h5>
   </div>
   <div class="col col-md-3">
-        <h4>
+        <h5>
           <input type="checkbox" name="state" value="dispatching" class="cb_state" checked >
-          <span class="label label-info">dispatching</span></h4>
-        </h4>
+          <span class="badge badge-info">dispatching</span></h5>
+        </h5>
   </div>
   <div class="col col-md-3">
-        <h4>
+        <h5>
           <input type="checkbox" name="state" value="running" class="cb_state" checked >
-          <span class="label label-info">running</span></h4>
-        </h4>
+          <span class="badge badge-info">running</span></h5>
+        </h5>
   </div>
 </div>
 <div class=row>
   <div class="col col-md-3">
-        <h4>
+        <h5>
           <input type="checkbox" name="state" value="scheduled" class="cb_state"         >
-          <span class="label label-warning">scheduled</span>
-        </h4>
+          <span class="badge badge-warning">scheduled</span>
+        </h5>
   </div>
   <div class="col col-md-3">
-        <h4>
+        <h5>
           <input type="checkbox" name="state" value="triggered" class="cb_state"         >
-          <span class="label label-warning">triggered</span>
-        </h4>
+          <span class="badge badge-warning">triggered</span>
+        </h5>
   </div>
   <div class="col col-md-3">
-        <h4>
+        <h5>
           <input type="checkbox" name="state" value="skipped" class="cb_state"         >
-          <span class="label label-warning">skipped</span>
-        </h4>
+          <span class="badge badge-warning">skipped</span>
+        </h5>
   </div>
   <div class="col col-md-3">
   </div>
@@ -52,7 +52,7 @@
 <div id=top_pager class=row>
   <div class="btn-group col-md-4">
     <input type="text" name="job_name" class="form-control" placeholder="Enter job name - Use '%' as wildcard" id="job_name">
-    <span id="searchclear" class="glyphicon glyphicon-remove-circle" />
+    <i class="far fa-times-circle"></i>
   </div>
   <div class="col col-md-5">
   </div>
@@ -89,31 +89,34 @@
 
 <script id="job_history_header" type="x-tmpl-mustache">
 
-    <div class='row well'>
-      <div class="col-md-4">
-        <span class="badge">{{ id }}</span>
+<div class='job_header'>
+  <div class='row'>
+      <div class="col-md-6">
+        <span class="badge badge-secondary">{{ id }}</span>
           {{ name }}
       </div>
-      <div class="col-md-4">{{ start_time }}</div>
-      <div class="col-md-4">{{ duration }}</div>
-    </div>
-
+      <div class="col-md-2">{{ start_time }}</div>
+      <div class="col-md-2">{{ duration }}</div>
+      <div class="col-md-2">{{ duration }}</div>
+  </div>
+</div>
+   
 </script>
 
 <script id="job_result_panel" type="x-tmpl-mustache">
 
-<div class="panel panel-{{ state_class }}" id="jh_line_{{ id }}">
-  <div id="jh_ph_{{ id }}" class="result_toggler panel-heading">
+<div class="card" id="jh_line_{{ id }}" style="margin-bottom:5px">
+  <div id="jh_ph_{{ id }}" class="result_toggler card-header alert alert-{{ state_class }}">
     <div class='row'>
-      <div id="jh_ph_link_{{id}}" class="col-md-7">
-        <span class="badge">{{ id }}</span>
+      <div id="jh_ph_link_{{id}}" class="col-md-6">
+        <span class="badge badge-secondary">{{ id }}</span>
           {{ name }} ({{ workerhost }})
       </div>
       <div class="col-md-2">{{ start_time }}</div>
       <div class="col-md-2">({{ duration_min }}min {{ duration_sec }}sec)</div>
-      <div class="col-md-1">
+      <div class="col-md-2">
         {{#comments_icon }}
-          <a class="pull-right"
+          <a class="float-right"
              href="#"
              data-toggle="modal"
              data-target="#modal_window_comment_{{id}}"
@@ -122,21 +125,20 @@
           </a>
         {{/comments_icon}}
         {{#pwrand}}
-          <a class="pull-right"
+          <a class="float-right"
              href="#"
              data-toggle="modal"
              data-target="#modal_window_pwrand_{{id}}"
              data-placement="left"
              style="margin-left:5px;">
-               <i class="fas fa-lock"/>
+               <i class="fas fa-lock"></i>
           </a>
         {{/pwrand}}
-	<a class="pull-right" href="[% request.uri_base %]/job_result/{{ id }}" style="margin-left:5px;"><i class="fas fa-link"/></a>
-	<span class="glyphicon glyphicon-download pull-right"/>
+	<a class="float-right" href="[% request.uri_base %]/job_result/{{ id }}" style="margin-left:5px;"><i class="fas fa-link"></i></a>
       </div>
     </div>
   </div>
-  <div class="panel-body" style='display:none;'id="jbody_{{ id }}">
+  <div class="card-body" style='display:none;'id="jbody_{{ id }}">
   </div>
 </div>
 
@@ -216,8 +218,7 @@ EOF
 
 <script id="job_result_panel_info" type="x-tmpl-mustache">
 
-<div class="panel panel-default" id="info_line_{{ id }}">
-  <div class="panel-heading">
+<div class="worker_info" id="info_line_{{ id }}">
     <div class='row'>
       <div class="col-md-2">
         Worker Name
@@ -242,24 +243,24 @@ EOF
         {{ workerqueue }}
       </div>
     </div>
-  </div>
 </div>
+
 </script>
 
 <script id="subtask_result_panel" type="x-tmpl-mustache">
 
-<div class="panel panel-{{ state_class }}" id="st_line_{{ id }}">
-  <div class="result_toggler panel-heading" onClick=toggle_subtask_result_body("{{ id }}")>
+<div class="card task_result_card" id="st_line_{{ id }}">
+  <div class="result_toggler card-header alert alert-{{ state_class }}" onClick=toggle_subtask_result_body("{{ id }}")>
     <div class='row'>
       <div class="col-md-1">
-        <span class="badge">{{ id }}</span>
+        <span class="badge badge-secondary">{{ id }}</span>
       </div>
       <div class="col-md-11">
         {{ name }}
       </div>
     </div>
   </div>
-  <div class="panel-body" style='display:none' id="stbody_{{ id }}">
+  <div class="card-body" style='display:none' id="stbody_{{ id }}">
   </div>
 </div>
 

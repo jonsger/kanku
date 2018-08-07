@@ -7,34 +7,36 @@
 </div>
 <div id=job_result>
 </div>
+
 <script id="job_history_header" type="x-tmpl-mustache">
 
-    <div class='row well'>
+<div class='job_header'>
+  <div class='row'>
       <div class="col-md-4">
-        <span class="badge">{{ id }}</span>
+        <span class="badge badge-secondary">{{ id }}</span>
           {{ name }}
       </div>
       <div class="col-md-4">{{ start_time }}</div>
       <div class="col-md-4">{{ duration }}</div>
-    </div>
+  </div>
+</div>
 
 </script>
 
 <script id="job_result_panel" type="x-tmpl-mustache">
 
-<div class="panel panel-{{ state_class }}" id="jh_line_{{ id }}">
-  <div id="jh_ph_{{ id }}" class="result_toggler panel-heading">
+<div class="card" id="jh_line_{{ id }}">
+  <div id="jh_ph_{{ id }}" class="card-header aler alert-{{ state_class }}">
     <div class='row'>
       <div class="col-md-4">
-        <span class="badge">{{ id }}</span>
+        <span class="badge badge-secondary">{{ id }}</span>
           {{ name }}
       </div>
-      <div class="col-md-3">{{ start_time }}</div>
-      <div class="col-md-3">({{ duration_min }}min {{ duration_sec }}sec)</div>
-      <div class="col-md-2"><span class="glyphicon glyphicon-download pull-right"/></div>
+      <div class="col-md-4">{{ start_time }}</div>
+      <div class="col-md-4">({{ duration_min }}min {{ duration_sec }}sec)</div>
     </div>
   </div>
-  <div class="panel-body" id="jbody_{{ id }}">
+  <div class="card-body" id="jbody_{{ id }}">
   </div>
 </div>
 
@@ -42,18 +44,18 @@
 
 <script id="subtask_result_panel" type="x-tmpl-mustache">
 
-<div class="panel panel-{{ state_class }}" id="st_line_{{ id }}">
-  <div class="result_toggler panel-heading" onClick=toggle_subtask_result_body("{{ id }}")>
+<div class="card task_result_card" id="st_line_{{ id }}">
+  <div class="card-header alert alert-{{ state_class }}" onClick=toggle_subtask_result_body("{{ id }}")>
     <div class='row'>
       <div class="col-md-1">
-        <span class="badge">{{ id }}</span>
+        <span class="badge badge-secondary">{{ id }}</span>
       </div>
       <div class="col-md-11">
         {{ name }}
       </div>
     </div>
   </div>
-  <div class="panel-body" style='display:none' id="stbody_{{ id }}">
+  <div class="card-body" id="stbody_{{ id }}" style='display:none;'>
   </div>
 </div>
 

@@ -19,8 +19,8 @@ alert_map['failed']  = 'danger';
 alert_map['skipped']  = 'warning';
 alert_map['dispatching']  = 'warning';
 
-function update_job_result(data) {
-
+function update_job_result(xhr) {
+  var data = xhr.data;
   $("#job_result").empty();
 
   var rendered = Mustache.render(
@@ -36,7 +36,7 @@ function update_job_result(data) {
 
   $("#job_result").append(rendered);
 
-  console.log(data);
+
   var job = data;
 
       var alert_map =[];
@@ -50,7 +50,7 @@ function update_job_result(data) {
       var duration_sec = 0;
       var start_time   = 0;
 
-console.log("data.id: " + data.id)
+
       if ( job.start_time ) {
         start_time = new Date(1000 * job.start_time);
         var due = Math.floor(Date.now() / 1000);
@@ -155,15 +155,12 @@ function toggle_subtask_result_body (subtask_id) {
 }
 
 function get_job_result () {
+
   var get_append = $('form').serialize();
   var job_history_id = $('#jr_form').find('input[name="job_history_id"]').val();
-  console.log("job_history_id: " + job_history_id);
   var url = uri_base + "/rest/job/" + job_history_id + ".json";
 
-  $.get(
-    url,
-    update_job_result
-  );
+  axios.get(url).then(update_job_result);
 }
 
 $( document ).ready(function() {
