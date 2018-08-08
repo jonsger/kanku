@@ -324,6 +324,7 @@ exit 0
 %defattr(-, root, root)
 %dir %attr(755, kankurun, kanku) /var/log/kanku
 %dir %attr(755, kankurun, kanku) /var/lib/kanku
+%dir %attr(755, kankurun, kanku) /var/lib/kanku/db
 %dir %attr(755, kankurun, kanku) /var/cache/kanku
 %ghost %dir %attr(755, kankurun, kanku) /run/kanku
 
