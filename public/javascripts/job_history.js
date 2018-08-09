@@ -306,18 +306,6 @@ function toggle_job_result_body (job_history_id) {
   }
 }
 
-function toggle_subtask_result_body (subtask_id) {
-
-  var element = $('#stbody_' + subtask_id );
-  var css_display = element.css("display");
-
-  if ( css_display == "none" ) {
-      element.css("display","block");
-  } else {
-      element.css("display","none");
-  }
-}
-
 function get_job_history () {
   var get_append = $('form').serialize();
   var url = uri_base + "/rest/jobs/list.json?" + get_append;

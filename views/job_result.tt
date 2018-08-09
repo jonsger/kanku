@@ -45,7 +45,7 @@
 <script id="subtask_result_panel" type="x-tmpl-mustache">
 
 <div class="card task_result_card" id="st_line_{{ id }}">
-  <div class="card-header alert alert-{{ state_class }}" onClick=toggle_subtask_result_body("{{ id }}")>
+  <div class="card-header alert alert-{{ state_class }}" onClick=toggle_element("#stbody_{{ id }}")>
     <div class='row'>
       <div class="col-md-1">
         <span class="badge badge-secondary">{{ id }}</span>
