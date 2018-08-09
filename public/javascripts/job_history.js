@@ -208,7 +208,11 @@ function update_job_history (xhr) {
       $("#jh_ph_link_"+this.id).click(function (ev) {
         var ev_id           = $(ev.currentTarget).attr('id');
         var job_history_id  = ev_id.replace('jh_ph_link_','');
-	toggle_job_result_body(job_history_id);
+        var element = $(job_history_id);
+        element.empty();
+        var url = uri_base + "/rest/job/" + job_history_id + ".json";
+        axios.get(url).then(update_job_result_panel_body);
+	toggle_element('#jbody_'+job_history_id);
       });
     }
   );
@@ -289,21 +293,6 @@ function update_job_result_panel_body (xhr) {
       $("#stbody_" + this.id).append(result_rendered);
     }
   );
-}
-
-function toggle_job_result_body (job_history_id) {
-
-  var element = $('#jbody_' + job_history_id );
-  var css_display = element.css("display");
-
-  if ( css_display == "none" ) {
-      element.css("display","block");
-      element.empty();
-      var url = uri_base + "/rest/job/" + job_history_id + ".json";
-      axios.get(url).then(update_job_result_panel_body);
-  } else {
-      element.css("display","none");
-  }
 }
 
 function get_job_history () {
