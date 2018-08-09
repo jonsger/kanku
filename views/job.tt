@@ -8,7 +8,7 @@
 <script id="job_panel" type="x-tmpl-mustache">
 
 <div class="card" id="job_panel{{ id }}" style="margin-bottom:5px;">
-  <div class="card-header" id='jp_header_{{ id }}' onClick=toggle_job_panel_body("{{ id }}")>
+  <div class="card-header" id='jp_header_{{ id }}' onClick=toggle_element("#jp_body_{{ id }}")>
         <span class="badge badge-secondary">{{ id }}</span>
   </div>
   <div class="card-body" style='display:none' id="jp_body_{{ id }}">

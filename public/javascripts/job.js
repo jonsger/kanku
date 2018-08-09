@@ -25,18 +25,6 @@ if (active_roles.User && !active_roles.Admin) {
 // preload global gui_config
 var gui_config;
 
-function toggle_job_panel_body (job_panel_id) {
-
-  var element = $('#jp_body_' + job_panel_id );
-  var css_display = element.css("display");
-
-  if ( css_display == "none" ) {
-      element.css("display","block");
-  } else {
-      element.css("display","none");
-  }
-}
-
 function schedule_job(job_name) {
 
   save_settings(job_name);
