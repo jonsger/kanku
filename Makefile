@@ -49,7 +49,7 @@ configs:
 		cp -av ./etc/$$i $(DESTDIR)/etc/kanku/$$i ;\
 	done
 
-install_full_dirs: lib dbfiles
+install_full_dirs: lib dbfiles public
 	install -m 755 bin/network-setup.pl $(DESTDIR)/usr/lib/kanku/network-setup.pl
 	install -m 755 bin/kanku $(DESTDIR)/usr/bin/kanku
 	install -m 755 bin/kanku-app.psgi $(DESTDIR)/usr/lib/kanku/kanku-app.psgi
@@ -58,6 +58,8 @@ install_full_dirs: lib dbfiles
 	install -m 755 sbin/kanku-scheduler $(DESTDIR)/usr/sbin/kanku-scheduler
 	install -m 755 sbin/kanku-triggerd $(DESTDIR)/usr/sbin/kanku-triggerd
 	cp -av views  $(DESTDIR)/usr/share/kanku/
+
+public:
 	cp -av public $(DESTDIR)/usr/share/kanku/
 
 dbfiles:
@@ -118,4 +120,4 @@ cover:
 
 check: cover critic
 
-.PHONY: dist install lib cover check test
+.PHONY: dist install lib cover check test public
