@@ -86,7 +86,7 @@
   <tbody id=role_list>
   </tbody>
 </table>
-<script src="[% request.uri_base %]/javascripts/admin.js"></script>
+<script src="[% request.uri_base %]/js/kanku/admin.js"></script>
 
 <script id="user-list-tr-template" type="x-tmpl-mustache">
 <tr>

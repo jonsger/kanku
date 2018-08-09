@@ -122,6 +122,6 @@
 
 </script>
 
-<script src="[% request.uri_base %]/javascripts/job_result.js"></script>
+<script src="[% request.uri_base %]/js/kanku/job_result.js"></script>
 
 <!-- vim: set ft=html -->

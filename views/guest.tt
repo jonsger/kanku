@@ -29,7 +29,7 @@
   <a href="{{ proto }}://{{ host_ip }}:{{ host_port}}" target=_blank>Link to Website ({{ proto }})</a><br>
 </script>
 
-<script src="[% request.uri_base %]/javascripts/guest.js"></script>
+<script src="[% request.uri_base %]/js/kanku/guest.js"></script>
 
 <script id="iface_line" type="x-tmpl-mustache">
   <div>

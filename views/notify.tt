@@ -190,5 +190,5 @@
   </div>
 [% END %]
 </form>
-<script src="[% request.uri_base %]/javascripts/notify.js"></script>
+<script src="[% request.uri_base %]/js/kanku/notify.js"></script>
 <!-- vim: set ft=html -->

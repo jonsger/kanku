@@ -63,5 +63,5 @@
 </form>
 
 </div>
-<script src="[% request.uri_base %]/javascripts/settings.js"></script>
+<script src="[% request.uri_base %]/js/kanku/settings.js"></script>
 <hr/>

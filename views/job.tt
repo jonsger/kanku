@@ -60,6 +60,6 @@
   </div>
 </script>
 
-<script src="[% request.uri_base %]/javascripts/job.js"></script>
+<script src="[% request.uri_base %]/js/kanku/job.js"></script>
 
 <!-- vim: set ft=html -->

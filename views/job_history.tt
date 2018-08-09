@@ -349,6 +349,6 @@ EOF
 </div>
 </script>
 
-<script src="[% request.uri_base %]/javascripts/job_history.js"></script>
+<script src="[% request.uri_base %]/js/kanku/job_history.js"></script>
 
 <!-- vim: set ft=html -->
