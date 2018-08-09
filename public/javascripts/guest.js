@@ -1,17 +1,3 @@
-function toggle_guest_panel_body (guest_panel_id) {
-
-  var element = $('#gp_body_' + guest_panel_id );
-  var css_display = element.css("display");
-
-  if ( css_display == "none" ) {
-      element.css("display","block");
-  }
-  else
-  {
-      element.css("display","none");
-  }
-}
-
 function trigger_remove_domain (domain_name) {
   console.log("domain_name: " + domain_name);
   var job_name = 'remove-domain';
@@ -30,7 +16,6 @@ function trigger_remove_domain (domain_name) {
     }
   );
 }
-
 
 $( document ).ready(
   function() {

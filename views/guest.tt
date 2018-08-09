@@ -6,7 +6,7 @@
 <script id="guest_panel" type="x-tmpl-mustache">
 
 <div class="card guest-card" id="guest_panel{{ id }}">
-  <div class="card-header alert alert-{{ guest_class }}" id='gp_header_{{ id }}' onClick=toggle_guest_panel_body("{{ id }}")>
+  <div class="card-header alert alert-{{ guest_class }}" id='gp_header_{{ id }}' onClick=toggle_element("#gp_body_{{ id }}")>
     <div class='row'>
       <div class="col-md-10">
         <span class="badge badge-{{ guest_class }}">{{ id }} ({{ host  }})</span>
