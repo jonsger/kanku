@@ -1,18 +1,11 @@
 function trigger_remove_domain (domain_name) {
-  console.log("domain_name: " + domain_name);
-  var job_name = 'remove-domain';
-  console.log("job_name: " + job_name);
-
-  var data = [
-    {domain_name : domain_name}
-  ];
-  console.log(JSON.stringify(data));
-
-  $.post(
-    uri_base + "/rest/job/trigger/" + job_name + ".json",
-    JSON.stringify(data),
-    function(response) {
-      console.log("HERE WE GO AGAIN");
+  var data = [ {domain_name : domain_name}];
+  axios.post(
+    uri_base + "/rest/job/trigger/remove-domain.json",
+    data
+  ).then(
+    function(xhr) {
+      show_messagebox(xhr.data.state, xhr.data.msg );
     }
   );
 }

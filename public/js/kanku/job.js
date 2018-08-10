@@ -61,12 +61,7 @@ function schedule_job(job_name) {
   axios.post(url, data).then(function(xhr) {
       var response = xhr.data;
       console.log(response);
-      $("#schedule_result").removeClass("alert-success");
-      $("#schedule_result").removeClass("alert-warning");
-      $("#schedule_result").addClass("alert-" + response.state);
-      $("#schedule_result").text(response.msg);
-      $("#schedule_result").fadeIn();
-      $("#schedule_result").delay(10000).fadeOut("slow");
+      show_messagebox(response.state, response.msg);
   });
 }
 
