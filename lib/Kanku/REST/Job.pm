@@ -120,7 +120,7 @@ sub trigger {
 
   my $job = $self->rset('JobHistory')->create($jd);
 
-  return {state => 'success', msg => 'Successfully triggered job with id '.$job->id};
+  return {state => 'success', msg => "Successfully triggered job '$name' with id ".$job->id};
 }
 
 sub config {
