@@ -15,6 +15,7 @@ CONFIG_FILES = \
 	jobs/examples/obs-server.yml\
 	jobs/examples/sles11sp3.yml\
 	jobs/examples/obs-server-26.yml\
+	jobs/remove-domain.yml\
 	logging/default.conf\
 	logging/console.conf\
         logging/network-setup.conf

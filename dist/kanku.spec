@@ -385,6 +385,7 @@ TODO:
 %dir /etc/apache2
 %dir /etc/apache2/conf.d
 %ghost %config (noreplace) /etc/apache2/conf.d/kanku.conf
+%config /etc/kanku/jobs/remove-domain.yml
 
 # public contains css/js/bootstrap/jquery etc
 /usr/share/kanku/public/

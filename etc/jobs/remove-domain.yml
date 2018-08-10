@@ -1,3 +1,8 @@
+# DO NOT REMOVE THIS JOB UNLESS YOU KNOW WHAT YOU ARE DOING
+# This job is required by the remove button for guest's in the "Guest Overview"
+# Once you remove this job, pushing the button will only result in a failed job
+# stating that no job named 'remove-domain' was found
+#
 tasks:
   -
     use_module: Kanku::Handler::RemoveDomain
