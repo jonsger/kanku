@@ -1,8 +1,7 @@
 [Unit]
 Description=Kanku Worker
-#Documentation=man:dovecot(1)
-#Documentation=http://wiki2.dovecot.org/
 After=local-fs.target network.target
+Wants=rabbitmq-server
  
 [Service]
 User=kankurun

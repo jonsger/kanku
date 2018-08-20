@@ -1,6 +1,5 @@
 [Unit]
 Description=Kanku Scheduler
-#Documentation=http://wiki2.dovecot.org/
 After=local-fs.target network.target
  
 [Service]

@@ -1,7 +1,7 @@
 [Unit]
 Description=Kanku Dispatcher
-#Documentation=man:dovecot(1)
 After=local-fs.target network.target
+Wants=rabbitmq-server
  
 [Service]
 User=kankurun
