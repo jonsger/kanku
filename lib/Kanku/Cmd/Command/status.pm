@@ -52,6 +52,7 @@ sub description { "This command can be used to show the status of a VM" }
 sub execute {
   my $self    = shift;
   my $logger  = Log::Log4perl->get_logger;
+  $self->cfg->initialize(class=>'KankuFile');
 
   my $vm = Kanku::Util::VM->new(domain_name=>$self->domain_name);
   $logger->debug("Searching for domain: ".$self->domain_name);
