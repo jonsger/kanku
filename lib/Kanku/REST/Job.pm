@@ -38,10 +38,12 @@ sub list {
 
   my $rv = [];
 
+  my $allow_comments = ($self->has_role('User') || $self->has_role('Admin'));
+
   while ( my $ds = $rs->next ) {
     my $data = $ds->TO_JSON();
 
-    if ($self->has_role('User') || $self->has_role('Admin')) {
+    if ($allow_comments) {
       $data->{comments} = [];
       my @comments = $ds->comments;
       for my $comment (@comments) {
