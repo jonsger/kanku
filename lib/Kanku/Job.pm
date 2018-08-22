@@ -35,7 +35,7 @@ has 'trigger_user' => ( is => 'rw', isa => 'Str|Undef' );
 has [qw/skipped scheduled triggered/] => ( is => 'rw', isa => 'Bool' );
 has [qw/creation_time start_time end_time last_modified/] => ( is  => 'rw', isa => 'Int' );
 has db_object => ( is => 'rw', isa => 'Object' );
-has '+workerinfo' => (default =>"localhost");
+has '+workerinfo' => (default =>"localhost:$$:none");
 has 'pwrand' => (is=>'rw', isa=>'Str');
 
 sub json_keys; # prototype to not break the requires in Kanku::Roles::Serialize
