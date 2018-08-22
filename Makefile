@@ -20,7 +20,7 @@ CONFIG_FILES = \
 	logging/console.conf\
         logging/network-setup.conf
 
-FULL_DIRS	= bin share/migrations share/fixtures public views
+FULL_DIRS	= bin share/migrations share/fixtures
 CONFIG_DIRS		= \
 	etc/kanku/templates\
 	etc/kanku/templates/cmd\
@@ -35,7 +35,7 @@ PERL_CRITIC_READY := bin/*
 
 all:
 
-install: install_dirs install_full_dirs install_services install_docs configs
+install: install_dirs install_full_dirs install_services install_docs configs public views
 	install -m 644 ./dist/kanku.logrotate $(DESTDIR)/etc/logrotate.d/kanku-common
 	install -m 644 dist/profile.d-kanku.sh $(DESTDIR)/etc/profile.d/kanku.sh
 	install -m 644 dist/tmpfiles.d-kanku $(DESTDIR)/usr/lib/tmpfiles.d/kanku.conf
@@ -62,6 +62,9 @@ install_full_dirs: lib dbfiles public
 
 public:
 	cp -av public $(DESTDIR)/usr/share/kanku/
+
+views:
+	cp -av views $(DESTDIR)/usr/share/kanku/
 
 dbfiles:
 	cp -av share/migrations $(DESTDIR)/usr/share/kanku/
@@ -121,4 +124,4 @@ cover:
 
 check: cover critic
 
-.PHONY: dist install lib cover check test public
+.PHONY: dist install lib cover check test public views
