@@ -208,7 +208,7 @@ function update_job_history (xhr) {
       $("#jh_ph_link_"+this.id).click(function (ev) {
         var ev_id           = $(ev.currentTarget).attr('id');
         var job_history_id  = ev_id.replace('jh_ph_link_','');
-        var element = $(job_history_id);
+        var element = $('#jbody_'+job_history_id);
         element.empty();
         var url = uri_base + "/rest/job/" + job_history_id + ".json";
         axios.get(url).then(update_job_result_panel_body);
