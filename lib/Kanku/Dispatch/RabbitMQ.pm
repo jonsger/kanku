@@ -210,7 +210,7 @@ sub run_task {
   # trigger_user is only set if a non-Admin triggered a job
   # then domain name should look like "$trigger_user-$domain_name"
   # to avoid overwriting
-  my $un = $job->trigger_user;
+  my $un = $job->trigger_user || "";
   $logger->debug("--- trigger_user $un");
   $defaults{final_args}->{domain_name} =~ s{^($un-)?}{$un-}smx if ($un && exists $defaults{final_args}->{domain_name});
   $logger->debug('--- final_args'.Dumper($defaults{final_args}));

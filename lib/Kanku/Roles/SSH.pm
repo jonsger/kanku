@@ -135,7 +135,7 @@ sub connect {
   $logger->debug("Connected successfully to $ip after $connect_count retries.");
 
   if ( $self->auth_type eq 'publickey' ) {
-    $logger->debug(" - ssh2: using auth_publickey SSH_AUT_SOCK: $::ENV{SSH_AUTH_SOCK}");
+    $logger->debug(' - ssh2: using auth_publickey SSH_AUT_SOCK: '.($::ENV{SSH_AUTH_SOCK} || q{}));
     $ssh2->auth_publickey(
       $self->username,
       $self->publickey_path,
@@ -143,7 +143,7 @@ sub connect {
       $self->passphrase
     );
   } elsif ( $self->auth_type eq 'agent' ) {
-    $logger->debug(" - ssh2: using auth_agent");
+    $logger->debug(' - ssh2: using auth_agent');
     $ssh2->auth_agent($self->username);
   } else {
     die "ssh auth_type not known!\n"
