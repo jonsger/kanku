@@ -60,11 +60,17 @@ sub update_db {
   if ($self->context->{encrypt_pwrand}) {
     # Avoid double encryption
     if ($self->context->{pwrand} !~ /-BEGIN PGP MESSAGE-/) {
-      my $gpg = Kanku::GPG->new(
-        message    => $pwrand,
-        recipients => $self->context->{encrypt_pwrand},
-      );
-      $pwrand = $gpg->encrypt;
+      try {
+        my $gpg = Kanku::GPG->new(
+          message    => $pwrand,
+          recipients => $self->context->{encrypt_pwrand},
+        );
+        $pwrand = $gpg->encrypt;
+      } catch {
+        $self->result(encode_json({error_message=>$_}));
+        $self->state('failed');
+        $self->end_time(time());
+      };
     }
   }
 

@@ -1,365 +1,325 @@
-var header_template                 = $("#job_history_header").html();
-var job_result_template             = $("#job_result_panel").html();
-var subtask_result_template         = $("#subtask_result_panel").html();
+var alert_map = {
+  succeed: 'alert-success',
+  failed:  'alert-danger',
+  running:  'alert-primary',
+};
 
-var subtask_result_success_template = $("#subtask_result_success").html();
-var subtask_result_failed_template  = $("#subtask_result_failed").html();
-var job_result_failed_template      = $("#job_result_failed").html();
-var job_result_panel_info           = $("#job_result_panel_info").html();
-var single_job_comment              = $("#single_job_comment").html();
+function calc_job_start_and_end(start_time, end_time) {
+  var st = new Date(1000 * start_time);
+  if (st) {
+    // calculate duration
+    var due;
 
-Mustache.parse(header_template);
-Mustache.parse(job_result_template);
-Mustache.parse(subtask_result_success_template);
-Mustache.parse(subtask_result_failed_template);
-Mustache.parse(job_result_failed_template);
-Mustache.parse(job_result_panel_info);
-Mustache.parse(single_job_comment);
-
-var alert_map =[];
-alert_map['succeed'] = 'success';
-alert_map['running'] = 'info';
-alert_map['failed']  = 'danger';
-alert_map['skipped']  = 'warning';
-alert_map['dispatching']  = 'warning';
-
-function save_job_comment (job_id) {
-
-  var comment = $("#new_comment_text_"+job_id).val();
-  var comment =JSON.stringify(
-    {
-      "job_id"   : job_id,
-      "message"  : comment
+    if ( end_time ) { 
+      due = end_time; 
+    } else {
+      due = Math.floor(Date.now() / 1000);
     }
-  );
-  var url = uri_base + "/rest/job/comment/" + job_id + ".json";
-  axios.post(url, comment).then(function () { update_comments(job_id); });
-}
 
-function delete_job_comment (comment_id, job_id) {
-  var url = uri_base + "/rest/job/comment/" + comment_id + ".json";
-  axios.delete(url).then(update_comments(job_id));
-}
+    var duration = due - start_time;
+    duration_min = Math.floor( duration / 60 );
+    duration_sec = duration % 60;
 
-function start_edit_job_comment (comment_id, job_id) {
-
-  var org_comment = $("#job_comment_panel_body_"+comment_id).text();
-
-  $("#job_comment_panel_body_"+comment_id).empty();
-
-  $("#job_comment_panel_body_"+comment_id).append(
-    "<textarea id='job_comment_edit_textarea_"+comment_id+"' style='width:100%;'>"
-     + $.trim(org_comment) +
-    "</textarea>" +
-    "<button "
-     + "class='btn btn-primary' "
-     + "style='margin-top:2px;' "
-     + "onclick='finish_edit_job_comment("+comment_id+","+job_id+")'>"+
-     "save" +
-     "</button>"
-  );
-}
-
-function finish_edit_job_comment (comment_id, job_id) {
-  var url  = uri_base + "/rest/job/comment/" + comment_id + ".json";
-  var data = {message : $("#job_comment_edit_textarea_"+comment_id).val()};
-  axios.put(url, data).then(update_comments(job_id));
-}
-
-function update_comments (job_id) {
-
-  $("#job_comment_body_"+job_id).empty();
-
-  var url = uri_base + "/rest/job/comments/"+job_id+".json";  
-
-  axios.get(url).then(
-    function (xhr) {
-      var data = xhr.data;
-      var comments_as_html = "";
-
-      $.each(data.comments, function (idx, comment) {
-
-        var show_mod = 0;
-
-        if ( user_id == comment.user.id ) {
-          show_mod = 1;
-        }
-
-        var rendered = Mustache.render(
-          single_job_comment,
-          {
-            username      : comment.user.username,
-            name          : comment.user.name,
-            comment       : comment.comment,
-            show_mod      : show_mod,
-            comment_id    : comment.id,
-            job_id        : job_id,
-          }
-        );
-        comments_as_html += rendered;
-      });
-      comments_as_html += "<hr/>";
-      $("#job_comment_body_"+job_id).empty();
-      $("#job_comment_body_"+job_id).append(comments_as_html);
-      $("#new_comment_text_"+job_id).val('');
-    }
-  );
-}
-
-function update_job_history (xhr) {
-
-  var data = xhr.data;
-  $("#job_history").empty();
-
-  var rendered = Mustache.render(
-                  header_template,
-                  {
-                    id            : "ID",
-                    name          : "Name",
-                    start_time    : "Start time",
-                    duration      : "Duration",
-                    state_class   : "default"
-                  }
-  );
-
-  $("#job_history").append(rendered);
-
-  $.each(
-    data.jobs,
-    function (job) {
-      var alert_map =[];
-      alert_map['succeed']  = 'success';
-      alert_map['running']  = 'info';
-      alert_map['failed']   = 'danger';
-      alert_map['skipped']  = 'warning';
-      alert_map['dispatching']  = 'warning';
-
-      var duration_min = 0;
-      var duration_sec = 0;
-      var start_time   = 0;
-
-      if ( this.start_time ) {
-        start_time = new Date(1000 * this.start_time);
-        var due = Math.floor(Date.now() / 1000);
-
-        if ( this.end_time ) { due = this.end_time; }
-
-        var duration = due - this.start_time;
-        duration_min = Math.floor( duration / 60 );
-        duration_sec = duration % 60;
-      }
-      // workerinfo : host:pid:queue
-      var winfo = ('Not started',0,'Not started');
-      if ( this.workerinfo ) {
-         winfo = this.workerinfo.split(':');
-      }
-      var comments_icon    = "";
-      var comments_as_html = "";
-      var job_id           = this.id;
-      if ( this.comments ) {
-        if ( this.comments.length > 0 ) {
-          comments_icon = 'fas';
-          $.each(this.comments, function(idx, comment) {
-
-            var show_mod = 0;
-
-            if ( user_id == comment.user.id ) {
-              show_mod = 1;
-            }
-
-            var rendered = Mustache.render(
-                  single_job_comment,
-                  {
-                    username      : comment.user.username,
-                    name          : comment.user.name,
-                    comment       : comment.comment,
-                    show_mod      : show_mod,
-                    comment_id    : comment.id,
-                    job_id        : job_id,
-                  }
-            );
-            comments_as_html += rendered;
-          });
-          comments_as_html += "<hr/>";
-        } else {
-          comments_icon = 'far';
-        }
-      }
-
-      var rendered = Mustache.render(
-                      job_result_template,
-                      {
-                        id            : this.id,
-                        name          : this.name,
-                        start_time    : ( start_time ) ? start_time.toLocaleString() : "not started yet",
-                        duration_min  : duration_min,
-                        duration_sec  : duration_sec,
-                        state_class   : alert_map[this.state],
-                        workerhost    : winfo[0],
-                        comments_icon : comments_icon,
-                        comments_as_html : comments_as_html,
-                        pwrand           : this.pwrand,
-                      }
-      );
-      $("#job_history").append(rendered);
-      $("#modal_window_comment_"+this.id).on('hidden.bs.modal', function(){
-        get_job_history();
-      });
-      $("#jh_ph_link_"+this.id).click(function (ev) {
-        var ev_id           = $(ev.currentTarget).attr('id');
-        var job_history_id  = ev_id.replace('jh_ph_link_','');
-        var element = $('#jbody_'+job_history_id);
-        element.empty();
-        var url = uri_base + "/rest/job/" + job_history_id + ".json";
-        axios.get(url).then(update_job_result_panel_body);
-	toggle_element('#jbody_'+job_history_id);
-      });
-    }
-  );
-}
-
-function update_job_result_panel_body (xhr) {
-  var data   = xhr.data;
-  var job_id = data.id;
-  var body   = $("#jbody_"+job_id);
-
-  if ( data.result ) {
-    var job_result = JSON.parse(data.result);
-
-    if (job_result.error_message) {
-      var rendered = Mustache.render(
-	job_result_failed_template,
-	{
-	  error_message   : job_result.error_message.replace(/\n/,"\n")
-	}
-      );
-      body.append(rendered);
-    }
-  }
-
-  var info_box = Mustache.render(
-                  job_result_panel_info,
-                  {
-                    'id'          : data.id,
-                    'workerhost'  : data.workerhost,
-                    'workerpid'   : data.workerpid,
-                    'workerqueue' : data.workerqueue,
-                  }
-  );
-
-  body.append(info_box);
-
-  $.each(
-    data.subtasks,
-    function() {
-
-      var result_rendered;
-
-      var rendered = Mustache.render(
-                  subtask_result_template,
-                  {
-                    id              : this.id,
-                    name            : this.name,
-                    state_class     : alert_map[this.state],
-                  }
-      );
-
-      if ( this.state == "failed" ) {
-
-        result_rendered = Mustache.render(
-            subtask_result_failed_template,
-            {
-              error_message   : this.result.error_message.replace(/\n/,"\n")
-            }
-        );
-
-      } else {
-        var result = {};
-        if ( this.result ) {
-          result = {
-            result_prepare  : this.result.prepare.message,
-            result_execute  : this.result.execute.message,
-            result_finalize : this.result.finalize.message
-          };
-        }
-        result_rendered = Mustache.render(
-            subtask_result_success_template,
-            result
-        );
-      }
-
-      // stbody_{{ id }}
-      body.append(rendered);
-      $("#stbody_" + this.id).append(result_rendered);
-    }
-  );
-}
-
-function get_job_history () {
-  var get_append = $('form').serialize();
-  var url = uri_base + "/rest/jobs/list.json?" + get_append;
-  axios.get(url).then(update_job_history);
-}
-
-function change_page(page_counter) {
-  var new_val = parseInt($("#page").val()) + page_counter;
-  $("#page").val(new_val);
-}
-
-function next_page() {
-  change_page(1);
-  get_job_history();
-  if ( parseInt($("#page").val()) > 1 ) {
-    $("#previous_page").prop("disabled",false);
+    // (start_time_formatted, duration_formatted)
+    return [st.toLocaleString(), duration_min +" min "+duration_sec+" sec"];
+  } else {
+    return ["not started", "not started"];
   }
 }
 
-function previous_page() {
-  change_page(-1);
-  get_job_history();
-  if ( parseInt($("#page").val()) <= 1 ) {
-    $("#previous_page").prop("disabled",true);
-  }
-}
+function calc_additional_job_parameters(job) {
+        job.state_class = alert_map[job.state];
+        var r = calc_job_start_and_end(job.start_time, job.end_time);
+        job.start_time_formatted = r[0];
+        job.duration             = r[1];
+};
 
-$( document ).ready(function() {
-  get_job_history();
-
-  $(".cb_state").each( function (cb) {
-    $( this ).change(get_job_history);
-  });
-
-  $("#search_button").click(function () {
-	get_job_history();
-  });
-
-  $("#job_name").keydown(function(e) {
-    if( e.keyCode === 13) {
-      e.preventDefault();
-      e.stopPropagation();
-      e.stopImmediatePropagation();
-      get_job_history();
-      return;
+Vue.component('worker-info',{
+  data: function() {
+    return {
+      worker: {
+        host:  '',
+        queue: '',
+        pid:   ''
+      }
     }
-  });
-
-  $("#next_page").click(function () {
-    next_page();
-  });
-  $("#previous_page").click(function () {
-    previous_page();
-  });
-
-  if ( parseInt($("#page").val()) <= 1 ) {
-    $("#previous_page").prop("disabled",true);
-  }
-
-  $("#limit").change(function () {
-    get_job_history();
-  });
-
-  $("#searchclear").click(function(){
-    $("#job_name").val('');
-    get_job_history();
-  });
+  },
+  template: '<div class="worker_info">'
+    + '  <div class="row">'
+    + '    <div class="col-md-2">'
+    + '      Worker Name'
+    + '    </div>'
+    + '    <div class="col-md-10">'
+    + '      {{ worker.host }}'
+    + '    </div>'
+    + '  </div>'
+    + '  <div class="row">'
+    + '    <div class="col-md-2">'
+    + '      Worker PID'
+    + '    </div>'
+    + '    <div class="col-md-10">'
+    + '      {{ worker.pid }}'
+    + '    </div>'
+    + '  </div>'
+    + '  <div class="row">'
+    + '    <div class="col-md-2">'
+    + '      Worker Queue'
+    + '    </div>'
+    + '    <div class="col-md-10">'
+    + '      {{ worker.queue }}'
+    + '    </div>'
+    + '  </div>'
+    + '</div>'
 });
+
+Vue.component('task-card',{
+  props: ['task'],
+  data: function() {
+    return {
+      showTaskResult: 0
+    }
+  },
+  methods: {
+    toggleTaskDetails: function() {
+      this.showTaskResult = !this.showTaskResult;
+    }
+  },
+  template: ''
+    + '<div class="card task_card">'
+    + '  <div class="card-header alert" v-bind:class="task.state_class" v-on:click="toggleTaskDetails()">'
+    + '    <div class="row">'
+    + '      <div class="col-md-12">'
+    + '        <span class="badge badge-secondary">{{ task.id }}</span> {{ task.name }}'
+    + '      </div>'
+    + '    </div>'
+    + '  </div>'
+    + '  <div class="card-body" v-show="showTaskResult">'
+    + '    <task-result v-bind:result="task.result"></task-result>'
+    + '  </div>'
+    + '</div>'
+});
+
+Vue.component('task-result',{
+  props: ['result'],
+  template: '<div class=container>'
+    + '<template v-if="result.error_message">'
+    + '  <pre>{{ result.error_message}}</pre>'
+    + '</template>'
+    + '<template v-if="result.prepare">'
+    + '  <div class="row">'
+    + '    <div class="col-md-2">prepare:</div><div class="col-md-10">{{ result.prepare.message }}</div>'
+    + '  </div>'
+    + '</template>'
+    + '<template v-if="result.execute">'
+    + '  <div class="row">'
+    + '    <div class="col-md-2">execute:</div><div class="col-md-10">{{ result.execute.message }}</div>'
+    + '  </div>'
+    + '</template>'
+    + '<template v-if="result.finalize">'
+    + '  <div class="row">'
+    + '    <div class="col-md-2">finalize:</div><div class="col-md-10">{{ result.finalize.message }}</div>'
+    + '  </div>'
+    + '</template>'
+    + '</div>'
+});
+
+Vue.component('task-list',{
+  data: function() {
+    return {
+      isShown: 0,
+      count: 0,
+      jobData: {}
+    }
+  },
+  updated: function() {
+    this.$refs.workerinfo.worker = {
+      host: this.jobData.workerhost,
+      pid:  this.jobData.workerpid,
+      queue: this.jobData.workerqueue
+    };
+    calc_additional_job_parameters(this.jobData);
+    this.$parent.job = this.jobData;
+  },
+  template: '<div class="card-body">'
+    + '  <worker-info ref="workerinfo"></worker-info>'
+    + '  <task-card v-bind:key="task.id" v-bind:task="task" v-for="task in jobData.subtasks"></task-card>'
+    +'</div>'
+});
+
+
+Vue.component('job-card',{
+  props: ['job'],
+  data: function () {
+    return {
+      showTaskList: 0
+    }
+  },
+  methods: {
+    toggleJobDetails: function() {
+      this.showTaskList = !this.showTaskList
+      this.$refs.tasklist.isShown = ! this.$refs.tasklist.isShown;
+      this.$refs.tasklist.count++;
+      var job  = this.job;
+      var url = uri_base + "/rest/job/"+job.id+".json";
+      var self = this;
+      axios.get(url).then(function(response) {
+        self.$refs.tasklist.jobData = response.data;
+        response.data.subtasks.forEach(function(task) {
+           task.state_class = alert_map[task.state];
+           task.result      = task.result || {};
+        });
+      });
+    },
+  },
+  template: '<div class="card job_card">'
+    + '<div class="card-header alert" v-bind:class="job.state_class" v-on:click="toggleJobDetails()">'
+    + '  <div class="row">'
+    + '    <div class="col-md-6">'
+    + '      <span class="badge badge-secondary">{{ job.id }}</span> {{ job.name }}'
+    + '    </div>'
+    + '    <div class="col-md-2">'
+    + '      {{ job.start_time_formatted }}'
+    + '    </div>'
+    + '    <div class="col-md-2">'
+    + '      {{ job.duration }}'
+    + '    </div>'
+    + '    <div class="col-md-2">'
+    + '      <!-- ACTIONS -->'
+    + '    </div>'
+    + '  </div>'
+    + '</div>'
+    + '<task-list v-show="showTaskList" ref="tasklist"></task-list>'
+    + '</div>'
+});
+
+Vue.component('page-counter',{
+  props: ['page'],
+  template: '<div class="col-md-2">Page: <span class="badge badge-secondary">{{ page }}</span></div>'
+});
+
+Vue.component('prev-button',{
+  methods: {
+    prevpage: function() {
+      if (this.$parent.page <= 1) {return}
+      this.$parent.page--;
+      this.$parent.updateJobList();
+    }
+  },
+  template: '<div class="col-md-1"><button v-on:click="prevpage()" class="btn btn-default">&lt;&lt;&lt;</button></div>'
+});
+
+Vue.component('next-button',{
+  methods: {
+    nextpage: function() {
+      this.$parent.page++;
+      this.$parent.updateJobList();
+    }
+  },
+  template: '<div class="col-md-1"><button v-on:click="nextpage()" class="btn btn-default">&gt;&gt;&gt;</button></div>'
+});
+
+Vue.component('limit-select',{
+  data: function() {
+    return {limit:10}
+  },
+  methods: {
+    setNewLimit: function() {
+      this.$parent.limit = this.limit;
+      this.$parent.updateJobList();
+    }
+  },
+  template: ''
+    + '<div v-on:change="setNewLimit()">'
+    + '  Show rows:'
+    + '  <select v-model="limit">'
+    + '    <option v-for="option in [5,10,20,50,100]" v-bind:value="option">{{ option }}</option>'
+    + '  </select>'
+    + '</div>'
+});
+
+Vue.component('job-search',{
+  data: function() {
+    return {job_name:''}
+  },
+  methods: {
+    updateJobSearch: function() {
+      this.$parent.job_name = this.job_name;
+      this.$parent.updateJobList();
+    },
+    clearJobSearch: function() {
+      this.job_name = '';
+      this.$parent.job_name = this.job_name;
+      this.$parent.updateJobList();
+    }
+  },
+  template: ''
+    + '    <div class="btn-group col-md-4">'
+    + '       <input type="text" v-model="job_name" v-on:blur="updateJobSearch" v-on:keyup.enter="updateJobSearch" class="form-control" placeholder="Enter job name - Use \'%\' as wildcard">'
+    + '      <span v-on:click="clearJobSearch()" style="margin-left:-20px;margin-top:10px;">'
+    + '          <i class="far fa-times-circle"></i>'
+    + '       </span>'
+    + '    </div>'
+
+});
+
+Vue.component('job-state-checkbox',{
+  props: ['name','state_class'],
+  data: function() {
+    return {job_states:['succeed','failed','dispatching','running']}
+  },
+  methods: {
+    updateJobSearch: function() {
+      this.$parent.job_states = this.job_states;
+      this.$parent.updateJobList();
+    },
+  },
+  template: ''
+    + '    <div class="col col-md-3">'
+    + '      <h5>'
+    + '        <input type="checkbox" name="state" v-model="job_states" v-bind:value="name" class="cb_state" v-on:change="updateJobSearch" >'
+    + '        <span v-bind:class="state_class">{{ name }}</span>'
+    + '      </h5>'
+    + '    </div>'
+});
+
+var vm = new Vue({
+  el: '#vue_app',
+  data: {
+    jobs: {},
+    page: 1,
+    limit: 10,
+    job_name: '',
+    job_states: ['succeed','failed','dispatching','running']
+  },
+  methods: {
+    updateJobList: function() {
+     
+      var url    = uri_base + "/rest/jobs/list.json";
+      var self   = this;
+      var params = {
+        page:  self.page,
+        limit: self.limit,
+        state: self.job_states,
+      };
+      var params = new URLSearchParams();
+      params.append("page",  self.page);
+      params.append("limit", self.limit);
+
+      self.job_states.forEach(function(state) { 
+        params.append("state", state);
+      });
+
+      if (self.job_name) { params.append('job_name', self.job_name); }
+      
+      axios.get(url, { params: params }).then(function(response) {
+	response.data.jobs.forEach(function(job) {
+	  calc_additional_job_parameters(job);
+	});
+	self.jobs = response.data.jobs;
+      });
+    }
+  },
+  mounted: function() {
+      this.updateJobList();
+  }
+})

@@ -80,9 +80,7 @@ sub details {
   my ($workerhost, $workerpid, $workerqueue) = split /:/smx, $job->workerinfo;
 
   return {
-      id          => $job->id,
-      name        => $job->name,
-      state       => $job->state,
+      %{$job->TO_JSON},
       subtasks    => $subtasks,
       result      => $job->result || '{}',
       workerhost  => $workerhost,

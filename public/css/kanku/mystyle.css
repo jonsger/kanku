@@ -101,3 +101,11 @@ pre {
 .guest-card {
     margin-bottom: 1rem;
 }
+
+.job_card {
+  margin-bottom: 5px;
+}
+
+.task_card {
+  margin-bottom: 5px;
+}

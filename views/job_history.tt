@@ -1,354 +1,56 @@
 <h1>Job History</h1>
-<div id=history_settings>
-<form>
-<div class=row>
-  <div class="col col-md-3">
-        <h5>
-          <input type="checkbox" name="state" value="succeed" class="cb_state" checked >
-          <span class="badge badge-success">succeed</span></h5>
-        </h5>
+<div id="vue_app">
+  <div id=history_settings>
+  <div class=row>
+    <job-state-checkbox name="succeed"     state_class="badge badge-success"></job-state-checkbox>
+    <job-state-checkbox name="failed"      state_class="badge badge-danger" ></job-state-checkbox>
+    <job-state-checkbox name="dispatching" state_class="badge badge-primary"></job-state-checkbox>
+    <job-state-checkbox name="running"     state_class="badge badge-primary"></job-state-checkbox>
   </div>
-  <div class="col col-md-3">
-        <h5>
-          <input type="checkbox" name="state" value="failed"  class="cb_state" checked >
-          <span class="badge badge-danger">failed</span></h5>
-        </h5>
-  </div>
-  <div class="col col-md-3">
-        <h5>
-          <input type="checkbox" name="state" value="dispatching" class="cb_state" checked >
-          <span class="badge badge-info">dispatching</span></h5>
-        </h5>
-  </div>
-  <div class="col col-md-3">
-        <h5>
-          <input type="checkbox" name="state" value="running" class="cb_state" checked >
-          <span class="badge badge-info">running</span></h5>
-        </h5>
-  </div>
-</div>
-<div class=row>
-  <div class="col col-md-3">
-        <h5>
-          <input type="checkbox" name="state" value="scheduled" class="cb_state"         >
-          <span class="badge badge-warning">scheduled</span>
-        </h5>
-  </div>
-  <div class="col col-md-3">
-        <h5>
-          <input type="checkbox" name="state" value="triggered" class="cb_state"         >
-          <span class="badge badge-warning">triggered</span>
-        </h5>
-  </div>
-  <div class="col col-md-3">
-        <h5>
-          <input type="checkbox" name="state" value="skipped" class="cb_state"         >
-          <span class="badge badge-warning">skipped</span>
-        </h5>
-  </div>
-  <div class="col col-md-3">
-  </div>
-</div>
-<div id=top_pager class=row>
-  <div class="btn-group col-md-4">
-    <input type="text" name="job_name" class="form-control" placeholder="Enter job name - Use '%' as wildcard" id="job_name">
-    <i class="far fa-times-circle"></i>
-  </div>
-  <div class="col col-md-5">
-  </div>
-  <div class="col col-md-3 text-right">
-  Show rows:
-  <select id=limit name=limit>
-    <option>5</option>
-    <option selected>10</option>
-    <option>20</option>
-    <option>50</option>
-    <option>100</option>
-  </select>
-  </div>
-</div>
-
-<input type=hidden name=page id=page value=[% page %]>
-
-</form>
-</div>
-
-<div id=job_history>
-
-</div>
-<div id=bottom_pager class=row>
-<div class="col-md-4"></div>
-<div class="col-md-2">
-  <button id=previous_page type="button" class="btn btn-default">&lt;&lt;&lt;</button>
-</div>
-<div class="col-md-2">
-  <button id=next_page type="button" class="btn btn-default">&gt;&gt;&gt;</button>
-</div>
-<div class="col-md-4"></div>
-</div>
-
-<script id="job_history_header" type="x-tmpl-mustache">
-
-<div class='job_header'>
-  <div class='row'>
-      <div class="col-md-6">
-        <span class="badge badge-secondary">{{ id }}</span>
-          {{ name }}
-      </div>
-      <div class="col-md-2">{{ start_time }}</div>
-      <div class="col-md-2">{{ duration }}</div>
-      <div class="col-md-2">{{ duration }}</div>
-  </div>
-</div>
-   
-</script>
-
-<script id="job_result_panel" type="x-tmpl-mustache">
-
-<div class="card" id="jh_line_{{ id }}" style="margin-bottom:5px">
-  <div id="jh_ph_{{ id }}" class="result_toggler card-header alert alert-{{ state_class }}">
-    <div class='row'>
-      <div id="jh_ph_link_{{id}}" class="col-md-6">
-        <span class="badge badge-secondary">{{ id }}</span>
-          {{ name }} ({{ workerhost }})
-      </div>
-      <div class="col-md-2">{{ start_time }}</div>
-      <div class="col-md-2">({{ duration_min }}min {{ duration_sec }}sec)</div>
-      <div class="col-md-2">
-        {{#comments_icon }}
-          <a class="float-right"
-             href="#"
-             data-toggle="modal"
-             data-target="#modal_window_comment_{{id}}"
-             style="margin-left:5px;">
-               <i class="{{comments_icon}} fa-comments"/>
-          </a>
-        {{/comments_icon}}
-        {{#pwrand}}
-          <a class="float-right"
-             href="#"
-             data-toggle="modal"
-             data-target="#modal_window_pwrand_{{id}}"
-             data-placement="left"
-             style="margin-left:5px;">
-               <i class="fas fa-lock"></i>
-          </a>
-        {{/pwrand}}
-	<a class="float-right" href="[% request.uri_base %]/job_result/{{ id }}" style="margin-left:5px;"><i class="fas fa-link"></i></a>
-      </div>
+  <div class=row>
+    <job-state-checkbox name="scheduled"   state_class="badge badge-warning"></job-state-checkbox>
+    <job-state-checkbox name="triggered"   state_class="badge badge-warning"></job-state-checkbox>
+    <job-state-checkbox name="skipped"     state_class="badge badge-warning"></job-state-checkbox>
+    <div class="col col-md-3">
     </div>
   </div>
-  <div class="card-body" style='display:none;'id="jbody_{{ id }}">
+  <div id=top_pager class=row>
+    <job-search></job-search>
+    <div class="col col-md-5">
+    </div>
+    <limit-select selected_limit="limit"></limit-select>
+  </div>
+  </div>
+
+  <div id=job_history>
+    <div class='container-fluid'>
+    <div class='row alert alert-secondary'>
+	<div class="col-md-6">
+	  <span class="badge badge-secondary">ID</span>
+	    Job Name
+	</div>
+	<div class="col-md-2">Start Time</div>
+	<div class="col-md-2">Duration</div>
+	<div class="col-md-2 float-right">Actions</div>
+    </div>
+    </div>
+
+    <job-card
+      v-for="job in jobs"
+      v-bind:key="job.id"
+      v-bind:job="job"
+    >
+    </job-card>
+  </div>
+
+  <div id=bottom_pager class=row>
+  <div class="col-md-4"></div>
+    <prev-button></prev-button>
+    <page-counter v-bind:page="page"></page-counter>
+    <next-button></next-button>
+  <div class="col-md-4"></div>
   </div>
 </div>
-
-<div id="modal_window_comment_{{id}}" class="modal fade" tabindex="-1" role="dialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Comments for Job {{id}}</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div id="job_comment_body_{{id}}">
-          {{{ comments_as_html }}}
-        </div>
-        <div id="new_comment_div_{{id}}">
-          New Comment:
-          <textarea id="new_comment_text_{{id}}" rows="2" style="width: 100%"></textarea>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-success" onclick="save_job_comment({{id}})">Add Comment</button>
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div id="modal_window_pwrand_{{id}}" class="modal fade" tabindex="-1" role="dialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Randomized Password</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-          <pre>
-gpg -d &lt;&lt;EOF |json_pp -f json -t dumper
-{{ pwrand }}
-EOF
-
-</pre>
-      </div>
-    </div>
-  </div>
-</div>
-</script>
-
-<script id="single_job_comment" type="x-tmpl-mustache">
-<div class="panel panel-default">
-  <div class="panel-heading">
-    <div class=row>
-      <div class=col-sm-9>
-        {{username}} ({{name}})
-      </div>
-      <div class="col-sm-3 text-right">
-      {{#show_mod}}
-        <button type="button" aria-label="Edit" onclick="start_edit_job_comment({{comment_id}},{{job_id}})">
-          <i class="far fa-edit"></i>
-        </button>
-        <button type="button" aria-label="Delete" onclick="delete_job_comment({{comment_id}},{{job_id}})">
-          <i class="far fa-trash-alt"></i>
-        </button>
-      {{/show_mod}}
-      </div>
-    </div>
-  </div>
-  <div class="panel-body" id="job_comment_panel_body_{{comment_id}}">
-    {{comment}}
-  </div>
-</div>
-</script>
-
-
-<script id="job_result_panel_info" type="x-tmpl-mustache">
-
-<div class="worker_info" id="info_line_{{ id }}">
-    <div class='row'>
-      <div class="col-md-2">
-        Worker Name
-      </div>
-      <div class="col-md-10">
-        {{ workerhost }}
-      </div>
-    </div>
-    <div class='row'>
-      <div class="col-md-2">
-        Worker PID
-      </div>
-      <div class="col-md-10">
-        {{ workerpid }}
-      </div>
-    </div>
-    <div class='row'>
-      <div class="col-md-2">
-        Worker Queue
-      </div>
-      <div class="col-md-10">
-        {{ workerqueue }}
-      </div>
-    </div>
-</div>
-
-</script>
-
-<script id="subtask_result_panel" type="x-tmpl-mustache">
-
-<div class="card task_result_card" id="st_line_{{ id }}">
-  <div class="result_toggler card-header alert alert-{{ state_class }}" onClick=toggle_element("#stbody_{{ id }}")>
-    <div class='row'>
-      <div class="col-md-1">
-        <span class="badge badge-secondary">{{ id }}</span>
-      </div>
-      <div class="col-md-11">
-        {{ name }}
-      </div>
-    </div>
-  </div>
-  <div class="card-body" style='display:none' id="stbody_{{ id }}">
-  </div>
-</div>
-
-</script>
-
-<script id="subtask_result_success" type="x-tmpl-mustache">
-
-    <div class=row>
-      <div class="col-md-1">
-        prepare
-      </div>
-      <div class="col-md11">
-        {{ result_prepare }}
-      </div>
-    </div>
-    <div class=row>
-      <div class="col-md-1">
-        execute
-      </div>
-      <div class="col-md11">
-        {{ result_execute }}
-      </div>
-    </div>
-    <div class=row>
-      <div class="col-md-1">
-        finalize
-      </div>
-      <div class="col-md11">
-        {{ result_finalize }}
-      </div>
-    </div>
-
-</script>
-
-<script id="subtask_result_failed" type="x-tmpl-mustache">
-
-    <div class=row>
-      <div class="col-md-1">
-      </div>
-      <div class="col-md-10">
-        <pre>
-{{ error_message  }}
-        </pre>
-      </div>
-      <div class="col-md-1">
-      </div>
-    </div>
-
-</script>
-
-<script id="job_result_failed" type="x-tmpl-mustache">
-
-    <div class=row>
-      <div class="col-md-1">
-      </div>
-      <div class="col-md-10">
-        <pre>
-{{ error_message  }}
-        </pre>
-      </div>
-      <div class="col-md-1">
-      </div>
-    </div>
-
-</script>
-
-<script id="job_comment_modal_window" type="x-tmpl-mustache">
-<div class="modal" tabindex="-1" role="dialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Modal title</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <p>Modal body text goes here.</p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary">Save changes</button>
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
-</script>
-
 <script src="[% request.uri_base %]/js/kanku/job_history.js"></script>
 
 <!-- vim: set ft=html -->
