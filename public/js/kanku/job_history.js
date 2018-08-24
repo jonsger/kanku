@@ -151,7 +151,8 @@ Vue.component('job-card',{
   props: ['job'],
   data: function () {
     return {
-      showTaskList: 0
+      showTaskList: 0,
+      uri_base:     uri_base
     }
   },
   methods: {
@@ -172,9 +173,9 @@ Vue.component('job-card',{
     },
   },
   template: '<div class="card job_card">'
-    + '<div class="card-header alert" v-bind:class="job.state_class" v-on:click="toggleJobDetails()">'
+    + '<div class="card-header alert" v-bind:class="job.state_class">'
     + '  <div class="row">'
-    + '    <div class="col-md-6">'
+    + '    <div class="col-md-6" v-on:click="toggleJobDetails()">'
     + '      <span class="badge badge-secondary">{{ job.id }}</span> {{ job.name }}'
     + '    </div>'
     + '    <div class="col-md-2">'
@@ -185,12 +186,40 @@ Vue.component('job-card',{
     + '    </div>'
     + '    <div class="col-md-2">'
     + '      <!-- ACTIONS -->'
+    + '      <job-details-link v-bind:href="uri_base + \'/job_result/\'+job.id"></job-details-link>'
     + '    </div>'
     + '  </div>'
     + '</div>'
     + '<task-list v-show="showTaskList" ref="tasklist"></task-list>'
     + '</div>'
 });
+
+Vue.component('job-details-link',{
+  props: ['job_id','uri_base'],
+  template: '<a class="float-right" style="margin-left:5px;"><i class="fas fa-link"></i></a>'
+});
+
+/*
+        {{#comments_icon }}
+          <a class="float-right"
+             href="#"
+             data-toggle="modal"
+             data-target="#modal_window_comment_{{id}}"
+             style="margin-left:5px;">
+               <i class="{{comments_icon}} fa-comments"/>
+          </a>
+        {{/comments_icon}}
+        {{#pwrand}}
+          <a class="float-right"
+             href="#"
+             data-toggle="modal"
+             data-target="#modal_window_pwrand_{{id}}"
+             data-placement="left"
+             style="margin-left:5px;">
+               <i class="fas fa-lock"></i>
+          </a>
+        {{/pwrand}}
+*/
 
 Vue.component('page-counter',{
   props: ['page'],
