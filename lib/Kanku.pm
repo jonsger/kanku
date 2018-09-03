@@ -55,7 +55,7 @@ get '/job_history' => sub {
 };
 
 get '/job_result/:id' => sub {
-    template 'job_result' , { %{ get_defaults_for_views() }, id => param('id'), kanku => { module => 'History'} };
+    template 'job_result' , { %{ get_defaults_for_views() }, id => param('id'), kanku => { module => 'Result'} };
 };
 
 get '/job' => require_any_role [qw/Admin User/] => sub {
