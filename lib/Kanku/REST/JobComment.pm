@@ -41,8 +41,14 @@ sub create {
       code   => 200,
     };
   }
-
-  return { result => 'failed' };
+  my $msg;
+  $msg .= "No message given!" unless $message;
+  $msg .= "No user_id given!" unless $user_id;
+  $msg .= "No job_id given!"  unless $job_id;
+  return {
+    result  => 'failed',
+    message => $msg
+  };
 }
 
 sub update {

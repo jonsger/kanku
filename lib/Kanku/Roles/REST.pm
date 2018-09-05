@@ -30,7 +30,8 @@ sub rset { return $_[0]->schema->resultset($_[1]); }
 
 sub has_role {
   my ($self, $role) = @_;
-  return scalar grep { $role } @{$self->current_user->{roles} || []};
+  $self->log("debug", "Searching for role $role");
+  return scalar grep { "$role" } @{$self->current_user->{roles} || []}, keys %{$self->current_user->{role_id} || {}};
 }
 
 sub log {    ## no critic (Subroutines::ProhibitBuiltinHomonyms)

@@ -34,13 +34,13 @@
 	<div class="col-md-2 float-right">Actions</div>
     </div>
     </div>
-
-    <job-card
+    <div
       v-for="job in jobs"
       v-bind:key="job.id"
       v-bind:job="job"
     >
-    </job-card>
+      <job-card v-bind:job="job"></job-card>
+    </div>
   </div>
 
   <div id=bottom_pager class=row>

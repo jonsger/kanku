@@ -10,8 +10,8 @@ function calc_job_start_and_end(start_time, end_time) {
     // calculate duration
     var due;
 
-    if ( end_time ) { 
-      due = end_time; 
+    if ( end_time ) {
+      due = end_time;
     } else {
       due = Math.floor(Date.now() / 1000);
     }
@@ -146,13 +146,24 @@ Vue.component('task-list',{
     +'</div>'
 });
 
-
 Vue.component('job-card',{
   props: ['job'],
   data: function () {
+    var show_comments     = false;
+    var show_pwrand       = false;
+    if (active_roles['Admin'] || active_roles['User']) {
+      show_comments = true
+    }
+    if (active_roles['Admin'] && this.job.pwrand) {
+      show_pwrand = true;
+    }
     return {
-      showTaskList: 0,
-      uri_base:     uri_base
+      showTaskList:        0,
+      uri_base:            uri_base,
+      user_is_admin:       active_roles['Admin'],
+      show_comments:       show_comments,
+      show_pwrand:         show_pwrand,
+      comment: '',
     }
   },
   methods: {
@@ -171,6 +182,28 @@ Vue.component('job-card',{
         });
       });
     },
+    showModal: function() {
+      this.$refs.modalComment.show()
+    },
+    closeModal: function() {
+      this.$refs.modalComment.hide();
+      this.$root.updateJobList();
+    },
+    createJobComment: function() {
+      var url    = uri_base+'/rest/job/comment/'+this.job.id+'.json';
+      var params = {job_id: this.job.id,message:this.comment};
+      axios.post(url, params);
+      this.updateJobCommentList();
+      this.comment = '';
+    },
+    updateJobCommentList: function() {
+      var url    = uri_base+'/rest/job/comment/'+this.job.id+'.json';
+      var params = {job_id: this.job.id};
+      var self = this;
+      axios.get(url, params).then(function(response) {
+        self.job.comments = response.data.comments;
+      });
+    },
   },
   template: '<div class="card job_card">'
     + '<div class="card-header alert" v-bind:class="job.state_class">'
@@ -187,39 +220,140 @@ Vue.component('job-card',{
     + '    <div class="col-md-2">'
     + '      <!-- ACTIONS -->'
     + '      <job-details-link v-bind:href="uri_base + \'/job_result/\'+job.id"></job-details-link>'
+    + '      <pwrand-link v-show="show_pwrand" v-bind:job_id="job.id"></pwrand-link>'
+    + '      <comments-link v-bind:job="job" ref="commentsLink"></comments-link>'
     + '    </div>'
     + '  </div>'
     + '</div>'
     + '<task-list v-show="showTaskList" ref="tasklist"></task-list>'
+    + '  <b-modal ref="modalComment" hide-footer title="Comments for Job">'
+    + '    <div>'
+    + '      <single-job-comment v-for="cmt in job.comments" v-bind:key="cmt.id" v-bind:comment="cmt">'
+    + '      </single-job-comment>'
+    + '    </div>'
+    + '    <div>'
+    + '      New Comment:'
+    + '      <textarea v-model="comment" rows="2" style="width: 100%"></textarea>'
+    + '    </div>'
+    + '    <div class="modal-footer">'
+    + '      <button type="button" class="btn btn-success" v-on:click="createJobComment(job.id)">Add Comment</button>'
+    + '      <button type="button" class="btn btn-secondary" v-on:click="closeModal()" aria-label="Close">Close</button>'
+    + '    </div>'
+    + '  </b-modal>'
+    + '<pwrand-modal v-bind:job="job" ref="modalPwRand"></pwrand-modal>'
     + '</div>'
 });
 
+Vue.component('comments-link',{
+  methods: {
+    showModal: function() {
+      var p = this.$parent;
+      p.showModal();
+    }
+  },
+  props: ['job'],
+  computed: {
+    comments_length: function() {
+      return this.job.comments.length;
+    }
+  },
+  template: ''
+    + '<a class="float-right" style="margin-left:5px;" v-on:click="showModal()">'
+    + '  <span v-if="comments_length > 0" key="commented"><i class="fas fa-comments"></i></span>'
+    + '  <span v-else><i class="far fa-comments" key="uncommented"></i></span>'
+    + '</a>'
+});
+
 Vue.component('job-details-link',{
-  props: ['job_id','uri_base'],
   template: '<a class="float-right" style="margin-left:5px;"><i class="fas fa-link"></i></a>'
 });
 
-/*
-        {{#comments_icon }}
-          <a class="float-right"
-             href="#"
-             data-toggle="modal"
-             data-target="#modal_window_comment_{{id}}"
-             style="margin-left:5px;">
-               <i class="{{comments_icon}} fa-comments"/>
-          </a>
-        {{/comments_icon}}
-        {{#pwrand}}
-          <a class="float-right"
-             href="#"
-             data-toggle="modal"
-             data-target="#modal_window_pwrand_{{id}}"
-             data-placement="left"
-             style="margin-left:5px;">
-               <i class="fas fa-lock"></i>
-          </a>
-        {{/pwrand}}
-*/
+Vue.component('pwrand-link',{
+  props: ['job_id'],
+  methods: {
+    showModalPwRand: function() {
+      var p0 = this.$parent;
+      var r0 = p0.$refs.modalPwRand;
+      var r1 = r0.$refs.modalPwRandModal;
+      r1.show();
+    },
+  },
+  template: '<a class="float-right" style="margin-left:5px;" v-on:click="showModalPwRand()"><i class="fas fa-lock"></i></a>'
+});
+
+Vue.component('pwrand-modal', {
+  props: ['job'],
+  template: ''
+    + '<b-modal ref="modalPwRandModal" hide-footer title="Randomized Password">'
+    + '<pre>'
+    + 'gpg -d &lt;&lt;EOF |json_pp -f json -t dumper' + "\n"
+    + '{{ job.pwrand }}'
+    + "\n"
+    + 'EOF'
+    + '</pre>'
+    + '</b-modal>'
+});
+
+Vue.component('single-job-comment', {
+  props: ['comment'],
+  methods: {
+    editJobComment: function() {
+      this.$refs.textarea_job_comment.readOnly = false;
+      this.show_save = 1;
+    },
+    deleteJobComment: function() {
+      var url    = uri_base+'/rest/job/comment/'+this.comment.id+'.json';
+      var params = {comment_id: this.comment.id, };
+      var self = this;
+      var p = this.$parent;
+      axios.delete(url, params).then(function(response) {
+        p.$parent.updateJobCommentList();
+      });
+    },
+    updateJobComment: function() {
+      var url    = uri_base+'/rest/job/comment/'+this.comment.id+'.json';
+      var params = {comment_id: this.comment.id, message: this.comment_message };
+      var self = this;
+      var p = this.$parent;
+      axios.put(url, params).then(function(response) {
+        p.$parent.updateJobCommentList();
+      });
+      this.$refs.textarea_job_comment.readOnly = true;
+      this.show_save = 0;
+    }
+  },
+  data: function() {
+    return {
+      show_mod: (user_name == this.comment.user.username) ? 1 : 0,
+      show_save: 0,
+      comment_message: this.comment.comment,
+    }
+  },
+  template: ''
+    + '<div class="panel panel-default">'
+    + '  <div class="panel-heading">'
+    + '    <div class=row>'
+    + '      <div class=col-sm-9>'
+    + '      {{ comment.user.username }} ({{comment.user.name}})'
+    + '      </div>'
+    + '      <div class="col-sm-3 text-right">'
+    + '        <div v-show="show_mod">'
+    + '          <button class="btn btn-primary" type="button" aria-label="Edit" v-on:click="editJobComment()">'
+    + '            <i class="far fa-edit"></i>'
+    + '          </button>'
+    + '          <button class="btn btn-danger" type="button" aria-label="Delete" v-on:click="deleteJobComment()">'
+    + '            <i class="far fa-trash-alt"></i>'
+    + '          </button>'
+    + '        </div>'
+    + '      </div>'
+    + '    </div>'
+    + '   </div>'
+    + '  <textarea v-model="comment_message" style="width:100%;margin-top:10px;margin-bottom:20px;" readonly ref="textarea_job_comment">'
+    + '{{ comment.comment }}'
+    + '</textarea>'
+    + '   <button v-show="show_save" class="btn btn-success" v-on:click="updateJobComment()">Save</button>'
+    + '</div>'
+});
 
 Vue.component('page-counter',{
   props: ['page'],
@@ -322,7 +456,6 @@ var vm = new Vue({
   },
   methods: {
     updateJobList: function() {
-     
       var url    = uri_base + "/rest/jobs/list.json";
       var self   = this;
       var params = {
@@ -334,12 +467,12 @@ var vm = new Vue({
       params.append("page",  self.page);
       params.append("limit", self.limit);
 
-      self.job_states.forEach(function(state) { 
+      self.job_states.forEach(function(state) {
         params.append("state", state);
       });
 
       if (self.job_name) { params.append('job_name', self.job_name); }
-      
+
       axios.get(url, { params: params }).then(function(response) {
 	response.data.jobs.forEach(function(job) {
 	  calc_additional_job_parameters(job);

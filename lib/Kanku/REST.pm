@@ -65,7 +65,7 @@ get '/job/config/:name.:format' => require_any_role [qw/Admin User/] =>  sub {
 };
 
 # ROUTES FOR JOB COMMENTS
-get '/job/comments/:job_id.:format' => require_any_role [qw/Admin User/] =>  sub {
+get '/job/comment/:job_id.:format' => require_any_role [qw/Admin User/] =>  sub {
   my $jco = Kanku::REST::JobComment->new(app_opts());
   return $jco->list();
 };
