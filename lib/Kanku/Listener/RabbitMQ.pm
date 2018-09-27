@@ -130,7 +130,7 @@ sub wait_for_events {
       if ( $message->{routing_key} eq "$routing_prefix.package.build_success" ) {
 	 my $body = decode_json($message->{body});
 	 my $package_key = $body->{project}.'/'.$body->{package}.'/'.$body->{repository}.'/'.$body->{arch};
-	 $logger->debug("package_key: $qname - $package_key");
+	 $logger->trace("package_key: $qname - $package_key");
 	 my $cfg = $triggers->{'package.build_success'}->{$package_key};
 	 if ($cfg) {
 	   $logger->debug(" - found in cfg");
@@ -148,7 +148,7 @@ sub wait_for_events {
       if ( $message->{routing_key} eq "$routing_prefix.repo.published" ) {
 	my $body = decode_json($message->{body});
 	my $repo_key = $body->{project}.'/'.$body->{repo};
-	$logger->debug("repo_key: $qname - $repo_key");
+	$logger->trace("repo_key: $qname - $repo_key");
 	if ($wait_for_publisher->{$repo_key}) {
 	  $logger->debug(" - found in wait_for_publisher");
 	  $self->trigger_jobs($wait_for_publisher->{$repo_key});
