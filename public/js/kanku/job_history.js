@@ -6,8 +6,8 @@ var alert_map = {
 };
 
 function calc_job_start_and_end(start_time, end_time) {
-  var st = new Date(1000 * start_time);
-  if (st) {
+  if (start_time > 0) {
+    var st = new Date(1000 * start_time);
     // calculate duration
     var due;
 
