@@ -1,7 +1,8 @@
 var alert_map = {
-  succeed: 'alert-success',
-  failed:  'alert-danger',
-  running:  'alert-primary',
+  succeed:     'alert-success',
+  failed:      'alert-danger',
+  running:     'alert-primary',
+  dispatching: 'alert-primary',
 };
 
 function calc_job_start_and_end(start_time, end_time) {
