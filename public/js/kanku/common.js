@@ -9,6 +9,7 @@ function show_messagebox(state, msg) {
   var elem = $("#messagebox");
   elem.removeClass("alert-success");
   elem.removeClass("alert-warning");
+  elem.removeClass("alert-danger");
   elem.addClass("alert-" + state);
   elem.text(msg);
   elem.show
