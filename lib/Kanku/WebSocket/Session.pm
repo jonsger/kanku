@@ -96,6 +96,8 @@ sub authenticate {
   my $rs = $self->schema->resultset('WsToken')->find({auth_token=> $self->auth_token});
 
   if ( $rs ) {
+    $self->user_id($rs->user_id);
+    $session->user_id($rs->user_id);
     my $user = $rs->user;
     my $roles = $rs->user->user_roles;
     my $perms=0;
