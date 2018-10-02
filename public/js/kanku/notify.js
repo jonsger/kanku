@@ -1,6 +1,3 @@
-var mySocket = new WebSocket(ws_url);
-var token = Cookies.get("kanku_notify_session");
-
 // Preloading images
 $.each(['32', '64'], function(index, size) {
   $.each(['', '-danger', '-success', '-warning'], function(index, ext) {
@@ -8,6 +5,14 @@ $.each(['32', '64'], function(index, size) {
     image.src = uri_base + '/images/' + size + '/kanku' + ext + '.png';
   });
 });
+
+console.log("ws_url: "+ ws_url);
+var mySocket = new WebSocket(ws_url);
+var token = Cookies.get("kanku_notify_session");
+
+mySocket.onerror = function (error) {
+  console.log('WebSocket Error ' + error);
+};
 
 mySocket.onmessage = function (evt) {
   console.log( "Got message " + evt.data );
@@ -70,7 +75,7 @@ mySocket.onclose = function(evt) {
 	body: m,
 	icon: ico
     });
-    $("#content").text(m);
+    show_messagebox('danger', m, 0);
     n.onclick = function() {
         window.location.href = 'notify';
         n.close();
