@@ -251,6 +251,7 @@ get '/notify' => requires_any_role [qw(Admin User Guest)] => sub {
       user_id => $user->{id},
       schema  => schema,
     );
+    debug "Session auth_token: ".$ws_session->auth_token;
     cookie 'kanku_notify_session' => $ws_session->auth_token, http_only => 0, path => $self->app->request->uri;
     template 'notify' , { %{ get_defaults_for_views() }, kanku => { module => 'Desktop Notifications' } };
   } else {
@@ -323,6 +324,8 @@ websocket_on_open sub {
       if ($ws_session) {
         debug 'closing session '.$ws_session->session_token;
         $ws_session->close_session();
+        debug 'cleanup session '.$ws_session->session_token;
+        $ws_session->cleanup_session();
       };
     },
     message => sub {
@@ -343,7 +346,8 @@ websocket_on_open sub {
         } else {
           $msg = 'Authentication succeed!';
         }
-	debug "$msg ($perms)";
+        my $uid = $ws_session->user_id;
+	debug "$msg ($perms/$uid)";
         $notify->send($msg);
       } elsif ($data->{filters}) {
         debug('Got filters');
@@ -384,16 +388,9 @@ websocket_on_open sub {
       debug "declared queue $qn successfully";
       $mq->queue_name($qn);
       debug "starting queue bind $qn -> kanku.notify";
-      try {
-        $mq->queue->queue_bind(1, $qn, 'kanku.notify', '');
-      } catch {
-        error $_;
-        $log->error($_);
-        die $_;
-      }
+      $mq->queue->queue_bind(1, $qn, 'kanku.notify', '');
       debug "queue bind succeed $qn -> kanku.notify";
       $mq->queue->consume(1, $qn);
-      $log->debug("Starting child($$) and waiting for notifications on queue $qn");
       debug "started consuming $qn";
       my $oldperms=10000;
       while (1) {
@@ -403,17 +400,17 @@ websocket_on_open sub {
           $oldperms = $perms;
         }
         if ($perms < 0) {
-          debug 'Perms count less than zero';
+          $log->debug('Perms count less than zero');
           $log->debug("Authentication failed ($perms)") if ($perms == -1);
           $log->debug("Detected connection closed ($perms)") if ($perms == -2);
 	  $ws_session->cleanup_session();
           if ($mq->queue->is_connected) {
             $log->debug('Unbinding queue');
 	    $mq->queue->queue_unbind(1, $qn, 'kanku.notify', '');
-            #$log->debug("Deleting queue");
-	    #$mq->queue->queue_delete(1, $qn);
             $log->debug('Disconnecting queue');
 	    $mq->queue->disconnect();
+            $log->debug("Deleting queue");
+	    $mq->queue->queue_delete(1, $qn);
           }
           $log->debug("Cleanup and exiting child($$)");
           $mq->queue->disconnect if $mq->queue->is_connected();
@@ -449,6 +446,16 @@ websocket_on_open sub {
 	}
       }
     }
+};
+
+websocket_on_error sub {
+    my $env = shift;
+    debug "WEBSOCKET ERROR: $env->{'plack.app.websocket.error'}";
+    return [
+        500,
+        ["Content-Type" => "text/plain"],
+        ["Error: " . $env->{"plack.app.websocket.error"}]
+    ];
 };
 
 __PACKAGE__->meta->make_immutable();
