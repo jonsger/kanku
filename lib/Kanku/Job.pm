@@ -20,6 +20,8 @@ use Moose;
 use Data::Dumper;
 use JSON::XS;
 use Kanku::GPG;
+use Try::Tiny;
+
 with 'Kanku::Roles::Serialize';
 with 'Kanku::Roles::Logger';
 
