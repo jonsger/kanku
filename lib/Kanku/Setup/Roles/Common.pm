@@ -24,6 +24,7 @@ use Path::Class qw/dir file/;
 use Carp;
 use English qw/-no_match_vars/;
 use Const::Fast;
+use File::Which;
 
 const my $MAX_NETWORK_NUMBER => 255;
 
@@ -330,7 +331,7 @@ sub _set_sudoers {     ## no critic (Subroutines::ProhibitUnusedPrivateSubroutin
   my $logger        = $self->logger;
 
   my $choice = $self->_query_interactive(<<'EOF'
-Should we add user $user to the sudoers to be able to execute iptables/netstat as root?
+Should we add user $user to the sudoers to be able to execute iptables/netstat/ss as root?
 This is required if you want to use portforwarding from host to guests!
 (Y|n)
 EOF
@@ -343,7 +344,11 @@ EOF
     my $sudoers_file  = file('/etc/sudoers.d/kanku');
     $self->_backup_config_file($sudoers_file);
     $logger->info("Adding commands for user $user in " . $sudoers_file->stringify);
-    $sudoers_file->spew("$user ALL=NOPASSWD: /usr/sbin/iptables, /bin/netstat\n");
+    my $iptables = which 'iptables' || '/usr/sbin/iptables';
+    my $ss       = which 'ss'       || '/usr/sbin/ss';
+    # support netstat on legacy systems
+    my $netstat  = which 'netstat'  || '/bin/netstat';
+    $sudoers_file->spew("$user ALL=NOPASSWD: $iptables, $ss, $netstat\n");
   }
 
   return;

@@ -18,6 +18,7 @@ package Kanku::Util::IPTables;
 
 use Moose;
 use Data::Dumper;
+use File::Which;
 
 with 'Kanku::Roles::Logger';
 
@@ -251,21 +252,24 @@ has _used_ports => (
     # TODO: make usable for tcp and udp
 
     # prepare command to read PREROUTING chain
-    $cmd = $self->sudo . "LANG=C netstat -ltn";
+    my $bin = which 'ss';
+    $bin = which 'netstat' unless $bin;
+    if ($bin) {
+      $cmd = $self->sudo . "LANG=C $bin -ltn";
 
-    # read PREROUTING rules
-    foreach my $line (`$cmd`) {
-      chomp $line;
-      my ($proto,$recvQ,$sendQ,$localAddress,$foreignAddress,$state)
-        = split(/\s+/,$line);
-      if ( $localAddress =~ /(.*):(\d+)$/ ) {
-        if (
-              $1 eq '0.0.0.0' or
-              $1 eq $hostip
-              # or $1 eq '::' use only ipv4 for now
-        ) {
-          $result->{$2} = 1;
-        }
+      # read PREROUTING rules
+      foreach my $line (`$cmd`) {
+	chomp $line;
+	my @fields = split(/\s+/,$line);
+	if ( $fields[3] =~ /(.*):(\d+)$/ ) {
+	  if (
+		$1 eq '0.0.0.0' or
+		$1 eq $hostip
+		# or $1 eq '::' use only ipv4 for now
+	  ) {
+	    $result->{$2} = 1;
+	  }
+	}
       }
     }
 
