@@ -6,6 +6,7 @@ var alert_map = {
 };
 
 function calc_job_start_and_end(start_time, end_time) {
+  console.log("start_time: "+start_time)
   if (start_time > 0) {
     var st = new Date(1000 * start_time);
     // calculate duration
@@ -255,7 +256,10 @@ Vue.component('comments-link',{
   props: ['job'],
   computed: {
     comments_length: function() {
-      return this.job.comments.length;
+      if (this.job.comments) {
+        return this.job.comments.length;
+      }
+      return 0;
     }
   },
   template: ''
