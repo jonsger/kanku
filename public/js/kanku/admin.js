@@ -39,7 +39,6 @@ function send_role_request(req_id, decision) {
 
 function get_admin_user_list() {
   var url = uri_base + "/rest/admin/user/list.json";
-  console.log(url);
   axios.get(url).then(update_admin_user_list);
 }
 
@@ -52,7 +51,6 @@ function update_admin_user_list(xhr) {
     $("#user_list").append("Looks like an error - No users found!");
   } else {
     $(data).each(function(idx, user) {
-      console.log(user);
       user.roles = user.roles.join(", ");
       var template = $("#user-list-tr-template").html();
       Mustache.parse(template);
@@ -79,9 +77,7 @@ function update_admin_role_list(xhr) {
   if (data.length < 1) {
     $("#role_list").append("Looks like an error - No roles found!");
   } else {
-  console.log(data);
     $(data).each(function(idx, role) {
-      console.log(role);
       var template = $("#role-list-tr-template").html();
       Mustache.parse(template);
       var rendered = Mustache.render(
@@ -96,7 +92,6 @@ function update_admin_role_list(xhr) {
 
 function delete_user(user_id) {
   var url = uri_base + "/rest/admin/user/" + user_id + ".json";
-  console.log(url);
   axios.delete(url).then(get_admin_user_list);
 }
 

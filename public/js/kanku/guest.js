@@ -34,8 +34,6 @@ $( document ).ready(
         $.each(
           we,
           function (num, error) {
-            console.log("error");
-            console.log(error);
             $('#worker_errors').append(
               '<div class="alert alert-danger">'+error+'</div>'
             )

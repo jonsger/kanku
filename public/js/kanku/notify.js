@@ -6,7 +6,6 @@ $.each(['32', '64'], function(index, size) {
   });
 });
 
-console.log("ws_url: "+ ws_url);
 var mySocket = new WebSocket(ws_url);
 var token = Cookies.get("kanku_notify_session");
 
@@ -15,16 +14,13 @@ mySocket.onerror = function (error) {
 };
 
 mySocket.onmessage = function (evt) {
-  console.log( "Got message " + evt.data );
   data = JSON.parse(evt.data);
   var ico_ext = '';
   if ( data.result == 'failed' ) {
     ico_ext = '-danger'
   }
   var ico = uri_base + '/images/64/kanku' + ico_ext + '.png';
-  console.log(ico);
   var notify_timeout = $('#notification_timeout').val() * 1000;
-  console.log("using timeout: "+notify_timeout);
   Notification.requestPermission(function() {
     var n = new Notification(data.title, {
 	body: data.body,
@@ -41,17 +37,13 @@ mySocket.onmessage = function (evt) {
 };
 
 mySocket.onopen = function(evt) {
-  console.log("opening Socket");
   var ico = uri_base + '/images/32/kanku-success.png';
   var notify_timeout = $('#notification_timeout').val();
-  console.log("using timeout: "+notify_timeout);
   Notification.requestPermission(function() {
     $("#favicon").attr("href",ico);
     setTimeout(
       function() {
 	var msg = '{"token":"'+ token +'"}';
-	console.log("sending token " + msg);
-	console.log(msg)
 	mySocket.send(msg);
       },
       notify_timeout
@@ -145,10 +137,8 @@ function update_filters() {
   $("form input:checkbox").each(function(idx, elem) {
     var id = $(elem).attr('id');
     filters[id] = $(elem).is(':checked')
-    console.log("id: "+id+" - "+$(elem).is(':checked'));
   });
   var j_string = JSON.stringify(filters);
-  console.log("update_filters: filters = "+j_string);
   Cookies.set(
     "kanku.filters",
     j_string,
@@ -168,14 +158,11 @@ function set_filters_from_cookie() {
   var j_string = Cookies.get("kanku.filters");
   var filters;
   if (j_string == undefined) {
-    console.log("Filters undefined - creating new array");
     filters = {};
     $("form input:checkbox").each(function (idx, elem) {
       var id = $(elem).attr('id');
-      console.log("id: "+id);
       filters[id] = true;
     });
-    console.log(filters);
   } else {
     filters = jQuery.parseJSON(j_string);
   }

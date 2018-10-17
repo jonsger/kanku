@@ -5,7 +5,6 @@ var updateMessageBar = function (p, t, s) {
     mb.text        = t;
     setTimeout(
       function() {
-	console.log("Closing");
 	mb.show = false;
       },
       10000

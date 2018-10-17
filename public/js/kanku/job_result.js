@@ -84,7 +84,6 @@ function update_job_result_panel_body (data) {
 
   if ( data.result ) {
     var job_result = JSON.parse(data.result);
-    console.log("error_message:"+job_result.error_message);
     if (job_result.error_message) {
       var rendered = Mustache.render(
 	job_result_failed_template,

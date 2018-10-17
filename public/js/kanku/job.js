@@ -38,8 +38,6 @@ function schedule_job(job_name) {
   $.each(
     input_elements,
     function() {
-      console.log("Triggering job for: " + this.name + " " + this.value);
-
       if ( this.name == 'use_module' ) {
         cur_class_id = this.value;
         sub_task_counter = sub_task_counter + 1
@@ -60,7 +58,6 @@ function schedule_job(job_name) {
 
   axios.post(url, data).then(function(xhr) {
       var response = xhr.data;
-      console.log(response);
       show_messagebox(response.state, response.msg);
   });
 }
@@ -95,15 +92,11 @@ function  restore_defaults(job_name) {
   $.each(
     gui_config.config,
     function (job_id) {
-    console.log("restore_defaults: job_id = " + job_id);
     // restore only for selected job
     if ( this.job_name == job_name ) {
-      console.log( this );
         $.each(
           this.sub_tasks,
           function(subtask_id) {
-            console.log("restore_defaults: subtask_id =" + subtask_id);
-            console.log( this );
             var defaults = this.defaults;
             $.each(
               this.gui_config,
@@ -142,8 +135,6 @@ $( document ).ready(
         $.each(
           gui_config.config,
           function (job_id) {
-            //console.log("job_name " + this.job_name);
-
             var job_name = this.job_name;
             var task_list = [];
 
@@ -158,9 +149,7 @@ $( document ).ready(
                     function (param_id) {
                       var tmpl = template_formgroup[this.type];
                       var final_jobid = this.param + "_" +job_id + "_" + subtask_id + "_" + param_id;
-                      //console.log("              value: "+ obj[final_jobid]);
                       var value = obj[final_jobid] || defaults[this.param];
-                      console.log("param: "+ this.param + " " + prefix_domain_name);
                       task_list_task_args.push(
                         Mustache.render(
                                   tmpl,
