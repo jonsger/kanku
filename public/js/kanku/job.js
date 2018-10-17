@@ -205,7 +205,9 @@ $( document ).ready(
         $.each(
           obj,
           function(k,v) {
-            $("#"+k).val(v);
+            if (k) {
+              $("#"+k).val(v);
+            }
         });
     });
 });
