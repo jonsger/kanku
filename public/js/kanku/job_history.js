@@ -6,7 +6,6 @@ var alert_map = {
 };
 
 function calc_job_start_and_end(start_time, end_time) {
-  console.log("start_time: "+start_time)
   if (start_time > 0) {
     var st = new Date(1000 * start_time);
     // calculate duration
@@ -168,6 +167,17 @@ Vue.component('job-card',{
       comment: '',
     }
   },
+  computed: {
+    workerInfo: function() {
+      var tmp = new Array;
+      tmp = this.job.workerinfo.split(':');
+      return {
+        host:  tmp[0] || 'localhost',
+        pid:   tmp[1] || 0,
+        queue: tmp[2] || ''
+      }
+    }
+  },
   methods: {
     toggleJobDetails: function() {
       this.showTaskList = !this.showTaskList
@@ -211,7 +221,7 @@ Vue.component('job-card',{
     + '<div class="card-header alert" v-bind:class="job.state_class">'
     + '  <div class="row">'
     + '    <div class="col-md-6" v-on:click="toggleJobDetails()">'
-    + '      <span class="badge badge-secondary">{{ job.id }}</span> {{ job.name }}'
+    + '      <span class="badge badge-secondary">{{ job.id }}</span> {{ job.name }} ({{ workerInfo.host }})'
     + '    </div>'
     + '    <div class="col-md-2">'
     + '      {{ job.start_time_formatted }}'
