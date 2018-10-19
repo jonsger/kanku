@@ -332,13 +332,19 @@ sub _setup_rabbitmq {
   # Wait for rabbitmq to get ready
   my $rcode = 1;
   while ($rcode) {
-    $rcode = $self->_run_system_cmd("rabbitmqctl","status");
+    my $result = $self->_run_system_cmd("rabbitmqctl","status");
+    $rcode = $result->{return_code};
     sleep 1;
   }
-  $self->_run_system_cmd("rabbitmqctl","add_vhost", $self->mq_vhost);
-  $self->_run_system_cmd("rabbitmqctl","add_user", $self->mq_user, $self->mq_pass);
-  $self->_run_system_cmd("rabbitmqctl","set_permissions", "-p", $self->mq_vhost, $self->mq_user, '.*', '.*', '.*');
+  # Add vhost if needed
+  my $result = $self->_run_system_cmd("rabbitmqctl","list_vhosts");
+  $self->_run_system_cmd("rabbitmqctl","add_vhost", $self->mq_vhost) if $result->{stdout} !~ m#/kanku#;
 
+  # Add user if needed
+  $result = $self->_run_system_cmd("rabbitmqctl","list_users");
+  $self->_run_system_cmd("rabbitmqctl","add_user", $self->mq_user, $self->mq_pass) if $result->{stdout} !~ m#kanku#;
+
+  $self->_run_system_cmd("rabbitmqctl","set_permissions", "-p", $self->mq_vhost, $self->mq_user, '.*', '.*', '.*');
 }
 
 sub _setup_ovs_hooks {

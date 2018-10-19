@@ -309,7 +309,11 @@ sub _run_system_cmd {    ## no critic (Subroutines::ProhibitUnusedPrivateSubrout
     $logger->error('Execution of command failed: "'.($err || q{}).q{"});
   }
 
-  return $CHILD_ERROR;
+  return {
+    return_code => $CHILD_ERROR,
+    stderr      => $err,
+    stdout	=> $out,
+  };
 }
 
 sub _chown {
