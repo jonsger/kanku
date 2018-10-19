@@ -70,6 +70,11 @@ Vue.component('worker-info',{
     + '      {{ worker.queue }}'
     + '    </div>'
     + '  </div>'
+    + '  <div class="row" v-show="worker.error">'
+    + '    <div class="col-md-12">'
+    + '      <pre>{{ worker.error }}</pre>'
+    + '    </div>'
+    + '  </div>'
     + '</div>'
 });
 
@@ -125,18 +130,20 @@ Vue.component('task-result',{
 });
 
 Vue.component('task-list',{
+  props: ['result'],
   data: function() {
     return {
       isShown: 0,
       count: 0,
-      jobData: {}
+      jobData: {},
     }
   },
   updated: function() {
     this.$refs.workerinfo.worker = {
-      host: this.jobData.workerhost,
-      pid:  this.jobData.workerpid,
-      queue: this.jobData.workerqueue
+      host:   this.jobData.workerhost,
+      pid:    this.jobData.workerpid,
+      queue:  this.jobData.workerqueue,
+      error:  JSON.parse(this.jobData.result).error_message
     };
     calc_additional_job_parameters(this.jobData);
     this.$parent.job = this.jobData;

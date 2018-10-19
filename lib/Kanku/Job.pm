@@ -69,6 +69,7 @@ sub update_db {
         );
         $pwrand = $gpg->encrypt;
       } catch {
+        $self->logger->error("Failed to encrypt: $_");
         $self->result(encode_json({error_message=>$_}));
         $self->state('failed');
         $self->end_time(time());
