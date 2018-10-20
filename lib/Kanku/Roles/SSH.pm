@@ -35,14 +35,22 @@ has 'privatekey_path' => (
   is	  => 'rw',
   isa	  => 'Str',
   lazy	  => 1,
-  default => sub { $_[0]->job->context->{privatekey_path} || '' }
+  default => sub { 
+    return $_[0]->job->context->{privatekey_path}
+    || Kanku::Config->instance()->config()->{'Kanku::Roles::SSH'}->{privatekey_path}
+    || '';
+  }
 );
 
 has 'publickey_path' => (
   is	  => 'rw',
   isa	  => 'Str',
   lazy	  => 1,
-  default => sub { $_[0]->job->context->{publickey_path} || '' }
+  default => sub {
+    return $_[0]->job->context->{publickey_path}
+    || Kanku::Config->instance()->config()->{'Kanku::Roles::SSH'}->{publickey_path}
+    || '';
+  }
 );
 
 has 'ipaddress' => (
