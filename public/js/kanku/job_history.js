@@ -177,7 +177,9 @@ Vue.component('job-card',{
   computed: {
     workerInfo: function() {
       var tmp = new Array;
-      tmp = this.job.workerinfo.split(':');
+      if (this.job.workerinfo) {
+        tmp = this.job.workerinfo.split(':');
+      }
       return {
         host:  tmp[0] || 'localhost',
         pid:   tmp[1] || 0,
