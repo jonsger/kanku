@@ -63,7 +63,7 @@ sub execute {
   if ( $self->forward_port_list ) {
     my $ipt = Kanku::Util::IPTables->new(
       domain_name     => $self->domain_name,
-      host_interface  => $self->host_interface,
+      host_interface  => $self->host_interface || '',
       guest_ipaddress => $self->ipaddress
     );
 

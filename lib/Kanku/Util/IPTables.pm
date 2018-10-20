@@ -19,15 +19,21 @@ package Kanku::Util::IPTables;
 use Moose;
 use Data::Dumper;
 use File::Which;
+use Kanku::Config;
 
 with 'Kanku::Roles::Logger';
 
 # For future use: we could also get the ip from the serial login
 # but therefore we need the domain_name
 has [qw/domain_name/] => (is=>'rw',isa=>'Str');
-has [qw/guest_ipaddress host_ipaddress host_interface forward_port_list iptables_chain/] => (is=>'rw',isa=>'Str');
+has [qw/guest_ipaddress forward_port_list iptables_chain/] => (is=>'rw',isa=>'Str');
 has forward_ports => (is=>'rw',isa=>'ArrayRef',default=>sub { [] });
 has '+iptables_chain' => (lazy=>1, default => 'KANKU_HOSTS');
+
+has 'host_interface' => (
+  is      => 'rw',
+  isa     => 'Str',
+);
 
 has host_ipaddress => (
   is      =>'rw',
@@ -35,6 +41,10 @@ has host_ipaddress => (
   lazy    => 1,
   default =>sub {
     my $host_interface = $_[0]->host_interface;
+    if (! $host_interface ) {
+      my $cfg  = Kanku::Config->instance()->config();
+      $host_interface = $cfg->{'Kanku::Util::IPTables'}->{host_interface};
+    }
 
     die "No host_interface given. Can not determine host_ipaddress" if (! $host_interface );
 

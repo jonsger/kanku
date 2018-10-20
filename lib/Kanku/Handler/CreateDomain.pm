@@ -313,7 +313,7 @@ sub _prepare_vm_via_console {
     if ( $self->forward_port_list ) {
 	my $ipt = Kanku::Util::IPTables->new(
 	  domain_name     => $self->domain_name,
-	  host_interface  => $ctx->{host_interface},
+	  host_interface  => $ctx->{host_interface} || '',
 	  guest_ipaddress => $ip,
 	  iptables_chain  => $cfg->{'Kanku::Util::IPTables'}->{iptables_chain}
 	);
