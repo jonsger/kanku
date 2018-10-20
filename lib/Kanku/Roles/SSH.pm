@@ -101,6 +101,7 @@ has ENV => (
 
 sub get_defaults {
   my $self = shift;
+  my $logger  = $self->logger;
 
   if (! $self->privatekey_path ) {
     if ( $::ENV{HOME} ) {
@@ -109,10 +110,14 @@ sub get_defaults {
     }
   }
 
+  $logger->debug(' - get_defaults: privatekey_path - '.$self->privatekey_path);
+
   if (! $self->publickey_path && $self->privatekey_path) {
     my $key_path = $self->privatekey_path.".pub";
     $self->publickey_path($key_path) if ( -f $key_path);
   }
+
+  $logger->debug(' - get_defaults: publickey_path - '.$self->publickey_path);
 
   return 1;
 }
