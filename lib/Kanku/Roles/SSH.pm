@@ -101,18 +101,28 @@ has ENV => (
 
 sub get_defaults {
   my $self = shift;
+  my $logger  = $self->logger;
+  my $cfg = Kanku::Config->instance->config();
 
   if (! $self->privatekey_path ) {
-    if ( $::ENV{HOME} ) {
+    if ( $cfg->{'Kanku::Roles::SSH'}->{privatekey_path} ) {
+      $self->privatekey_path($cfg->{'Kanku::Roles::SSH'}->{privatekey_path});
+    } elsif ( $::ENV{HOME} ) {
       my $key_path = "$::ENV{HOME}/.ssh/id_rsa";
       $self->privatekey_path($key_path) if ( -f $key_path);
     }
   }
 
+  $logger->debug(' - get_defaults: privatekey_path - '.$self->privatekey_path);
+
+  $self->publickey_path($cfg->{'Kanku::Roles::SSH'}->{publickey_path}) if $cfg->{'Kanku::Roles::SSH'}->{publickey_path};
+
   if (! $self->publickey_path && $self->privatekey_path) {
     my $key_path = $self->privatekey_path.".pub";
     $self->publickey_path($key_path) if ( -f $key_path);
   }
+
+  $logger->debug(' - get_defaults: publickey_path - '.$self->publickey_path);
 
   return 1;
 }
