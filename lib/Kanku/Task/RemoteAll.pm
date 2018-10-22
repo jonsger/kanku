@@ -183,6 +183,7 @@ sub _inspect_msg {
     $data = decode_json($body);
     try {
       $data->{result}->{result} = decode_base64($data->{result}->{result}) if ($data->{result}->{result});
+      $logger->debug("Got action '".$data->{action}."', answer_queue: '".$data->{answer_queue}."'" );
     } catch {
       $logger->fatal("Error while decoding base64: $_");
       $logger->debug(Dumper($data));

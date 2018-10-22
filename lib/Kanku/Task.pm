@@ -141,9 +141,12 @@ sub run {
 
     my $res = $tr->run();
     $logger->trace("Got result from task:\n".Dumper($res));
-    $result = $res->{result} ;
     $state  = $res->{state};
-
+    if ($state eq 'failed') {
+      $result = encode_json({error_message=>$res->{error_message}});
+    } else {
+      $result = $res->{result} ;
+    }
   }
   catch {
     my $e = $_;

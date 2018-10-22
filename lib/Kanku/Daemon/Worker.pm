@@ -343,8 +343,19 @@ sub handle_task {
 
   my $task   = Kanku::Task::Local->new(%{$data->{task_args}},schema => $self->schema);
 
-  my $result = $task->run();
+  my $result;
+  try {
+    $result = $task->run();
+  } catch {
+    $self->logger->error("An error occurred while running Task: $_");
+    $result = {
+      state         => 'failed',
+      error_message => $_
+    };
+  };
+
   $result->{result} = encode_base64($result->{result}) if ($result->{result});
+
   my $answer = {
       action        => 'finished_task',
       result        => $result,
@@ -352,7 +363,7 @@ sub handle_task {
       job           => $job->to_json
   };
 
-  $self->logger->trace("Sending answer to '".$self->remote_job_queue_name."': ".$self->dump_it($answer));
+  $self->logger->debug("Sending answer to '".$self->remote_job_queue_name."': ".$self->dump_it($answer));
 
   $job_kmq->publish(
     $self->remote_job_queue_name,
