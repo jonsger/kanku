@@ -20,7 +20,7 @@ Example:
 cat <<EOF > /etc/libvirt/hooks/network
 #!/bin/bash
 
-/usr/bin/perl /opt/kanku/bin/kanku-network-setup.pl \$@
+/usr/bin/perl /usr/lib/kanku/network-setup.pl \$@
 EOF
 chmod 755 /etc/libvirt/hooks/network
 systemctl restart libvirtd.service
@@ -28,4 +28,10 @@ systemctl restart libvirtd.service
 virsh net-define  dist/kanku-ovs.xml
 virsh net-start kanku-ovs
 virsh net-autostart kanku-ovs
+'''
+
+'''
+virsh -c qemu+ssh://<kanku-worker>/system net-define /etc/kanku/templates/cmd/setup/net-kanku-ovs.xml.tt2
+virsh -c qemu+ssh://<kanku-worker>/system net-start kanku-ovs
+virsh -c qemu+ssh://<kanku-worker>/system net-autostart kanku-ovs
 '''
