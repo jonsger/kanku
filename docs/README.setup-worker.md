@@ -1,31 +1,34 @@
 # Install packages
 
-```zypper in kanku-worker openvswitch openvswitch-switch libvirt```
+```zypper in kanku-worker openvswitch libvirt```
 
-# (On worker) Copy ssh keys for access
+# (On master) Copy ssh keys for access to worker
 
-e.g. /opt/kanku/etc/ssh
+```
+scp -r /etc/kanku/ssh <kanku-worker>:/etc/kanku/ssh
+ssh <kanku-worker> chown kankurun:kanku -R /etc/kanku/ssh
+```
 
-# (On worker) Copy ssl cert for access to rabbitmq on master
+# (On master) Copy ssl CA-cert for access to rabbitmq on master
 
-e.g. /opt/kanku/etc/ssl
+'''
+ssh <kanku-worker> mkdir -p /etc/kanku/ssl/
+scp  /etc/rabbitmq/testca/certs/ca.cert.pem <kanku-worker>:/etc/kanku/ssl/cacert.pem
+'''
 
-
-# (On master) Add worker in /opt/kanku/etc/config.yml
+# (On master) Add worker in /etc/kanku/kanku-config.yml
 
 See section
 
-```
+'''
 Kanku::LibVirt::HostList:
-```
+'''
 
 # (On Worker) Configure openvswitch
 
-SEE README.setup-ovs.md
+## Configure /etc/kanku/kanku-config.yml
 
-and configure 
-
-```
+'''
 Kanku::LibVirt::Network::OpenVSwitch:
   name:                kanku-ovs
   bridge:              kanku-br0
@@ -39,30 +42,41 @@ Kanku::LibVirt::Network::OpenVSwitch:
 Kanku::Handler::CreateDomain:
   name:   kanku-ovs
   bridge: kanku-br0
-```
+'''
+
+and
+
+SEE README.setup-ovs.md
+
+for further setup of openvswitch/libvirt
+
 # (On worker) Create Pool for images
 
-vi pool-default.xml
-virsh pool-define pool-default.xml 
-virsh pool-start default
-virsh pool-autostart default
+'''
+virsh -c qemu+ssh://<kanku-worker>/system pool-define /etc/kanku/templates/cmd/setup/pool-default.xml 
+virsh -c qemu+ssh://<kanku-worker>/system pool-start default
+virsh -c qemu+ssh://<kanku-worker>/system pool-autostart default
+'''
 
 # Configure network for CreateDomain:
 
-/opt/kanku/etc/config.yml
+/etc/kanku/kanku-config.yml
 
-```
+'''
 Kanku::Handler::CreateDomain:
   name:   kanku-ovs
   bridge: kanku-br0
-```
-
+'''
 
 # (On worker) Add ssh-keys from master to authorized_keys
 
 # (On worker) Create and populate database
 
-The database is only needed for the download history
+The database is only needed for the download history.
+
+'''
+kanku db --create --server
+'''
 
 # (On worker) Start and enable kanku-worker
 
