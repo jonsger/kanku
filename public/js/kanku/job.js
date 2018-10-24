@@ -154,7 +154,7 @@ $( document ).ready(
                         Mustache.render(
                                   tmpl,
                                   {
-                                    prefix_domain_name : ((this.param == "domain_name") ? prefix_domain_name : ''),
+                                    prefix_domain_name : ((this.param == "domain_name" && value != null) ? prefix_domain_name : ''),
                                     label              : this.label,
                                     param              : this.param,
                                     id                 : final_jobid,
