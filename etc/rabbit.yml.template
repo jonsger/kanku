@@ -1,0 +1,52 @@
+servers:
+  opensuse:
+    host: rabbit.opensuse.org
+    exchange: pubsub
+    routing_key: opensuse.obs.package.build_success
+
+    settings:
+      user: opensuse
+      password: opensuse
+      port: 5671
+      ssl: 1
+      ssl_verify_host: 0
+      ssl_cacert: /etc/ssl/ca-bundle.pem
+  suse:
+    host: rabbit.suse.de
+    exchange: pubsub
+    routing_key: suse.obs.package.build_success
+    settings:
+      user: suse
+      password: suse
+      port: 5671
+      ssl: 1
+      ssl_verify_host: 0
+      ssl_cacert: /etc/ssl/ca-bundle.pem
+#  example.com:
+#    host: rabbit.example.com
+#    exchange: pubsub
+#    routing_key: #
+#    settings:
+#      user: test
+#      password: XXXXXXXXXX
+#      vhost: /example
+#      port: 5671
+#      ssl: 1
+#      ssl_verify_host: 0
+#      ssl_cacert: ./ca.cert.pem
+notifications:
+  succeed:
+    title: Kanku Status Notification
+    link: notify
+    body: Sent by 'kanku rabbit -s <server>'
+    result: succeed
+  failed:
+    title: Kanku Status Notification
+    link: notify
+    body: Sent by 'kanku rabbit -s <server>'
+    result: failed
+  warning:
+    title: Kanku Status Notification
+    link: notify
+    body: Sent by 'kanku rabbit -s <server>'
+    result: warning

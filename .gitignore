@@ -24,3 +24,4 @@ home:M0ses:kanku
 tmp/
 t/tmp.db
 .perlcritic.cache
+etc/rabbit.yml
