@@ -31,6 +31,12 @@ sub distributable { 1 }
 
 sub prepare {
   my $self = shift;
+  my $cfg  = Kanku::Config->instance()->config();
+  my $pkg  = __PACKAGE__;
+
+  if ($cfg->{$pkg}->{public_key_files}) {
+    push @{$self->public_key_files}, @{$cfg->{$pkg}->{public_key_files}};
+  }
 
   $self->evaluate_console_credentials;
 
