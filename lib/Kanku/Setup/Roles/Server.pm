@@ -35,7 +35,7 @@ sub _configure_apache {
     $self->_run_system_cmd("a2enflag", 'SSL');
   }
 
-  for my $mod (qw/proxy proxy_http rewrite headers/) {
+  for my $mod (@mod_list) {
     $self->_run_system_cmd("a2enmod", $mod);
   }
 
