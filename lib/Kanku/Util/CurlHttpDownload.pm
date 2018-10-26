@@ -60,7 +60,13 @@ has cache_dir => (
   is        =>'rw',
   isa       =>'Object',
   lazy      => 1,
-  default   => sub { Path::Class::Dir->new($ENV{HOME},".cache","kanku") }
+  default   => sub {
+    my $pkg  = __PACKAGE__;
+    my $cdir = Kanku::Config->instance->config()->{$pkg}->{cache_dir};
+    return ($cdir)
+           ? Path::Class::Dir->new($cdir)
+           : Path::Class::Dir->new($ENV{HOME},".cache","kanku");
+  }
 );
 
 has [qw/username password/] => (
