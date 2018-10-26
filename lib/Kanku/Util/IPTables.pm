@@ -48,8 +48,12 @@ has host_ipaddress => (
 
     die "No host_interface given. Can not determine host_ipaddress" if (! $host_interface );
 
-    my $cmd = "ip addr show " . $_[0]->host_interface;
+    $_[0]->logger->debug("Using host_interface: $host_interface");
+    my $cmd = "ip addr show " . $host_interface;
+    $_[0]->logger->debug("Executing command: '$cmd'");
     my @out = `$cmd`;
+
+    $_[0]->logger->trace(Dumper(\@out));
 
     for my $line (@out) {
       if ( $line =~ /^\s*inet\s+([0-9\.]*)(\/\d+)?\s.*/ ) {
@@ -161,6 +165,7 @@ sub add_forward_rules_for_domain {
   my $start_port    = $opts{start_port};
   my $forward_rules = $opts{forward_rules};
   my $sudo          = $self->sudo();
+  my $logger        = $self->logger;
 
   my $portlist      = { tcp =>[],udp=>[] };
   my $host_ip       = $self->host_ipaddress;
@@ -176,6 +181,7 @@ sub add_forward_rules_for_domain {
       return undef
   }
 
+  $logger->debug("Using ip's(host_ip/guest_ip): ($host_ip/$guest_ip)");
 
   foreach my $rule (@$forward_rules) {
     if ($rule =~ /^(tcp|udp):(\d+)$/i ) {
