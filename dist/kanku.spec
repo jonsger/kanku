@@ -284,6 +284,7 @@ TODO:
 %dir /usr/lib/kanku/lib/Kanku/Dispatch/
 /usr/lib/kanku/lib/Kanku/Dispatch/Local.pm
 
+/usr/lib/kanku/lib/Kanku/Test/
 
 %package cli
 Summary: Command line client for kanku
