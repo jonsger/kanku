@@ -88,8 +88,11 @@ sub prepare {
 sub _prepare_mirror {
   my $self = shift;
   my $ctx  = $self->job->context;
+  my $pkg  = __PACKAGE__;
+  my $cdir = Kanku::Config->instance->config()->{$pkg}->{cache_dir};
 
-  $self->cache_dir( ( $self->cache_dir || $ctx->{cache_dir} || '' ) );
+
+  $self->cache_dir( ( $self->cache_dir || $ctx->{cache_dir} || $cdir || '' ) );
   die "No cache_dir specified!\n" if ( ! $self->cache_dir );
   die "remote_url needed when using mirror mode\n" if ( ! $self->remote_url );
 
