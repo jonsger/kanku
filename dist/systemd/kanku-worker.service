@@ -1,7 +1,7 @@
 [Unit]
 Description=Kanku Worker
-After=local-fs.target network.target
-Wants=rabbitmq-server
+After=local-fs.target network-online.target
+After=rabbitmq-server.service
  
 [Service]
 User=kankurun
