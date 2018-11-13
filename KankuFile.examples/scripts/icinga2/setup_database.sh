@@ -21,6 +21,8 @@ ICINGAWEB2_ADMIN_PASS=opensuse
 ################################################################################
 # MAIN
 ################################################################################
+
+### icinga2
 mysql -e "create database $ICINGA2_DB_NAME"
 mysql -e "CREATE USER '$ICINGA2_DB_USER'@'localhost' IDENTIFIED BY '$ICINGA2_DB_PASS'"
 mysql -e "GRANT ALL PRIVILEGES ON $ICINGA2_DB_NAME.* TO '$ICINGA2_DB_USER'@'localhost'"
@@ -32,6 +34,9 @@ icinga2 feature enable command
 #icinga2 feature enable api
 systemctl restart icinga2
 
+
+## icingaweb2
+### database
 mysql -e "create database $ICINGAWEB2_DB_NAME"
 mysql -e "CREATE USER '$ICINGAWEB2_DB_USER'@'localhost' IDENTIFIED BY '$ICINGAWEB2_DB_PASS'"
 mysql -e "GRANT ALL PRIVILEGES ON $ICINGAWEB2_DB_NAME.* TO '$ICINGAWEB2_DB_USER'@'localhost'"
@@ -85,7 +90,24 @@ permissions="*"
 monitoring/filter/objects = "*"
 EOF
 
+###
+mkdir -p /etc/icingaweb2/modules/monitoring/
+cat <<EOF > /etc/icingaweb2/modules/monitoring/backends.ini
+[icinga2]
+disabled = "0"
+type = "ido"
+resource = "icinga2"
+EOF
+
+mkdir -p /etc/icingaweb2/enabledModules/
+ln -s /usr/share/icingaweb2/modules/monitoring /etc/icingaweb2/enabledModules/monitoring
+
 usermod -a -G icingaweb2 wwwrun
 
+cat <<EOF >/srv/www/htdocs/index.html
+<head>
+<meta http-equiv="refresh" content="0; url=/icingaweb2" />
+</head>
+EOF
 
 exit 0
