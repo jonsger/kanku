@@ -5,7 +5,7 @@
 
 ```
 # Set KankuFile
-export KANKU_FILE=KankuFile.openQA
+export KANKU_CONFIG=KankuFile.openQA
 # Remove existing domain
 kanku destroy
 # Create new domain
@@ -16,7 +16,7 @@ kanku up
 
 ```
 # Set KankuFile
-export KANKU_FILE=KankuFile.icinga2
+export KANKU_CONFIG=KankuFile.icinga2
 # Remove existing domain
 kanku destroy
 # Create new domain
