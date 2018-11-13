@@ -28,7 +28,9 @@ with 'Kanku::Roles::Config::Base';
 has 'log_dir' => (is=>'rw',isa=>'Object',default=>sub {Path::Class::Dir->new(getcwd(),'.kanku','log')});
 
 sub file {
-    return Path::Class::File->new(getcwd(),'KankuFile');
+  return ($ENV{KANKU_CONFIG})
+    ? Path::Class::File->new($ENV{KANKU_CONFIG})
+    : Path::Class::File->new(getcwd(),'KankuFile');
 };
 
 sub job_config {
