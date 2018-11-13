@@ -241,7 +241,7 @@ sub check_before_download {
 sub _sub_get_image_file_from_url_cb {
     my $self = shift;
     my $arg = shift;
-    my $reg = qr/\.(qcow2|raw|raw\.xz|vmdk|vdi|vhdfixed\.xz|install.iso|iso)$/;
+    my $reg = qr/\.(qcow2|raw|raw\.xz|vmdk(.xz)?|vdi|vhdfixed\.xz|install.iso|iso)$/;
     my %all_images;
 
     foreach my $bin (@{$arg}) {
