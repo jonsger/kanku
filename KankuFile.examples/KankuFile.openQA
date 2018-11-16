@@ -38,7 +38,7 @@ jobs:
   -
     use_module: Kanku::Handler::CreateDomain
     options:
-      memory: 4G
+      memory: 8G
       vcpu: 2
       use_9p: 1
       #forward_port_list: tcp:22,tcp:443
@@ -73,4 +73,6 @@ jobs:
         - curl http://localhost/login
         - systemctl enable openqa-worker@1
         - systemctl start openqa-worker@1
+        - systemctl enable openqa-scheduler
+        - systemctl start openqa-scheduler
         - /tmp/kanku/scripts/openQA/start_test
