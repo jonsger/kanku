@@ -89,6 +89,7 @@ sub execute {
   $con->login();
   $con->cmd_timeout(-1);
   $con->cmd("reboot");
+  $con->cmd_timeout($self->timeout);
   if ($self->wait_for_console) {
     # Wait for reboot to complete
     $con->login();
