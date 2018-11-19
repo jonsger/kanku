@@ -52,7 +52,7 @@ jobs:
       commands:
         - zypper ar obs://server:monitoring server:monitoring
         - zypper -n --no-gpg-check ref -s
-        - zypper -n in apache2 icinga2 icingaweb2 icingaweb2-icingacli php7-ldap php7-dom php7-imagick php7-pdo php7-curl php7-mysql php7-pgsql mariadb mariadb-client icinga2-ido-mysql
+        - zypper -n in apache2 icinga2 icingaweb2 icingaweb2-icingacli php7-ldap php7-dom php7-imagick php7-pdo php7-curl php7-mysql php7-pgsql mariadb mariadb-client icinga2-ido-mysql monitoring-plugins monitoring-plugins-ping monitoring-plugins-procs monitoring-plugins-ssh monitoring-plugins-load monitoring-plugins-http monitoring-plugins-disk monitoring-plugins-users monitoring-plugins-swap
         - systemctl start icinga2
         - systemctl enable icinga2
         - systemctl start apache2
