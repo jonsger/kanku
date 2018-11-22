@@ -131,7 +131,7 @@ has wait_for_network => (
   is => 'rw',
   isa => 'Int',
   lazy => 1,
-  default => 120
+  default => 180
 );
 
 has network_name => (
