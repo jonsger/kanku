@@ -40,6 +40,7 @@ has [qw/
       forward_port_list     images_dir
       short_hostname	    memory
       network_name          network_bridge
+      pool_name
 /] => (is => 'rw',isa=>'Str');
 
 has '+memory'         => ( default => 1024*1024 );
@@ -210,6 +211,8 @@ sub execute {
       image_file            => $final_file,
       root_disk             => $image
   );
+
+  $vm->pool_name($self->pool_name) if $self->pool_name;
 
   $vm->host_dir_9p($self->host_dir_9p) if ($self->host_dir_9p);
 
@@ -541,6 +544,7 @@ If configured a port_forward_list, it tries to find the next free port and confi
 
     installation          : array of expect commands for installation process
 
+    pool_name            : name of disk pool
 
 =head1 CONTEXT
 
