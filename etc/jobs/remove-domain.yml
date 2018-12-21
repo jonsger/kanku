@@ -5,11 +5,16 @@
 #
 tasks:
   -
+    use_module: Kanku::Handler::SetJobContext
+  -
     use_module: Kanku::Handler::RemoveDomain
-notifiers:
-  - 
-    use_module: Kanku::Notifier::Sendmail
-    options:
-      from: kanku@suse.de
-      to: fschreiner@suse.de
-    states: failed, skipped
+  -
+    use_module: Kanku::Handler::CleanupIPTables
+
+#notifiers:
+#  -
+#    use_module: Kanku::Notifier::Sendmail
+#    options:
+#      from: kanku@your-domain.com
+#      to: admin@your-domain.com
+#    states: failed, skipped
