@@ -229,7 +229,7 @@ sub _create_default_network {    ## no critic (Subroutines::ProhibitUnusedPrivat
   for my $net (@networks) {
     if ($net->get_name eq $nn) {
       $logger->info("Found network '$nn' - enabling autostart");
-      my $choice = $self->_query_interactive(<<'EOF'
+      my $choice = $self->_query_interactive(<<"EOF"
 Should autostart for libvirt net '$nn' be enabled and started?
 
 Your choice (Y|n)?
@@ -348,11 +348,12 @@ EOF
     my $sudoers_file  = file('/etc/sudoers.d/kanku');
     $self->_backup_config_file($sudoers_file);
     $logger->info("Adding commands for user $user in " . $sudoers_file->stringify);
-    my $iptables = which 'iptables' || '/usr/sbin/iptables';
-    my $ss       = which 'ss'       || '/usr/sbin/ss';
-    # support netstat on legacy systems
-    my $netstat  = which 'netstat'  || '/bin/netstat';
-    $sudoers_file->spew("$user ALL=NOPASSWD: $iptables, $ss, $netstat\n");
+    my @tcmd;
+    for my $cmd (qw/iptables ss netstat/) {
+      my $cmdpath = which($cmd);
+      push @tcmd, $cmdpath if $cmdpath;
+    }
+    $sudoers_file->spew("$user ALL=NOPASSWD: ".join(',', @tcmd)."\n");
   }
 
   return;
@@ -403,7 +404,7 @@ sub _query_interactive {
 
   print $query;
 
-  my $choice = <>;
+  my $choice = <STDIN>;
   chomp $choice;
 
   return $default unless $choice;
