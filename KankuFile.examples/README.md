@@ -84,3 +84,20 @@ kanku destroy
 # Create new domain
 kanku up
 ```
+
+# centos
+
+## Description
+
+A JeOS image of the current CentOS version.
+
+## Instructions
+
+```
+# Set KankuFile
+export KANKU_CONFIG=KankuFile.centos
+# Remove existing domain
+kanku destroy
+# Create new domain
+kanku up
+```
