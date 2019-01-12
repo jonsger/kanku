@@ -68,7 +68,7 @@ sub run {
       kill('INT',@childs);
     }
     @childs = grep { waitpid($_,WNOHANG) == 0 } @childs;
-    $logger->trace("Active Childs: (@childs)");
+    #$logger->trace("Active Childs: (@childs)");
     sleep(1);
   }
 
