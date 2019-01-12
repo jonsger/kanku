@@ -186,6 +186,7 @@ sub execute_notifier {
   my $notifier = $mod->new(
     options=> $args,
     job_id => $job->id,
+    state  => $state,
   );
 
   $notifier->short_message("Job ".$job->name." has exited with state '$state'");
