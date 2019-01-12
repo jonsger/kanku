@@ -32,10 +32,6 @@ jobs:
     options:
       use_cache: 1
   -
-    use_module: Kanku::Handler::ResizeImage
-    options:
-      disk_size: 25G
-  -
     use_module: Kanku::Handler::CreateDomain
     options:
       memory: 8G

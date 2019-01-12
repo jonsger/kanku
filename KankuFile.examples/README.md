@@ -67,3 +67,37 @@ kanku destroy
 # Create new domain
 kanku up
 ```
+
+# ubuntu-devel
+
+## Description
+
+An image of the current Ubuntu LTS version, prepared for creating ubuntu packages
+
+## Instructions
+
+```
+# Set KankuFile
+export KANKU_CONFIG=KankuFile.ubuntu-devel
+# Remove existing domain
+kanku destroy
+# Create new domain
+kanku up
+```
+
+# centos
+
+## Description
+
+A JeOS image of the current CentOS version.
+
+## Instructions
+
+```
+# Set KankuFile
+export KANKU_CONFIG=KankuFile.centos
+# Remove existing domain
+kanku destroy
+# Create new domain
+kanku up
+```
