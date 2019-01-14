@@ -143,6 +143,10 @@ sub prepare {
   $ctx->{management_interface} = $self->management_interface
     if $self->management_interface;
 
+  if ($self->root_disk_size && $self->vm_image_file !~ /\.raw(\.gz)?$/) {
+    die "Option \"root_disk_size\" is only available for raw images!\n";
+  }
+
   return {
     code    => 0,
     message => "Nothing todo"
@@ -530,7 +534,7 @@ If configured a port_forward_list, it tries to find the next free port and confi
 
     noauto_9p		  : set noauto option for 9p directory in fstab.
 
-    root_disk_size        : define size of root disk
+    root_disk_size        : define size of root disk (WARNING: only availible with raw images)
 
     empty_disks           : Array of empty disks to be created
 
