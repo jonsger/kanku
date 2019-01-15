@@ -18,7 +18,7 @@ has cfg => (
   lazy    => 1,
   default => sub {
     my $pkg = __PACKAGE__;
-    Kanku::YAML($_[0]->cfg_file)->{$pkg});
+    Kanku::YAML::LoadFile($_[0]->cfg_file)->{$pkg};
   }
 );
 
