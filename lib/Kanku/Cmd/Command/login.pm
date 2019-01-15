@@ -19,7 +19,7 @@ package Kanku::Cmd::Command::login;
 use Moose;
 use Data::Dumper;
 use Term::ReadKey;
-use YAML qw/LoadFile DumpFile/;
+use Kanku::YAML;
 
 extends qw(MooseX::App::Cmd::Command);
 
@@ -41,7 +41,7 @@ sub execute {
 
   if ( -f $self->rc_file ) {
 
-    $self->settings(LoadFile($self->rc_file));
+    $self->settings(Kanku::YAML::LoadFile($self->rc_file));
 
     if ( ! $self->apiurl ) {
       $self->apiurl( $self->settings->{apiurl} || '');
@@ -121,7 +121,7 @@ sub save_settings {
   $self->settings->{$self->apiurl}->{user}     = $self->user;
   $self->settings->{$self->apiurl}->{password} = $self->password;
 
-  DumpFile($self->rc_file,$self->settings);
+  Kanku::YAML::DumpFile($self->rc_file, $self->settings);
 
   return 0;
 }

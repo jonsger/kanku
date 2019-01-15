@@ -17,9 +17,7 @@
 package Kanku::Cmd::Command::rtrigger;
 
 use Moose;
-use Data::Dumper;
 use Term::ReadKey;
-use YAML qw/LoadFile DumpFile Dump/;
 use POSIX;
 use Try::Tiny;
 use JSON::XS;

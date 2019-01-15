@@ -19,7 +19,6 @@ package Kanku::Cmd::Command::rjob;
 use Moose;
 use Data::Dumper;
 use Term::ReadKey;
-use YAML qw/LoadFile DumpFile Dump/;
 use POSIX;
 use Try::Tiny;
 

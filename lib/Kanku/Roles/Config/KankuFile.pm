@@ -21,7 +21,6 @@ use Path::Class::File;
 use Path::Class::Dir;
 use Data::Dumper;
 use Cwd;
-use YAML;
 
 with 'Kanku::Roles::Config::Base';
 

@@ -1,7 +1,7 @@
 package Kanku::Setup::LibVirt::Network;
 
 use Moose;
-use YAML qw/LoadFile/;
+use Kanku::YAML;
 use Path::Class qw/file/;
 use Net::IP;
 use POSIX 'setsid';
@@ -19,7 +19,7 @@ has cfg => (
 	is => 'rw',
 	isa => 'HashRef',
 	lazy => 1,
-	default => sub { LoadFile($_[0]->cfg_file) }
+	default => sub { Kanku::YAML::LoadFile($_[0]->cfg_file) }
 );
 
 has logger => (

@@ -17,7 +17,7 @@
 package Kanku::Cmd::Roles::Remote;
 
 use Moose::Role;
-use YAML qw/LoadFile/;
+use Kanku::YAML;
 use LWP::UserAgent;
 use JSON::XS;
 use HTTP::Cookies;
@@ -64,7 +64,7 @@ has settings => (
   default       => sub {
     my $self = shift;
     if ( -f $self->rc_file ) {
-      my $ct = LoadFile($_[0]->rc_file);
+      my $ct = Kanku::YAML::LoadFile($_[0]->rc_file);
       if ( $ct->{apiurl} ) {
 	$self->apiurl($ct->{apiurl});
       }
@@ -134,7 +134,7 @@ sub connect_restapi {
 
   if ( ! $self->apiurl ) {
     if ( -f $self->rc_file ) {
-      $self->settings(LoadFile($self->rc_file));
+      $self->settings(Kanku::YAML::LoadFile($self->rc_file));
       $self->apiurl( $self->settings->{apiurl} || '');
       if ( $self->apiurl ) {
 	my $user = $self->settings->{$self->apiurl}->{user};

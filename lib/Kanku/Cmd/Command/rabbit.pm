@@ -19,7 +19,7 @@ package Kanku::Cmd::Command::rabbit;
 use Moose;
 use Kanku::Config;
 use Data::Dumper;
-use YAML qw/LoadFile/;
+use Kanku::YAML;
 use FindBin;
 use Log::Log4perl;
 
@@ -87,7 +87,7 @@ has cfg => (
       $cf = "$FindBin::Bin/../etc/rabbit.yml" if (! $cf && -f "$FindBin::Bin/../etc/rabbit.yml");
       $cf = "/etc/kanku/rabbit.yml" if (! $cf && -f "/etc/kanku/rabbit.yml");
       die "Could not find any config file!\n" unless $cf;
-      return LoadFile($cf);
+      return Kanku::YAML::LoadFile($cf);
     },
 );
 

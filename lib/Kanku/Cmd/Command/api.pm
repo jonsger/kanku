@@ -20,7 +20,6 @@ use Moose;
 use Data::Dumper;
 use Term::ReadKey;
 use Try::Tiny;
-use YAML qw/LoadFile DumpFile/;
 
 extends qw(MooseX::App::Cmd::Command);
 

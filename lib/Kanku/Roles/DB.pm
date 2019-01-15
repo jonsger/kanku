@@ -17,8 +17,8 @@
 package Kanku::Roles::DB;
 
 use Moose::Role;
-use Path::Class qw/file/;
-use YAML;
+
+use Kanku::YAML;
 use Kanku::Schema;
 
 has schema => (
@@ -26,12 +26,11 @@ has schema => (
   isa     => 'Object',
   lazy    => 1,
   default => sub {
-    my $cfg_file    = file('/etc/kanku/dancer/config.yml');
-    my $cfg_content = $cfg_file->slurp;
-    my $cfg_yaml    = YAML::Load($cfg_content);
+    my $file = '/etc/kanku/dancer/config.yml';
+    my $cfg_yaml;
+    $cfg_yaml = Kanku::YAML::LoadFile($file);
     return Kanku::Schema->connect($cfg_yaml->{plugins}->{DBIC}->{default}->{dsn});
   }
 );
-
 
 1;

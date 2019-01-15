@@ -21,16 +21,15 @@ use Moose;
 use Sys::Virt;
 use Sys::Virt::Stream;
 use Expect;
-use YAML;
 use Template;
 use Cwd;
 use Net::IP;
-use Kanku::Util::VM::Console;
-use Kanku::Util::VM::Image;
 use Sys::Virt::StorageVol;
-use Data::Dumper;
 use XML::XPath;
 use Try::Tiny;
+
+use Kanku::Util::VM::Console;
+use Kanku::Util::VM::Image;
 
 has [qw/
       image_file    domain_name   vcpu        memory

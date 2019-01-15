@@ -19,7 +19,7 @@ package Kanku::Roles::Config::Base;
 use Moose::Role;
 use Path::Class::File;
 use Data::Dumper;
-use YAML;
+use Kanku::YAML;
 use Path::Class qw/dir/;
 
 with 'Kanku::Roles::Logger';
@@ -49,9 +49,7 @@ has log_dir => (
 
 sub _build_config {
     my $self    = shift;
-    my $file    = $self->file;
-    my $content = $file->slurp();
-    return YAML::Load($content);
+    return Kanku::YAML::LoadFile($self->file);
 }
 
 around 'config' => sub {

@@ -1,8 +1,9 @@
 package Kanku::LibVirt::HostList;
 
 use Moose;
-use YAML qw/LoadFile/;
+use Kanku::YAML;
 use URI::Escape;
+use Try::Tiny;
 
 has cfg_file => (
   is      => 'rw',
@@ -17,7 +18,7 @@ has cfg => (
   lazy    => 1,
   default => sub {
     my $pkg = __PACKAGE__;
-    LoadFile($_[0]->cfg_file)->{$pkg};
+    Kanku::YAML($_[0]->cfg_file)->{$pkg});
   }
 );
 

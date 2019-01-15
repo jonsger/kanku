@@ -20,7 +20,7 @@ use Moose;
 use Data::Dumper;
 use Term::ReadKey;
 use Try::Tiny;
-use YAML qw/LoadFile DumpFile/;
+use Kanku::YAML;
 
 extends qw(MooseX::App::Cmd::Command);
 
@@ -65,7 +65,7 @@ sub _list {
 sub save_settings {
   my $self    = shift;
 
-  DumpFile($self->rc_file,$self->settings);
+  Kanku::YAML::DumpFile($self->rc_file, $self->settings);
 
   return 0;
 };

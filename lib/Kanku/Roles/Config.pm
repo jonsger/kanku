@@ -19,7 +19,7 @@ package Kanku::Roles::Config;
 use Moose::Role;
 use Path::Class::File;
 use Data::Dumper;
-use YAML;
+use Kanku::YAML;
 use Try::Tiny;
 
 with 'Kanku::Roles::Config::Base';
@@ -46,14 +46,7 @@ has views_dir => (
 );
 
 sub _build_config {
-    my $self    = shift;
-    my $file    = $self->file;
-    my $content = $file->slurp();
-    try {
-      return YAML::Load($content);
-    } catch {
-      die "Error while parsing YAML file '".$self->file->stringify."':\n$_";
-    }
+    return Kanku::YAML::LoadFile($_[0]->file);
 }
 
 around 'config' => sub {

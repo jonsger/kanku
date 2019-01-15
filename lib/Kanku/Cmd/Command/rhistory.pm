@@ -17,10 +17,8 @@
 package Kanku::Cmd::Command::rhistory;
 
 use Moose;
-use Data::Dumper;
 use Term::ReadKey;
 use Log::Log4perl;
-use YAML qw/LoadFile DumpFile/;
 use POSIX;
 use Try::Tiny;
 
