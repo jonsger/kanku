@@ -22,6 +22,7 @@ use Data::Dumper;
 use Kanku::Config;
 use Path::Class qw/file/;
 use Carp;
+use Time::HiRes qw/usleep/;
 
 with 'Kanku::Roles::Logger';
 
@@ -244,7 +245,7 @@ sub cmd {
       $exp->clear_accum();
       $logger->debug("EXPECT STARTING COMMAND: '$cmd' (timeout: $timeout)");
       $exp->send("$cmd\n");
-      sleep 1;
+      usleep(10000);
       if ($timeout < 0) {
         $logger->debug("Timeout less then 0 - fire and forget mode");
         next;
@@ -263,7 +264,7 @@ sub cmd {
 
       $exp->clear_accum;
       $exp->send("echo \$?\n");
-      sleep 1;
+      usleep(10000);
 
       @result = $exp->expect(
         $timeout,
