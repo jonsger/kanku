@@ -31,6 +31,7 @@ mysql $ICINGA2_DB_NAME < /usr/share/icinga2-ido-mysql/schema/mysql.sql
 
 icinga2 feature enable ido-mysql
 icinga2 feature enable command
+icinga2 feature enable influxdb
 #icinga2 feature enable api
 systemctl restart icinga2
 
@@ -43,8 +44,6 @@ mysql -e "GRANT ALL PRIVILEGES ON $ICINGAWEB2_DB_NAME.* TO '$ICINGAWEB2_DB_USER'
 mysql -D icingaweb2 < /usr/share/doc/icingaweb2/schema/mysql.schema.sql
 PWHASH=`openssl passwd -1 $ICINGAWEB2_ADMIN_PASS`
 mysql -e "INSERT INTO icingaweb_user (name, active, password_hash) VALUES ('$ICINGAWEB2_ADMIN_USER', 1, '$PWHASH')" $ICINGAWEB2_DB_NAME
-
-icingacli setup config webserver apache > /etc/apache2/vhosts.d/icingaweb2.conf
 
 # FIXME: clarify if needed on opensuse
 icingacli setup config directory
