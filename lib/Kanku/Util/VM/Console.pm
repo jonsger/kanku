@@ -244,6 +244,7 @@ sub cmd {
       $exp->clear_accum();
       $logger->debug("EXPECT STARTING COMMAND: '$cmd' (timeout: $timeout)");
       $exp->send("$cmd\n");
+      sleep 1;
       if ($timeout < 0) {
         $logger->debug("Timeout less then 0 - fire and forget mode");
         next;
@@ -258,11 +259,11 @@ sub cmd {
           ],
       );
 
-      $logger->debug("result1: ".Dumper(\@result));
-
       die "Error while executing command '$cmd' (timemout: $timeout): $result[1]" if $result[1];
 
+      $exp->clear_accum;
       $exp->send("echo \$?\n");
+      sleep 1;
 
       @result = $exp->expect(
         $timeout,
@@ -270,8 +271,8 @@ sub cmd {
           $self->prompt_regex() => sub {
             my $exp=shift;
             my $rc = $exp->before();
-            $rc =~ s/echo \$\?//;
-            $rc =~ s/\r\n//g;
+            my @l = split /\r?\n/, $rc;
+            $rc = pop @l;
             if ( $rc ) {
               $logger->warn("Execution of command '$cmd' failed with return code '$rc'");
             } else {
@@ -281,7 +282,6 @@ sub cmd {
         ]
       );
 
-      $logger->debug("result2: ".Dumper(\@result));
       die "Error while getting return value of command '$cmd' (timeout $timeout): ".$result[1] if $result[1];
   }
 
