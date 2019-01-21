@@ -1,0 +1,53 @@
+#include <tunables/global>
+
+/usr/bin/kanku {
+  #include <abstractions/base>
+  #include <abstractions/nameservice>
+
+  # required for "kanku setup"
+  capability dac_override,
+  /etc/libvirt/libvirtd.conf rw,
+  /etc/libvirt/libvirt.conf rw,
+  /etc/libvirt/qemu.conf rw,
+  /etc/sudoers.d/kanku rw,
+  /etc/**/*.kanku-bak* rw,
+
+  network inet stream,
+  network inet6 stream,
+
+  /usr/bin/kanku r,
+  /usr/lib/perl5/** rm,
+  /etc/kanku/** rw,
+  /usr/share/kanku/** r,
+  /usr/share/terminfo/** r,
+  @{HOME}/.kankurc rw,
+  @{HOME}/.kanku/ rw,
+  @{HOME}/.kanku/* rw,
+  @{HOME}/* rw,
+  owner @{HOME}/.kanku_cookiejar rw,
+  owner @{HOME}/.kanku/logging.conf rw,
+  owner @{HOME}/.kanku/kanku-schema.db rwk,
+  owner @{HOME}/**/KankuFile* rw,
+  owner @{HOME}/KankuFile* rw,
+  owner /tmp/**/KankuFile* rw,
+  owner /tmp/KankuFile* rw,
+  /tmp/**/KankuFile* r,
+  /tmp/KankuFile* r,
+  owner /var/lib/kanku/db/kanku-schema.db rw,
+  /var/lib/kanku/db/kanku-schema.db r,
+  /tmp/dbic* rw,
+  /usr/bin/systemctl Cx -> systemctl,
+  /usr/sbin/usermod Cx -> usermod,
+  /usr/bin/chkconfig Cx -> chkconfig,
+  profile systemctl {
+    #include <abstractions/base>
+    /usr/bin/systemctl rm,
+  }
+  profile usermod {
+    #include <abstractions/base>
+  }
+  profile chkconfig {
+    #include <abstractions/base>
+  }
+
+}
