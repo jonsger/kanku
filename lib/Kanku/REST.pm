@@ -196,6 +196,12 @@ get '/gui_config/job.:format' => sub {
         require "$mod2require";    ## no critic (Modules::RequireBarewordIncludes)
         my $tmp = [];
         my $can = $mod->can('gui_config');
+
+        if (! $can) {
+          error "Could not find method gui_config in module $mod2require configured in job $job_name";
+          next;
+        }
+
         $tmp = $can->();
 
         foreach my $opt (@{$tmp}) {

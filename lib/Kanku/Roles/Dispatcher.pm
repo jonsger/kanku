@@ -187,6 +187,7 @@ sub execute_notifier {
     options=> $args,
     job_id => $job->id,
     state  => $state,
+    duration => ($job->end_time > $job->start_time) ? $job->end_time - $job->start_time : 0,
   );
 
   $notifier->short_message("Job ".$job->name." has exited with state '$state'");
