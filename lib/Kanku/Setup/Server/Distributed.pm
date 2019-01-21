@@ -92,6 +92,8 @@ sub setup {
 
   $self->_setup_ovs_hooks;
 
+  $self->_setup_nested_kvm;
+
   $self->_create_config_from_template(
     "kanku-config.yml.tt2",
     "/etc/kanku/kanku-config.yml",

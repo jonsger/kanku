@@ -25,6 +25,7 @@ use Carp;
 use English qw/-no_match_vars/;
 use Const::Fast;
 use File::Which;
+use File::Copy;
 
 const my $MAX_NETWORK_NUMBER => 255;
 
@@ -397,6 +398,52 @@ sub _setup_database {    ## no critic (Subroutines::ProhibitUnusedPrivateSubrout
   return;
 }
 
+sub _setup_nested_kvm {
+  my ($self) = @_;
+  my $pfile;
+  my $kmod;
+  if ( -f "/sys/module/kvm_intel/parameters/nested" ) {
+    $pfile = "/sys/module/kvm_intel/parameters/nested";
+    $kmod  = "kvm_intel";
+  } elsif ( -f "/sys/module/kvm_amd/parameters/nested" ) {
+    $pfile = "/sys/module/kvm_amd/parameters/nested";
+    $kmod  = "kvm-amd";
+  } else {
+    die "No proper cpu type found!\n";
+  }
+
+  open(P, '<', $pfile) || die "Could not open $pfile: $!\n";
+  my @p = <P>;
+  close P;
+
+  chomp $p[0];
+
+  return if ( $p[0] eq 'Y');
+
+  $self->_backup_config_file("/etc/modprobe.d/kvm-nested.conf");
+
+  open(M, '>', '/etc/modprobe.d/kvm-nested.conf')
+    || die "Could not open /etc/modprobe.d/kvm-nested.conf: $!";
+
+  if ($kmod eq 'kvm_intel') {
+    print M <<EOF;
+options kvm-intel nested=1
+options kvm-intel enable_shadow_vmcs=1
+options kvm-intel enable_apicv=1
+options kvm-intel ept=1
+EOF
+  } else {
+    print M <<EOF;
+options kvm-amd nested=1
+EOF
+  }
+  close M;
+  `modprobe -r $kmod`;
+  `modprobe -a $kmod`;
+
+  return;
+}
+
 sub _query_interactive {
   my ($self, $query, $default, $type) = @_;
 
@@ -418,10 +465,10 @@ sub _query_interactive {
 
 sub _backup_config_file {
   my ($self, $rc) = @_;
-  my $src = file($rc);
-  my $dst = file("$rc.kanku-bak".time().q{.}.$PID);
+  my $src = $rc;
+  my $dst = "$rc.kanku-bak".time().q{.}.$PID;
   if (-e $src) {
-    $src->copy_to($dst);
+    File::Copy::cp($src, $dst);
     $self->logger->debug("Create backup of config $src -> $dst");
   } else {
     $self->logger->debug("No backup of config $src - File does not exist");

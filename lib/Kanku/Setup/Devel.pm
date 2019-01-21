@@ -74,6 +74,8 @@ sub setup {
 
   $self->_create_default_network;
 
+  $self->_setup_nested_kvm;
+
   $logger->info('Developer mode setup successfully finished!');
   $logger->info('Please reboot to make sure, libvirtd is coming up properly');
   return;
