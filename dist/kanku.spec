@@ -270,6 +270,7 @@ TODO:
 /usr/lib/kanku/lib/Kanku/Airbrake.pm
 /usr/lib/kanku/lib/Kanku/NotifyQueue.pm
 /usr/lib/kanku/lib/Kanku/GPG.pm
+/usr/lib/kanku/lib/Kanku/YAML.pm
 
 %dir /usr/lib/kanku/lib/Kanku/WebSocket
 /usr/lib/kanku/lib/Kanku/WebSocket/Notification.pm
