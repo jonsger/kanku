@@ -74,10 +74,11 @@ sub notify {
       $self->logger->error("No configuration found for init. Please check the docs!");
   }
   my $nsca             = Net::NSCA::Client->new(%iopts);
+  my $msg              = ($self->short_message || 'Got no message')."|duration=".$self->duration."s";
   $nsca->send_report(
     %{$cfg->{$pkg}->{send_report} ||{}},
     %{$self->options->{send_report}},
-    message => $self->short_message,
+    message => $msg,
     status => $nstat
   );
 
