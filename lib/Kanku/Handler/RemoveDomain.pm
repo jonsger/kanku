@@ -58,7 +58,7 @@ sub execute {
 
   $self->logger->trace("Domain name in context: $ctx->{domain_name}");
 
-  if ( $ctx->{domain_name} ) {
+  if ( ! $self->domain_name && $ctx->{domain_name} ) {
     $self->logger->debug("Using domain name from context: $ctx->{domain_name}");
     $self->domain_name($ctx->{domain_name});
   }

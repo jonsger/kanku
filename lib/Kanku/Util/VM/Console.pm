@@ -210,13 +210,16 @@ sub logout {
   my $self = shift;
   my $exp = $self->_expect_object();
 
+  $self->logger->debug("Sending exit");
   $exp->send("exit\n");
   my $timeout = 5;
+  sleep 1;
   $exp->expect(
     $timeout,
       [ '^\S+ login: ' =>
         sub {
           my $exp = shift;
+          $self->logger->debug("Found '".$exp->match."'");
           $exp->send(chr(29));
           sleep(1);
           #$exp->soft_close();

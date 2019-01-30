@@ -89,7 +89,7 @@ sub execute {
   my $state = $vm->state;
 
   if ( $state eq 'on' ) {
-    my $ip    = $vm->get_ipaddress;
+    my $ip    = $cfg->config->{ipaddress} || $vm->get_ipaddress;
     my $user  = $self->user;
 
     $self->ipaddress($ip);
