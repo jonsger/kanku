@@ -37,7 +37,7 @@ has [qw/
       ipaddress     uri           disks_xml
       management_interface        management_network
       network_name  network_bridge
-      keep_volumes
+      keep_volumes  pool_name
     / ]  => ( is=>'rw', isa => 'Str');
 
 has job_id           => ( is => 'rw', isa => 'Int' );
@@ -292,7 +292,7 @@ sub create_empty_disks  {
                 vol_name  => $self->domain_name ."-".$disk->{name}.".$fmt",
                 size      => $disk->{size},
                 vmm       => $self->vmm,
-                pool_name => $disk->{pool}   || 'default',
+                pool_name => $disk->{pool} || $self->pool_name || 'default',
                 format    => $fmt,
               );
     my $vol = $img->create_volume();
