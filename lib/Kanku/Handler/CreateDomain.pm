@@ -434,7 +434,9 @@ sub _create_image_file_from_cache {
 	format		=> ($suffix2format{$fmt} || $fmt),
 	vol_name 	=> $vol_name,
 	source_file 	=> $in->stringify,
-	final_size	=> $size
+        final_size      => $size,
+        pool_name       => $self->pool_name,
+
       );
 
     if ($file_data->{reuse}) {
