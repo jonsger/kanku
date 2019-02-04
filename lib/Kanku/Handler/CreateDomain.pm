@@ -435,9 +435,9 @@ sub _create_image_file_from_cache {
 	vol_name 	=> $vol_name,
 	source_file 	=> $in->stringify,
         final_size      => $size,
-        pool_name       => $self->pool_name,
-
       );
+
+    $image->pool_name($self->pool_name) if ($self->pool_name);
 
     if ($file_data->{reuse}) {
       $self->logger->info("Uploading '$vol_name' skipped because of reuse flag");
