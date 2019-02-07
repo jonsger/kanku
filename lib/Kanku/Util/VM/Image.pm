@@ -151,17 +151,26 @@ sub get_image_size {
       return $stat[7];
     }
   }
+  my $vol  = $self->vol_name;
+  my $size = $self->_string2bytes($self->size);
+
+  die "Size of volume '$vol' could not be determined\n" unless $size;
+
+  return $size;
+}
+
+sub _string2bytes {
+  my ($self, $size) = @_;
 
   my $sh = {
              b => 1,                   k => 1024 ,
              m => 1024*1024,           g => 1024*1024*1024,
              t => 1024*1024*1024*1024, p => 1024*1024*1024*1024*1024
            };
-  if ($self->size =~ /^(\d+)([bkmgtp]m?)?/i ) {
-    return $1 * ($sh->{lc($2)} || 1)
-  }
 
-  die "Size of volume '".$self->vol_name."' could not be determined\n";
+  $size =~ /^(\d+)([bkmgtp]m?)?/i;
+
+  return ($1 || 0) * ($sh->{lc($2)} || 1)
 }
 
 sub _copy_volume {
@@ -203,7 +212,7 @@ sub _expand_raw_image {
   my ($self, $st) = @_;
 
   if ( $self->format eq 'raw' && $self->final_size > $self->_total_sent ) {
-    my $to_read = $self->final_size - $self->_total_sent;
+    my $to_read = $self->_string2bytes($self->final_size) - $self->_total_sent;
     my $nbytes  = $self->_nbytes;
 
     $self->logger->info("-- Sending another $to_read bytes");

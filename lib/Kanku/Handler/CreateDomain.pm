@@ -74,7 +74,7 @@ has [qw/
 
 has ['_root_disk']    => (is => 'rw', isa => 'Object');
 
-has 'root_disk_size'  => (is => 'rw', isa => 'Int');
+has 'root_disk_size'  => (is => 'rw', isa => 'Str');
 
 has empty_disks => (
   is => 'rw',
@@ -185,11 +185,10 @@ sub execute {
 
 
   my $final_file = $ctx->{vm_image_file};
-  my $image;
 
 
-  my $vol;
-  ($vol, $image) = $self->_create_image_file_from_cache({file=>$final_file}, $self->root_disk_size, $self->domain_name);
+  my ($vol, $image) = $self->_create_image_file_from_cache({file=>$final_file}, $self->root_disk_size, $self->domain_name);
+
   $final_file = $vol->get_path();
   for my $file(@{$self->additional_disks}) {
       my ($avol,$aimage) = $self->_create_image_file_from_cache($file);
