@@ -143,7 +143,7 @@ sub prepare {
   $ctx->{management_interface} = $self->management_interface
     if $self->management_interface;
 
-  if ($self->root_disk_size && $self->vm_image_file !~ /\.raw(\.gz)?$/) {
+  if ($self->root_disk_size && $self->vm_image_file !~ /\.raw(\.gz|\.xz)?$/) {
     die "Option \"root_disk_size\" is only available for raw images!\n";
   }
 
