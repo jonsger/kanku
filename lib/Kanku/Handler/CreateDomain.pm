@@ -135,16 +135,18 @@ sub prepare {
   my $self = shift;
   my $ctx  = $self->job()->context();
 
-  $self->domain_name($ctx->{domain_name}) if ( ! $self->domain_name && $ctx->{domain_name});
-  $self->login_user($ctx->{login_user})   if ( ! $self->login_user  && $ctx->{login_user});
-  $self->login_pass($ctx->{login_pass})   if ( ! $self->login_pass  && $ctx->{login_pass});
-  $self->cache_dir($ctx->{cache_dir})     if ($ctx->{cache_dir});
+  $self->domain_name($ctx->{domain_name})       if ( ! $self->domain_name && $ctx->{domain_name});
+  $self->login_user($ctx->{login_user})         if ( ! $self->login_user  && $ctx->{login_user});
+  $self->login_pass($ctx->{login_pass})         if ( ! $self->login_pass  && $ctx->{login_pass});
+  $self->vm_image_file($ctx->{vm_image_file})   if ( ! $self->vm_image_file  && $ctx->{vm_image_file});
+  $self->cache_dir($ctx->{cache_dir})           if ($ctx->{cache_dir});
 
   $ctx->{management_interface} = $self->management_interface
     if $self->management_interface;
 
-  if ($self->root_disk_size && $self->vm_image_file !~ /\.raw(\.gz|\.xz)?$/) {
-    die "Option \"root_disk_size\" is only available for raw images!\n";
+  $self->logger->debug("*** vm_image_file: ".$self->vm_image_file);
+  if ($self->root_disk_size && $self->vm_image_file !~ /(\.raw(\.gz|\.xz)?)$/) {
+    die "Option \"root_disk_size\" is only available for raw images (extension: $1)!\n";
   }
 
   return {
@@ -184,7 +186,7 @@ sub execute {
   $self->logger->debug("additional_disks:".Dumper($self->additional_disks));
 
 
-  my $final_file = $ctx->{vm_image_file};
+  my $final_file = $self->vm_image_file;
 
 
   my ($vol, $image) = $self->_create_image_file_from_cache({file=>$final_file}, $self->root_disk_size, $self->domain_name);
@@ -423,6 +425,7 @@ sub _create_image_file_from_cache {
   );
   my $supported_formats = join('|', keys %suffix2format);
   my $in = Path::Class::File->new($self->cache_dir,$file);
+  $self->logger->info("Resizing to new root_disk_size: $size");
   if ( $file =~ /\.($supported_formats)(\.(gz|bz2|xz))?$/ ) {
     my $fmt      = $1;
     my $vol_name = $file;
