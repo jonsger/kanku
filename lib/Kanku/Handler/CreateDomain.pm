@@ -425,6 +425,7 @@ sub _create_image_file_from_cache {
   );
   my $supported_formats = join('|', keys %suffix2format);
   my $in = Path::Class::File->new($self->cache_dir,$file);
+  $self->logger->info("Resizing to new root_disk_size: $size");
   if ( $file =~ /\.($supported_formats)(\.(gz|bz2|xz))?$/ ) {
     my $fmt      = $1;
     my $vol_name = $file;

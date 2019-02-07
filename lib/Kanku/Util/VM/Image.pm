@@ -210,9 +210,9 @@ sub _copy_volume {
 
 sub _expand_raw_image {
   my ($self, $st) = @_;
-
-  if ( $self->format eq 'raw' && $self->final_size > $self->_total_sent ) {
-    my $to_read = $self->_string2bytes($self->final_size) - $self->_total_sent;
+  my $final_size = $self->_string2bytes($self->final_size);
+  if ( $self->format eq 'raw' && $final_size > $self->_total_sent ) {
+    my $to_read = $final_size - $self->_total_sent;
     my $nbytes  = $self->_nbytes;
 
     $self->logger->info("-- Sending another $to_read bytes");
