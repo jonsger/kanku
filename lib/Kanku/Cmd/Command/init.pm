@@ -51,11 +51,11 @@ has qemu_user => (
 
 has memory => (
     traits        => [qw(Getopt)],
-    isa           => 'Int',
+    isa           => 'Str',
     is            => 'rw',
-    documentation => 'RAM size of virtual machines (in MB)',
+    documentation => 'RAM size of virtual machines',
     lazy          => 1,
-    default       => 2048
+    default       => '2G',
 );
 
 has vcpu => (
@@ -88,12 +88,11 @@ sub execute {
 
   # create Template object
   my $template  = Template->new($config);
-  my $memory    = $self->memory * 1024;
 
   # define template variables for replacement
   my $vars = {
 	domain_name   => $self->domain_name,
-        domain_memory => $memory,
+        domain_memory => $self->memory,
 	domain_cpus   => $self->vcpu,
 	default_job   => $self->default_job,
 	qemu_use      => $self->qemu_user,
