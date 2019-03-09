@@ -87,7 +87,7 @@ has dns_domain_name => (
 );
 
 sub _configure_libvirtd_access { ## no critic (Subroutines::ProhibitUnusedPrivateSubroutines)
-  my ($self) = @_;
+  my ($self, %opts) = @_;
   my $logger        = $self->logger;
 
   $self->_configure_qemu_config if $self->_devel;
@@ -112,8 +112,10 @@ EOF
   my $dconf = file('/etc/libvirt/libvirtd.conf');
 
   my @lines = $dconf->slurp;
+  my $user  = $opts{user};
+  my $group = 'libvirt';
   my $defaults = {
-    unix_sock_group         => 'libvirt',
+    unix_sock_group         => $group,
     unix_sock_ro_perms      => '0777',
     unix_sock_rw_perms      => '0770',
     unix_sock_admin_perms   => '0700',
@@ -135,8 +137,26 @@ EOF
 
   $dconf->spew(\@lines);
 
-  system 'systemctl enable libvirtd' || print $OS_ERROR;
-  system 'systemctl restart libvirtd' || print $OS_ERROR;
+  # add user to group libvirt
+  if ($user) {
+    if (
+      $self->_run_system_cmd('usermod', '-aG', $group, $user)->{return_code}
+   ) {
+      die "Error while adding user $user to group $group!\n";
+   }
+  }
+
+  if (
+    $self->_run_system_cmd('systemctl', 'enable', 'libvirtd')->{return_code}
+  ) {
+    die "Error while enabling libvirtd\n";
+  }
+
+  if (
+    $self->_run_system_cmd('systemctl', 'restart', 'libvirtd')->{return_code}
+  ) {
+    die "Error while restarting libvirtd\n";
+  }
 
   return;
 }

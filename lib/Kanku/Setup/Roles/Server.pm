@@ -46,9 +46,16 @@ sub _configure_apache {
   );
 
   $self->_configure_apache_ssl();
-
-  $self->_run_system_cmd("systemctl", "start", "apache2");
-  $self->_run_system_cmd("chkconfig", "apache2", "on");
+  if (
+    $self->_run_system_cmd("systemctl", "enable", "apache2")->{return_code}
+  ) {
+    die "Error while enabling apache2"
+  }
+  if (
+    $self->_run_system_cmd("systemctl", "restart", "apache2")->{return_code}
+  ) {
+    die "Error while restart apache2"
+  }
 }
 
 sub _create_ssh_keys {

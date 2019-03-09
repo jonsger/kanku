@@ -57,18 +57,11 @@ sub setup {
 
   $self->_set_sudoers();
 
-  $self->_configure_libvirtd_access();
+  $self->_configure_libvirtd_access(user=>$self->user);
 
   $self->_setup_database();
 
   $self->_create_osc_rc();
-
-  # add user to group libvirt
-  my $cmd = 'usermod -G libvirt '.$self->user;
-  system $cmd || croak($OS_ERROR);
-
-  # enable libvirtd
-  system 'chkconfig libvirtd on' || croak($OS_ERROR);
 
   $self->_create_default_pool;
 
