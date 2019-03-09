@@ -1,0 +1,10 @@
+[Unit]
+Description=Kubernetes API Proxy
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/kubectl proxy --port=8080
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
