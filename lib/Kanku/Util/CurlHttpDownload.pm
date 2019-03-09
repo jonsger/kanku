@@ -153,13 +153,6 @@ sub download {
       }
   }
 
-  my $user = Kanku::Config->instance->config()->{qemu}->{user} || 'qemu';
-
-  my ($login,$pass,$uid,$gid) = getpwnam($user)
-        or die "$user not in passwd file";
-
-  chown $uid, $gid, $file->stringify;
-
   return ($file->stringify, $res->header('ETag'));
 }
 
