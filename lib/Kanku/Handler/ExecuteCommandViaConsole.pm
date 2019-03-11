@@ -96,6 +96,8 @@ Here is an example how to configure the module in your jobs file or KankuFile
   -
     use_module: Kanku::Handler::ExecuteCommandViaConsole
     options:
+      login_user: kanku
+      login_pass: kankusho
       timeout: 600
       commands:
         - /bin/true
