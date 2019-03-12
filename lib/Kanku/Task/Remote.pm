@@ -87,7 +87,7 @@ sub run {
           id          => $job->id,
         },
         module      => $self->module,
-        final_args  => $self->final_args,
+        final_args  => {%{$self->final_args}, 'running_remotely'=>1},
       }
     }
   );

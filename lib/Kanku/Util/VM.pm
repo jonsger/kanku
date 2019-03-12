@@ -43,6 +43,7 @@ has [qw/
 has job_id           => ( is => 'rw', isa => 'Int' );
 has root_disk        => ( is => 'rw', isa => 'Object' );
 has use_9p           => ( is => 'rw', isa => 'Bool' );
+has running_remotely => ( is => 'rw', isa => 'Bool' );
 has empty_disks      => ( is => 'rw', isa => 'ArrayRef', default => sub {[]});
 has additional_disks => ( is => 'rw', isa => 'ArrayRef', default => sub {[]});
 has keep_volumes     => ( is => 'rw', isa => 'ArrayRef', default => sub {[]});
@@ -384,10 +385,8 @@ sub get_ipaddress {
     $self->management_interface($opts{management_interface})
   }
 
-  if ( ( $opts{mode} || '' ) eq 'console' ) {
-
+  if ((($opts{mode} || '' ) eq 'console') or $self->running_remotely) {
     return $self->_get_ip_from_console();
-
   } else {
     try {
       return $self->_get_ip_from_dhcp();

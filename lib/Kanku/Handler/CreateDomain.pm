@@ -213,6 +213,7 @@ sub execute {
       additional_disks      => $self->additional_disks,
       job_id                => $self->job->id,
       network_name          => $self->network_name,
+      running_remotely      => $self->running_remotely,
       image_file            => $final_file,
       root_disk             => $image
   );
@@ -312,7 +313,7 @@ sub _prepare_vm_via_console {
 
 
   if ( ! $self->skip_network ) {
-    %opts = (mode => 'console') if $self->management_interface;
+    %opts = (mode => 'console') if $self->management_interface or $self->running_remotely;
 
     $ip = $vm->get_ipaddress(%opts);
     die "Could not get ipaddress from VM" unless $ip;

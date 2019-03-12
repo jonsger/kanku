@@ -47,6 +47,12 @@ has 'schema' => (
   isa => 'Object'
 );
 
+has 'running_remotely' => (
+  is  => 'rw',
+  isa => 'Bool',
+  default => 0,
+);
+
 has gui_config => (
   is => 'ro',
   isa => 'ArrayRef',
