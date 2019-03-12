@@ -1,0 +1,12 @@
+#!/usr/bin/perl
+
+use strict;
+use Data::Dumper;
+
+{
+  local $/;
+  my $data = eval <>;
+  print Dumper($data);
+}
+
+exit 0;
