@@ -97,8 +97,7 @@ has shutdown_file => (
 =cut
 
 sub connect {
-  my $self = shift;
-  my %opts = @_;
+  my ($self, %opts) = @_;
   my $logger = $self->logger;
 
   $logger->debug(__PACKAGE__."->connect to opts:".$self->dump_it(\%opts));
@@ -127,7 +126,10 @@ sub connect {
       $connect_success = 1;
     } catch {
       if ( $self->shutdown_file ) {
-        die "shutdown while trying to connect to rabbitmq" if ( -f $self->shutdown_file);
+        my $msg = "Found shutdown file '"
+          . $self->shutdown_file
+          . "' while trying to connect to rabbitmq\n";
+        die $msg if ( -f $self->shutdown_file);
       }
       $logger->trace("Error while connecting to RabbitMQ: '$_'");
       die "Could not connect to RabbitMQ: $_" if $opts{no_retry};
@@ -167,7 +169,7 @@ sub connect_info {
 =cut
 
 sub setup_worker {
-  my ($self,$mq)=@_;
+  my ($self, $mq) = @_;
 
   $self->queue->exchange_declare(
     $self->channel,
@@ -186,7 +188,7 @@ sub setup_worker {
 =cut
 
 sub recv {
-  my $self = shift;
+  my ($self) = @_;
   my $logger = $self->logger;
 
   $logger->trace("Waiting for message on channel:     '".$self->channel."'");
@@ -224,8 +226,7 @@ sub publish {
 
 =cut
 sub create_queue {
-  my $self = shift;
-  my %opts = @_;
+  my ($self, %opts) = @_;
 
   while ( my ($key, $value) = each(%opts)) { $self->$key($opts{$key}) if defined($value) }
 
@@ -270,7 +271,7 @@ sub create_queue {
 =cut
 
 sub destroy_queue {
-  my $self = shift;
+  my ($self) = @_;
   my $mq = $self->queue;
   my %opts = @_;
 
@@ -304,7 +305,7 @@ sub destroy_queue {
 =cut
 
 sub reconnect {
-  my $self = shift;
+  my ($self) = @_;
   my $mq = $self->queue;
 
   try {
@@ -312,7 +313,21 @@ sub reconnect {
   };
 
   $self->connect;
-  $self->create_queue;
 
+  try {
+    $self->create_queue;
+  } catch {
+    $self->logger->warn($_);
+    if($_ =~ / NOT_FOUND - no exchange /) {
+      $self->logger->debug("Trying to setup worker after reconnect");
+      # the connection gets automatically disconnect if exchange does not
+      # exists, thats why we force connect here
+      $self->connect;
+      $self->setup_worker;
+      $self->create_queue;
+    } else {
+      die $_;
+    }
+  };
 }
 1;

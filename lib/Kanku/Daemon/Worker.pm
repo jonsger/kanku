@@ -150,10 +150,16 @@ sub listen_on_queue {
     } catch {
       $logger->error($_);
       $self->airbrake->notify_with_backtrace($_, {context=>{pid=>$$,worker_id=>$self->worker_id}});
-      $kmq->reconnect if $_ =~ /^recv: a SSL error occurred/;
+      if ($_ =~ /^(recv: a SSL error occurred|AMQP socket not connected)/) {
+        try {
+          $kmq->reconnect;
+        } catch {
+          $logger->error($_);
+          die $_;
+        };
+      }
       sleep 1;
     };
-
 
     if ($self->detect_shutdown) {
       $logger->info("AllWorker process detected shutdown - exiting");
