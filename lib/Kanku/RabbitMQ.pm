@@ -188,12 +188,13 @@ sub setup_worker {
 =cut
 
 sub recv {
-  my ($self, @opts) = shift;
+  my ($self, @opts) = @_;
   my $logger = $self->logger;
 
   $logger->trace("Waiting for message on channel:     '".$self->channel."'");
   $logger->trace("                       queue:       '".$self->queue_name."'");
   $logger->trace("                       routing_key: '".$self->routing_key."'");
+  $logger->trace("                       opts:        '@opts'");
 
   my $msg = $self->queue->recv(@opts);
   if ($msg) {
