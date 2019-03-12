@@ -173,7 +173,7 @@ sub handle_advertisement {
   my $logger = $self->logger();
 
   $logger->debug("Starting to handle advertisement");
-  $logger->trace($self->dump_it($data));
+  $logger->trace("\$data = ".$self->dump_it($data));
 
   if ( $data->{answer_queue} ) {
       $self->remote_job_queue_name($data->{answer_queue});
@@ -198,7 +198,7 @@ sub handle_advertisement {
         action        => 'apply_for_job'
       };
       $logger->debug("Sending application for job_id $job_id on queue ".$self->remote_job_queue_name);
-      $logger->trace($self->dump_it($application));
+      $logger->trace("\$application =".$self->dump_it($application));
 
       my $json    = encode_json($application);
       $kmq->publish(
@@ -215,7 +215,8 @@ sub handle_advertisement {
         my $body = decode_json($msg->{body});
         if ( $body->{action} eq 'offer_job' ) {
           $logger->info("Starting with job ");
-          $logger->trace($self->dump_it($msg,$body));
+          $logger->trace("\$msg =".$self->dump_it($msg));
+          $logger->trace("\$body =".$self->dump_it($body));
 
           $self->handle_job($job_id,$job_kmq);
           return;
@@ -226,7 +227,8 @@ sub handle_advertisement {
           return;
         } else {
           $logger->error("Answer on application for job $job_id unknown");
-          $logger->trace($self->dump_it($msg,$body));
+          $logger->trace("\$msg =".$self->dump_it($msg));
+          $logger->trace("\$body =".$self->dump_it($body));
         }
       } else {
           $logger->error("Got no answer for application (job_id: $job_id)");
@@ -252,7 +254,7 @@ sub handle_job {
 	error_message => "Aborted job because of TERM signal",
     };
 
-    $self->logger->trace("Sending answer to '".$self->remote_job_queue_name."': ".$self->dump_it($answer));
+    $logger->info("Sending t'aborted_job' because of TERM signal to '".$self->remote_job_queue_name);
 
     $job_kmq->publish(
       $self->remote_job_queue_name,
@@ -272,7 +274,7 @@ sub handle_job {
 	    error_message => "Aborted job because of daemon shutdown",
 	};
 
-	$self->logger->trace("Sending answer to '".$self->remote_job_queue_name."': ".$self->dump_it($answer));
+	$logger->info("Sending action 'aborted_job' because of daemon shutdown to '".$self->remote_job_queue_name);
 
 	$job_kmq->publish(
 	  $self->remote_job_queue_name,
@@ -283,15 +285,13 @@ sub handle_job {
 	exit 0;
       }
       if ( $task_msg ) {
+        $logger->trace("\$task_msg = $task_msg");
         my $task_body = decode_json($task_msg->{body});
         $logger->debug("Got new message while waiting for tasks");
-        $logger->trace($self->dump_it($task_body));
         if (
            $task_body->{action} eq 'task' and $task_body->{job_id} == $job_id
         ){
-          $logger->info("Starting with task");
-          $logger->trace($self->dump_it($task_msg,$task_body));
-
+          $logger->info("Job $task_body->{job_id} is starting task $task_body->{task_args}->{module}");
           $self->handle_task($task_body,$job_kmq,$job_id);
         }
         if ( $task_body->{action} eq 'finished_job' and $task_body->{job_id} == $job_id) {
@@ -329,7 +329,7 @@ sub handle_job {
       return;
     } else {
       $logger->debug("Unknown answer when waitingin for finish_job:");
-      $logger->trace($self->dump_it($task_body));
+      $logger->trace("\$task_body =".$self->dump_it($task_body));
     }
   };
 
@@ -340,8 +340,6 @@ sub handle_task {
   my ($self, $data, $job_kmq, $job_id) = @_;
 
   confess "Got no task_args" if (! $data->{task_args});
-
-  $self->logger->trace("task_args: ".$self->dump_it($data->{task_args}));
 
   # create object from serialized data
   my $job = Kanku::Job->new($data->{task_args}->{job});
@@ -359,6 +357,15 @@ sub handle_task {
       error_message => $_
     };
   };
+  $self->_send_task_result($job_kmq, $job, $result);
+  return;
+}
+
+sub _send_task_result {
+  my ($self, $job_kmq, $job, $result) = @_;
+  my $logger = $self->logger;
+
+  $logger->debug("Sending task result (state: $result->{state}) to ".$self->remote_job_queue_name);
 
   $result->{result} = encode_base64($result->{result}) if ($result->{result});
 
@@ -369,13 +376,16 @@ sub handle_task {
       job           => $job->to_json
   };
 
-  $self->logger->debug("Sending answer to '".$self->remote_job_queue_name."': ".$self->dump_it($answer));
+  $logger->trace("\$answer = ".$self->dump_it($answer));
+
 
   $job_kmq->publish(
     $self->remote_job_queue_name,
 	encode_json($answer),
     { exchange => 'kanku.to_dispatcher'}
   );
+
+  return;
 }
 
 sub collect_resources {
