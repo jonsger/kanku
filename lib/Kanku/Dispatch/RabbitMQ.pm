@@ -28,7 +28,6 @@ use Moose;
 
 our $VERSION = "0.0.1";
 
-use Data::Dumper;
 use JSON::XS;
 use Kanku::RabbitMQ;
 use Kanku::Task;
@@ -40,6 +39,7 @@ use Try::Tiny;
 with 'Kanku::Roles::Dispatcher';
 with 'Kanku::Roles::ModLoader';
 with 'Kanku::Roles::Daemon';
+with 'Kanku::Roles::Helpers';
 
 has 'max_processes' => (
   is      => 'rw',
@@ -120,7 +120,7 @@ sub run_job {
     sleep 1;
   }
 
-  $logger->trace("List of all applications:\n" . Dumper($applications));
+  $logger->trace("List of all applications:\n" . $self->dump_it($applications));
 
   # pa = prefered_application
   my ($pa,$declined_applications) = $self->score_applications($applications);
@@ -142,8 +142,8 @@ sub run_job {
   $self->start_job($job);
 
   $job->workerinfo($pa->{worker_fqhn}.":".$pa->{worker_pid}.":".$aq);
-  $logger->trace("Result of job offer:\n".Dumper($result));
-  $logger->trace("  -- args:\n".Dumper($args));
+  $logger->trace("Result of job offer:\n".$self->dump_it($result));
+  $logger->trace("  -- args:\n".$self->dump_it($args));
 
   my $last_task;
 
@@ -199,7 +199,7 @@ sub run_task {
 
   $logger->debug("Starting with new task");
 
-  $logger->trace(Dumper(\%opts));
+  $logger->trace($self->dump_it(\%opts));
 
   my %defaults = (
     job         => $opts{job},
@@ -213,7 +213,7 @@ sub run_task {
   my $un = $job->trigger_user || "";
   $logger->debug("--- trigger_user $un");
   $defaults{final_args}->{domain_name} =~ s{^($un-)?}{$un-}smx if ($un && exists $defaults{final_args}->{domain_name});
-  $logger->debug('--- final_args'.Dumper($defaults{final_args}));
+  $logger->trace('--- final_args = '.$self->dump_it($defaults{final_args}));
 
   my $task = Kanku::Task->new(
     %defaults,
@@ -279,7 +279,7 @@ sub send_job_offer {
   my $logger = $self->logger;
 
   $logger->debug("Offering job for prefered_application");
-  $logger->trace(Dumper($prefered_application));
+  $logger->trace("\$prefered_application = ".$self->dump_it($prefered_application));
 
   $rmq->publish(
     $prefered_application->{answer_queue},
@@ -355,11 +355,11 @@ sub advertise_job {
     while ( my $msg = $rmq->recv(1000) ) {
       if ($msg ) {
           my $data;
-          $logger->debug("Incomming application");
-          $logger->trace(Dumper($msg));
+          $logger->trace("got message:\n".$self->dump_it($msg));
           my $body = $msg->{body};
           try {
             $data = decode_json($body);
+            $logger->debug("Incomming application for $data->{job_id} from $data->{worker_fqhn} ($data->{worker_pid}))");
             $all_applications->{$data->{answer_queue}} = $data;
           } catch {
             $logger->debug("Error in JSON:\n$_\n$body\n");
@@ -371,6 +371,8 @@ sub advertise_job {
     $logger->debug("No application so far (wcnt: $wcnt)") if (! $wcnt % 60);
     $wcnt++;
   }
+
+  $logger->debug(" Got ".%{$all_applications}." applications");
 
   return $all_applications;
 }
