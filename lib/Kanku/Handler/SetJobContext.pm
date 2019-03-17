@@ -30,6 +30,7 @@ has [qw/
 	os_instance_name os_image_id
 	login_user	login_pass
 	privatekey_path publickey_path
+        ipaddress
     /
 ] => (is=>'rw',isa=>'Str');
 
@@ -103,7 +104,7 @@ sub execute {
   my $self = shift;
   my $ctx  = $self->job()->context();
   for my $var (qw/
-    domain_name vm_template_file host_interface images_dir cache_dir 
+    domain_name vm_template_file host_interface images_dir cache_dir ipaddress
     os_instance_name os_image_id login_user login_pass 
     privatekey_path publickey_path
   /) {
