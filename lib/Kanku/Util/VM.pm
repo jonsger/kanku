@@ -27,6 +27,7 @@ use Net::IP;
 use Sys::Virt::StorageVol;
 use XML::XPath;
 use Try::Tiny;
+use File::Path qw/make_path/;
 
 use Kanku::Util::VM::Console;
 use Kanku::Util::VM::Image;
@@ -148,6 +149,12 @@ has host_dir_9p => (
   default => sub { getcwd() }
 );
 
+has accessmode_9p => (
+  is      => 'rw',
+  isa     => 'Str',
+  lazy    => 1,
+  default => 'passthrough',
+);
 
 has '_unit' => (
   traits  => ['Counter'],
@@ -163,6 +170,7 @@ has '_unit' => (
 
 sub process_template {
   my ($self,$disk_xml) = @_;
+  my $logger = $self->logger;
 
   # some useful options (see below for full list)
   my $template_path = '/etc/kanku/templates/';
@@ -177,7 +185,7 @@ sub process_template {
 
   my $host_feature = $self->_get_hw_virtualization;
   die "Hardware doesn't support kvm" if ! $host_feature;
-  $self->logger->debug("Found hardware virtualization: '$host_feature'");
+  $logger->debug("Found hardware virtualization: '$host_feature'");
   # create Template object
   my $template  = Template->new($config);
 
@@ -197,12 +205,18 @@ sub process_template {
     host_feature    => $host_feature
   };
 
-  $self->logger->debug(" --- use_9p:".$self->use_9p);
+  $logger->debug(" --- use_9p:".$self->use_9p);
   if ( $self->use_9p ) {
+    $logger->debug(" --- host_dir_9p:".$self->host_dir_9p);
+    if (! -d $self->host_dir_9p) {
+      $logger->debug(" --- host_dir_9p does not exists. Trying to create");
+      make_path($self->host_dir_9p) || die "Could not create host_dir_9p '".$self->host_dir_9p."': $!";
+    }
 
+    $logger->debug(" --- accesmode_9p: ".$self->accessmode_9p);
 
     $vars->{domain}->{hostshare} = "
-    <filesystem type='mount' accessmode='passthrough'>
+    <filesystem type='mount' accessmode='".$self->accessmode_9p."'>
       <source dir='".$self->host_dir_9p."'/>
       <target dir='kankushare'/>
       <alias name='fs0'/>

@@ -67,6 +67,8 @@ has ['mnt_dir_9p']    => (is => 'rw', isa => 'Str', default => '/tmp/kanku');
 
 has ['host_dir_9p']    => (is => 'rw', isa => 'Str');
 
+has ['accessmode_9p']  => (is => 'rw', isa => 'Str');
+
 has [qw/
   noauto_9p
   wait_for_systemd
@@ -139,6 +141,8 @@ sub prepare {
   $self->login_user($ctx->{login_user})         if ( ! $self->login_user  && $ctx->{login_user});
   $self->login_pass($ctx->{login_pass})         if ( ! $self->login_pass  && $ctx->{login_pass});
   $self->vm_image_file($ctx->{vm_image_file})   if ( ! $self->vm_image_file  && $ctx->{vm_image_file});
+  $self->host_dir_9p($ctx->{host_dir_9p})       if ( ! $self->host_dir_9p  && $ctx->{host_dir_9p});
+  $self->accessmode_9p($ctx->{accessmode_9p})   if ( ! $self->accessmode_9p  && $ctx->{accessmode_9p});
   $self->cache_dir($ctx->{cache_dir})           if ($ctx->{cache_dir});
 
   $ctx->{management_interface} = $self->management_interface
@@ -215,12 +219,13 @@ sub execute {
       network_name          => $self->network_name,
       running_remotely      => $self->running_remotely,
       image_file            => $final_file,
-      root_disk             => $image
+      root_disk             => $image,
   );
 
   $vm->pool_name($self->pool_name) if $self->pool_name;
 
   $vm->host_dir_9p($self->host_dir_9p) if ($self->host_dir_9p);
+  $vm->accessmode_9p($self->accessmode_9p) if ($self->accessmode_9p);
 
   if ( $ctx->{vm_template_file} ) {
     $vm->template_file($ctx->{vm_template_file});
