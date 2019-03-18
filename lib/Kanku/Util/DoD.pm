@@ -28,9 +28,7 @@ use Kanku::Config;
 use Carp;
 
 with 'Kanku::Roles::Logger';
-
-# http://download.opensuse.org/repositories/OBS:/Server:/Unstable/images/
-#
+with 'Kanku::Roles::Helpers';
 
 has project => (
   is      => 'rw',
@@ -98,8 +96,9 @@ has get_image_file_from_url => (
   isa     => 'HashRef',
   lazy    => 1,
   default => sub {
-    my $self = shift;
+    my ($self) = @_;
     my $result = [];
+    my $logger = $self->logger;
 
     $self->get_image_file_from_url_cb(\&_sub_get_image_file_from_url_cb);
 
@@ -111,7 +110,9 @@ has get_image_file_from_url => (
       apiurl      => $self->api_url,
       %{$self->auth_config},
     );
-    my $record = $self->get_image_file_from_url_cb->($self,$build_results->binarylist());
+    my $binlist = $build_results->binarylist();
+    $logger->trace("\$binlist = ".$self->dump_it($binlist));
+    my $record = $self->get_image_file_from_url_cb->($self,$binlist);
     if ( $record ) {
       $record->{url} = $self->download_url .$record->{prefix}. $record->{filename};
       if ( $self->api_url =~ /\/public\/?$/ ) {
@@ -123,7 +124,7 @@ has get_image_file_from_url => (
       $record->{obs_username} = $build_results->user;
       $record->{obs_password} = $build_results->pass;
     }
-    $self->logger->trace("\$record:\n".Dumper($record));
+    $self->logger->trace("\$record = ".$self->dump_it($record));
     return $record || {};
   },
 );
