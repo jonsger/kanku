@@ -102,16 +102,18 @@ $( document ).ready(
               function (host_ip,forwarded_ports) {
                 $.each(
                   forwarded_ports,
-                  function(host_port,guest_port) {
-                    var gen_href  = 0;
-                    var proto     = '';
-                    if ( guest_port == 443 ) {
+                  function(host_port,gp) {
+                    var gen_href   = 0;
+                    var guest_port = gp[0];
+                    var proto      = gp[1];
+
+                    if ( guest_port == 443 || proto == 'https') {
                       gen_href = 1;
                       proto    = 'https';
-                    } else if ( guest_port == 80 ) {
+                    } else if ( guest_port == 80 || proto == 'http') {
                       gen_href = 1;
                       proto    = 'http';
-                    } else if ( guest_port == 22 ) {
+                    } else if ( guest_port == 22 || proto == 'ssh') {
                       $("#gp_body_" + domain_name).append(
                         "<pre>ssh -l root -p "+host_port+" -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null "+host_ip+"</pre>"
                       );
@@ -119,7 +121,6 @@ $( document ).ready(
                       $("#gp_body_" + domain_name).append(
                         "<pre>Found unknown port forward ("+host_ip+") "+host_port+" => "+guest_port+" on guest</pre>"
                       );
-
                     }
 
                     if ( gen_href == 1 ) {

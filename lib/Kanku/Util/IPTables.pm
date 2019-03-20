@@ -73,7 +73,7 @@ sub get_forwarded_ports_for_domain {
 
   die "No domain_name given. Cannot procceed\n" if (! $domain_name);
 
-  my $re = '^DNAT.*\/\*\s*Kanku:host:'.$self->domain_name.'\s*\*\/';
+  my $re = '^DNAT.*\/\*\s*Kanku:host:'.$self->domain_name.'(:\w*)?\s*\*\/';
 
   # prepare command to read PREROUTING chain
   $cmd = $sudo . "LANG=C iptables -t nat -L PREROUTING -n";
@@ -81,19 +81,20 @@ sub get_forwarded_ports_for_domain {
   # read PREROUTING rules
   my @prerouting_rules = `$cmd`;
 
-  # check each PREROUTING rule if comment matches "/* Kanku:host:<domain_name> */"
+  # check each PREROUTING rule if comment matches "/* Kanku:host:<domain_name>:<application_protocol> */"
   # and push line number to rules ARRAY
   for my $line (@prerouting_rules) {
       if ( $line =~ $re ) {
         chomp $line;
-        # DNAT       tcp  --  0.0.0.0/0            10.160.67.4          tcp dpt:49002 /* Kanku:host:obs-server */ to:192.168.100.148:443
+        # DNAT       tcp  --  0.0.0.0/0            10.160.67.4          tcp dpt:49002 /* Kanku:host:obs-server:<application_protocol> */ to:192.168.100.148:443
         my($target,$prot,$opt,$source,$destination,@opts) = split(/\s+/,$line);
-        my ($host_port,$guest_port);
+        my ($host_port,$guest_port,$app);
         for my $f (@opts) {
+          if ($f =~ /^Kanku:host:\w+:(\w+)$/ ) { $app = $1 }
           if ($f =~ /^dpt:(\d+)$/ ) { $host_port = $1 }
           if ($f =~ /^to:[\d\.]+:(\d+)$/ ) { $guest_port = $1 }
         }
-        $result->{$destination}->{$host_port} = $guest_port;
+        $result->{$destination}->{$host_port} = [$guest_port, $app];
       }
   }
 
@@ -184,10 +185,12 @@ sub add_forward_rules_for_domain {
   $logger->debug("Using ip's(host_ip/guest_ip): ($host_ip/$guest_ip)");
 
   foreach my $rule (@$forward_rules) {
-    if ($rule =~ /^(tcp|udp):(\d+)$/i ) {
+    if ($rule =~ /^(tcp|udp):(\d+)(:(\w+))?$/i ) {
       # ignore case for protocol TCP = tcp
-      my $p = lc($1);
-      push(@{$portlist->{$p}},$2);
+      my $trans = lc($1);
+      my $port  = $2;
+      my $app   = lc($4);
+      push(@{$portlist->{$trans}}, [$port,$app]);
     } else {
       die "Malicious rule detected '$rule'\n";
     }
@@ -200,14 +203,14 @@ sub add_forward_rules_for_domain {
     $proto
   );
   $self->_check_chain;
-  foreach my $guest_port ( @{$portlist->{$proto}} ) {
+  foreach my $port ( @{$portlist->{$proto}} ) {
     my $host_port = shift(@fw_ports);
 
-    my $comment = " -m comment --comment 'Kanku:host:".$self->domain_name."'";
+    my $comment = " -m comment --comment 'Kanku:host:".$self->domain_name.":$port->[1]'";
 
     my @cmds = (
-      "iptables -t nat -I PREROUTING 1 -d $host_ip -p $proto --dport $host_port -j DNAT --to $guest_ip:$guest_port $comment",
-      "iptables -I ".$self->iptables_chain." 1 -d $guest_ip/32 -p $proto -m state --state NEW -m tcp --dport $guest_port -j ACCEPT $comment"
+      "iptables -t nat -I PREROUTING 1 -d $host_ip -p $proto --dport $host_port -j DNAT --to $guest_ip:$port->[0] $comment",
+      "iptables -I ".$self->iptables_chain." 1 -d $guest_ip/32 -p $proto -m state --state NEW -m tcp --dport $port->[0] -j ACCEPT $comment"
     );
 
     for my $cmd (@cmds) {

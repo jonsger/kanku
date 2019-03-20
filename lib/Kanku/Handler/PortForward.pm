@@ -54,11 +54,8 @@ has gui_config => (
   }
 );
 
-
 sub execute {
   my $self = shift;
-  my $ctx  = $self->job()->context();
-  my $cfg  = Kanku::Config->instance()->config();
 
   if ( $self->forward_port_list ) {
     my $ipt = Kanku::Util::IPTables->new(
@@ -68,7 +65,7 @@ sub execute {
     );
 
     $ipt->add_forward_rules_for_domain(
-      start_port => $cfg->{'Kanku::Util::IPTables'}->{start_port},
+      start_port => $self->cfg->{'Kanku::Util::IPTables'}->{start_port},
       forward_rules => [ split(/,/,$self->forward_port_list) ]
     );
 
@@ -77,6 +74,7 @@ sub execute {
       message => "Created port forwarding for " . $self->domain_name .
 		  " (".$self->ipaddress.") port list: (". $self->forward_port_list.")"
     };
+
   } else {
     return {
       code    => 0,

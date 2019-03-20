@@ -67,6 +67,13 @@ has 'username' => (
   default => 'root'
 );
 
+has 'password' => (
+  is	  => 'rw',
+  isa	  => 'Str',
+  lazy    => 1,
+  default => 'kankudai'
+);
+
 has 'connect_timeout' => (
   is	  => 'rw',
   isa	  => 'Int',
@@ -104,26 +111,27 @@ sub get_defaults {
   my $logger  = $self->logger;
   my $cfg = Kanku::Config->instance->config();
 
-  if (! $self->privatekey_path ) {
-    if ( $cfg->{'Kanku::Roles::SSH'}->{privatekey_path} ) {
-      $self->privatekey_path($cfg->{'Kanku::Roles::SSH'}->{privatekey_path});
-    } elsif ( $::ENV{HOME} ) {
-      my $key_path = "$::ENV{HOME}/.ssh/id_rsa";
-      $self->privatekey_path($key_path) if ( -f $key_path);
+  if ($self->auth_type eq 'publickey') {
+    if (! $self->privatekey_path ) {
+      if ( $cfg->{'Kanku::Roles::SSH'}->{privatekey_path} ) {
+	$self->privatekey_path($cfg->{'Kanku::Roles::SSH'}->{privatekey_path});
+      } elsif ( $::ENV{HOME} ) {
+	my $key_path = "$::ENV{HOME}/.ssh/id_rsa";
+	$self->privatekey_path($key_path) if ( -f $key_path);
+      }
     }
+
+    $logger->debug(' - get_defaults: privatekey_path - '.$self->privatekey_path);
+
+    $self->publickey_path($cfg->{'Kanku::Roles::SSH'}->{publickey_path}) if $cfg->{'Kanku::Roles::SSH'}->{publickey_path};
+
+    if (! $self->publickey_path && $self->privatekey_path) {
+      my $key_path = $self->privatekey_path.".pub";
+      $self->publickey_path($key_path) if ( -f $key_path);
+    }
+
+    $logger->debug(' - get_defaults: publickey_path - '.$self->publickey_path);
   }
-
-  $logger->debug(' - get_defaults: privatekey_path - '.$self->privatekey_path);
-
-  $self->publickey_path($cfg->{'Kanku::Roles::SSH'}->{publickey_path}) if $cfg->{'Kanku::Roles::SSH'}->{publickey_path};
-
-  if (! $self->publickey_path && $self->privatekey_path) {
-    my $key_path = $self->privatekey_path.".pub";
-    $self->publickey_path($key_path) if ( -f $key_path);
-  }
-
-  $logger->debug(' - get_defaults: publickey_path - '.$self->publickey_path);
-
   return 1;
 }
 
@@ -134,6 +142,7 @@ sub connect {
     strict_host_key_checking=>'no',
     timeout => 1000 * 60 * 60 * 4 # default timeout 4 hours in milliseconds
   );
+
   $self->ssh2($ssh2);
 
   my $results = [];
@@ -152,30 +161,39 @@ sub connect {
 
   $logger->debug("Connected successfully to $ip after $connect_count retries.");
 
+  $logger->debug(' - SSH_AUTH_SOCK: '.($::ENV{SSH_AUTH_SOCK} || q{}));
+  $logger->debug(' - ssh2: using auth_'.$self->auth_type);
   if ( $self->auth_type eq 'publickey' ) {
-    $logger->debug(' - ssh2: using auth_publickey SSH_AUT_SOCK: '.($::ENV{SSH_AUTH_SOCK} || q{}));
     $ssh2->auth_publickey(
       $self->username,
       $self->publickey_path,
       $self->privatekey_path,
-      $self->passphrase
+      $self->passphrase,
     );
   } elsif ( $self->auth_type eq 'agent' ) {
-    $logger->debug(' - ssh2: using auth_agent');
     $ssh2->auth_agent($self->username);
+  } elsif ( $self->auth_type eq 'password' ) {
+    $ssh2->auth_password($self->username, $self->password);
   } else {
     die "ssh auth_type not known!\n"
   }
 
   if ( ! $ssh2->auth_ok()  ) {
-
-    $logger->info(
-      "Using the following login data:\n" .
-          "username   : " . ( $self->username || '' )         . "\n".
-          "pubkey     : " . ( $self->publickey_path || '' )   . "\n".
-          "privkey    : " . ( $self->privatekey_path || '' )  . "\n".
-          "passphrase : " . ( $self->passphrase || '' )       . "\n"
-    );
+    if ($self->auth_type eq 'publickey') {
+      $logger->error(
+	"Using the following login data:\n" .
+	    "username   : " . ( $self->username || '' )         . "\n".
+	    "pubkey     : " . ( $self->publickey_path || '' )   . "\n".
+	    "privkey    : " . ( $self->privatekey_path || '' )  . "\n".
+	    "passphrase : " . ( $self->passphrase || '' )       . "\n"
+      );
+    } elsif ($self->auth_type eq 'agent') {
+      $logger->error(
+	"Using the following login data:\n" .
+	    "username      : " . ( $self->username || '' )       . "\n".
+	    "SSH_AUTH_SOCK : " . ( $::ENV{SSH_AUTH_SOCK} || '' ) . "\n"
+      );
+    }
     my @err = $ssh2->error;
     die "Could not authenticate! $err[2]\n";
   }
