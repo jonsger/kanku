@@ -127,9 +127,10 @@ $( document ).ready(
                       var href = Mustache.render(
                          href_guest,
                           {
-                            proto     : proto,
-                            host_ip   : host_ip,
-                            host_port : host_port
+                            proto      : proto,
+                            host_ip    : host_ip,
+                            host_port  : host_port,
+                            guest_port : guest_port,
                           }
                       );
                       $("#gp_body_" + domain_name).append(href);

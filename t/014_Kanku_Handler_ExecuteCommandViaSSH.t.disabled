@@ -1,0 +1,61 @@
+use strict;
+use warnings;
+
+use Test::More tests => 1;
+use FindBin;
+use Path::Class qw/dir/;
+use Data::Dumper;
+use Kanku::Config;
+
+Kanku::Config->initialize;
+
+use Kanku::Job;
+require_ok('Kanku::Handler::ExecuteCommandViaSSH');
+
+### Initialization Section
+use Log::Log4perl qw(:easy);
+Log::Log4perl->easy_init($TRACE);  # Set priority of root logger to ERROR
+
+### Application Section
+my $logger = get_logger();
+
+
+my $job = Kanku::Job->new();
+
+#$job->context()->{cache_dir} = $FindBin::Bin."/tmp/cache/";
+$job->context()->{ipaddress} = "192.168.199.17";
+
+my $handler = Kanku::Handler::ExecuteCommandViaSSH->new(
+  job         => $job,
+  logger      => $logger,
+  command => [
+    "curl https://github.com",
+  ],
+  # auth_type   => 'password',
+  # password    => 'kankudai',
+  # auth_type   => 'publickey',
+  # publickey_path  => '/etc/kanku/ssh/id_rsa.pub',
+  # privatekey_path => '/etc/kanku/ssh/id_rsa',
+  auth_type   => 'agent',
+);
+
+print Dumper($handler->execute());
+eval {
+  $handler = Kanku::Handler::ExecuteCommandViaSSH->new(
+    job         => $job,
+    logger      => $logger,
+    commands => [
+      "/bin/false",
+    ],
+    # auth_type   => 'password',
+    # password    => 'kankudai',
+    # auth_type   => 'publickey',
+    # publickey_path  => '/etc/kanku/ssh/id_rsa.pub',
+    # privatekey_path => '/etc/kanku/ssh/id_rsa',
+    # auth_type   => 'agent',
+  );
+
+  $handler->execute();
+};
+
+exit 0;

@@ -64,9 +64,10 @@ has cfg => (
   is      => 'ro',
   isa     => 'HashRef',
   lazy    => 1,
-  default => sub { return Kanku::Config->instance()->config() }
+  default => sub {
+    return Kanku::Config->instance()->config();
+  },
 );
-
 
 sub distributable { 0 }
 

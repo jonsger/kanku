@@ -34,25 +34,18 @@ has domain_name => (
   isa=>'Str',
   lazy => 1,
   default => sub {
-    $_[0]->job->context->{domain_name}
+    return $_[0]->job->context->{domain_name};
   },
 );
 
 has host_interface => (
   is      => 'ro',
   isa     => 'Str',
-  default => sub { $_[0]->job()->context()->{host_interface} || '' },
+  lazy => 1,
+  default => sub {
+    return $_[0]->job->context->{host_interface} || '';
+  },
 );
-
-has cfg => (
-  is      => 'ro',
-  isa     => 'HashRef',
-  lazy    => 1,
-  default => sub { return Kanku::Config->instance()->config() }
-);
-
-
-sub distributable { 0 }
 
 sub execute {
   my $self    = shift;
@@ -88,7 +81,7 @@ sub execute {
         $ssh2->disconnect();
         die "Error while executing command via ssh '$cmd': $err[2]";
       }
-      die "Invalid port: '$out'\n" unless ($out =~ /^\d+$/); 
+      die "Invalid port: '$out'\n" unless ($out =~ /^\d+$/);
       my $ipt = Kanku::Util::IPTables->new(
 	domain_name     => $self->domain_name,
 	host_interface  => $self->host_interface || '',
@@ -143,8 +136,8 @@ Here is an example how to configure the module in your jobs file or KankuFile
         -
           service: rook-ceph-mgr-dashboard-external-https
           namespace: rook-ceph
-          transport_layer: tcp
-          application_layer: https
+          transport: tcp
+          application: https
 
 =head1 DESCRIPTION
 

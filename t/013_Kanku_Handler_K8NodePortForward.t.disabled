@@ -5,6 +5,9 @@ use Test::More tests => 1;
 use FindBin;
 use Path::Class qw/dir/;
 use Data::Dumper;
+use Kanku::Config;
+
+Kanku::Config->initialize;
 
 use Kanku::Job;
 
@@ -36,10 +39,13 @@ my $handler = Kanku::Handler::K8NodePortForward->new(
                      application => "https",
                    }
                  ],
-  auth_type   => 'password',
   cfg => {},
+  # auth_type   => 'password',
+  # password    => 'kankudai',
+  # auth_type   => 'publickey',
   # publickey_path  => '/etc/kanku/ssh/id_rsa.pub',
   # privatekey_path => '/etc/kanku/ssh/id_rsa',
+  # auth_type   => 'agent',
 );
 
 

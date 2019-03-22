@@ -111,27 +111,26 @@ sub get_defaults {
   my $logger  = $self->logger;
   my $cfg = Kanku::Config->instance->config();
 
-  if ($self->auth_type eq 'publickey') {
-    if (! $self->privatekey_path ) {
-      if ( $cfg->{'Kanku::Roles::SSH'}->{privatekey_path} ) {
-	$self->privatekey_path($cfg->{'Kanku::Roles::SSH'}->{privatekey_path});
-      } elsif ( $::ENV{HOME} ) {
-	my $key_path = "$::ENV{HOME}/.ssh/id_rsa";
-	$self->privatekey_path($key_path) if ( -f $key_path);
-      }
+  if (! $self->privatekey_path ) {
+    if ( $cfg->{'Kanku::Roles::SSH'}->{privatekey_path} ) {
+      $self->privatekey_path($cfg->{'Kanku::Roles::SSH'}->{privatekey_path});
+    } elsif ( $::ENV{HOME} ) {
+      my $key_path = "$::ENV{HOME}/.ssh/id_rsa";
+      $self->privatekey_path($key_path) if ( -f $key_path);
     }
-
-    $logger->debug(' - get_defaults: privatekey_path - '.$self->privatekey_path);
-
-    $self->publickey_path($cfg->{'Kanku::Roles::SSH'}->{publickey_path}) if $cfg->{'Kanku::Roles::SSH'}->{publickey_path};
-
-    if (! $self->publickey_path && $self->privatekey_path) {
-      my $key_path = $self->privatekey_path.".pub";
-      $self->publickey_path($key_path) if ( -f $key_path);
-    }
-
-    $logger->debug(' - get_defaults: publickey_path - '.$self->publickey_path);
   }
+
+  $logger->debug(' - get_defaults: privatekey_path - '.$self->privatekey_path);
+
+  $self->publickey_path($cfg->{'Kanku::Roles::SSH'}->{publickey_path}) if $cfg->{'Kanku::Roles::SSH'}->{publickey_path};
+
+  if (! $self->publickey_path && $self->privatekey_path) {
+    my $key_path = $self->privatekey_path.".pub";
+    $self->publickey_path($key_path) if ( -f $key_path);
+  }
+
+  $logger->debug(' - get_defaults: publickey_path - '.$self->publickey_path);
+
   return 1;
 }
 
@@ -142,7 +141,6 @@ sub connect {
     strict_host_key_checking=>'no',
     timeout => 1000 * 60 * 60 * 4 # default timeout 4 hours in milliseconds
   );
-
   $self->ssh2($ssh2);
 
   my $results = [];
@@ -161,14 +159,23 @@ sub connect {
 
   $logger->debug("Connected successfully to $ip after $connect_count retries.");
 
-  $logger->debug(' - SSH_AUTH_SOCK: '.($::ENV{SSH_AUTH_SOCK} || q{}));
-  $logger->debug(' - ssh2: using auth_'.$self->auth_type);
+  $logger->debug(' - ssh2: SSH_AUTH_SOCK: '.($::ENV{SSH_AUTH_SOCK} || q{}));
+  $logger->debug(
+      "Using the following login data:\n" .
+          "auth_type  : " . ( $self->auth_type || '' )        . "\n".
+          "username   : " . ( $self->username || '' )         . "\n".
+          "pubkey     : " . ( $self->publickey_path || '' )   . "\n".
+          "privkey    : " . ( $self->privatekey_path || '' )  . "\n".
+          "passphrase : " . ( $self->passphrase || '' )       . "\n".
+          "password   : " . ( $self->password || '' )         . "\n"
+  );
+
   if ( $self->auth_type eq 'publickey' ) {
     $ssh2->auth_publickey(
       $self->username,
       $self->publickey_path,
       $self->privatekey_path,
-      $self->passphrase,
+      $self->passphrase
     );
   } elsif ( $self->auth_type eq 'agent' ) {
     $ssh2->auth_agent($self->username);
@@ -179,21 +186,7 @@ sub connect {
   }
 
   if ( ! $ssh2->auth_ok()  ) {
-    if ($self->auth_type eq 'publickey') {
-      $logger->error(
-	"Using the following login data:\n" .
-	    "username   : " . ( $self->username || '' )         . "\n".
-	    "pubkey     : " . ( $self->publickey_path || '' )   . "\n".
-	    "privkey    : " . ( $self->privatekey_path || '' )  . "\n".
-	    "passphrase : " . ( $self->passphrase || '' )       . "\n"
-      );
-    } elsif ($self->auth_type eq 'agent') {
-      $logger->error(
-	"Using the following login data:\n" .
-	    "username      : " . ( $self->username || '' )       . "\n".
-	    "SSH_AUTH_SOCK : " . ( $::ENV{SSH_AUTH_SOCK} || '' ) . "\n"
-      );
-    }
+
     my @err = $ssh2->error;
     die "Could not authenticate! $err[2]\n";
   }
@@ -222,7 +215,7 @@ sub exec_command {
     $out .= $buf;
   }
 
-  die "Command '$cmd' failed:\n\n$out\n" if $chan->exit_status;
+  die "Command '$cmd' failed:\n\n".($out || q{})."\n" if $chan->exit_status;
 
   return $out;
 }

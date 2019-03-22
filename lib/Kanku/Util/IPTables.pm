@@ -73,7 +73,7 @@ sub get_forwarded_ports_for_domain {
 
   die "No domain_name given. Cannot procceed\n" if (! $domain_name);
 
-  my $re = '^DNAT.*\/\*\s*Kanku:host:'.$self->domain_name.'(:\w*)?\s*\*\/';
+  my $re = '^DNAT.*\/\*\s*Kanku:host:'.$domain_name.'(:\w*)?\s*\*\/';
 
   # prepare command to read PREROUTING chain
   $cmd = $sudo . "LANG=C iptables -t nat -L PREROUTING -n";
@@ -110,7 +110,7 @@ sub get_active_rules_for_domain {
 
   die "No domain_name given. Cannot procceed\n" if (! $domain_name);
 
-  my $re = '^(\d+).*\/\*\s*Kanku:host:'.$self->domain_name.'\s*\*\/';
+  my $re = '^(\d+).*\/\*\s*Kanku:host:'.$domain_name.':\w* \s*\*\/';
 
   # prepare command to read PREROUTING chain
   $cmd = $sudo . "LANG=C iptables -t nat -v -L PREROUTING -n --line-numbers";
@@ -121,7 +121,7 @@ sub get_active_rules_for_domain {
   # check each PREROUTING rule if comment matches "/* Kanku:host:<domain_name> */"
   # and push line number to rules ARRAY
   for my $line (@prerouting_rules) {
-      push(@{$result->{nat}->{PREROUTING}},$1) if ( $line =~ $re );
+    push(@{$result->{nat}->{PREROUTING}},$1) if ( $line =~ $re );
   }
 
   # prepare command to read FORWARD chain
@@ -156,8 +156,6 @@ sub cleanup_rules_for_domain {
       }
     }
   }
-
-
 };
 
 sub add_forward_rules_for_domain {
@@ -190,7 +188,7 @@ sub add_forward_rules_for_domain {
       my $trans = lc($1);
       my $port  = $2;
       my $app   = lc($4);
-      push(@{$portlist->{$trans}}, [$port,$app]);
+      push(@{$portlist->{$trans}}, [$port, $app]);
     } else {
       die "Malicious rule detected '$rule'\n";
     }
