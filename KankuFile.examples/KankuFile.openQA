@@ -26,7 +26,7 @@ jobs:
       # to find more official Images
       project: devel:kanku:images
       repository: images_tumbleweed
-      package: openSUSE-Tumbleweed-JeOS
+      package: openSUSE-Tumbleweed-JeOS:ext4
   -
     use_module: Kanku::Handler::ImageDownload
     options:
