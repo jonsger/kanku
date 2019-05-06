@@ -24,3 +24,4 @@ requires        'Net::AMQP::RabbitMQ', 0;
 requires        'Const::Fast', 0;
 requires        'UUID', 0;
 requires        'Archive::Cpio', 0;
+requires        'IO::Uncompress::UnXz', 0;
