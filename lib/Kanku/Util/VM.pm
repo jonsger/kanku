@@ -265,7 +265,7 @@ sub _generate_disk_xml {
     $self->logger->debug("generate_disk_xml: $file, $format");
     # ASCII 97 = a + 0
     my $unit  = $self->_unit;
-    my $drive = "hd" . chr(97+$unit);
+    my $drive = "vd" . chr(97+$unit);
 
     my $readonly='';
     my $device = 'disk';
@@ -282,10 +282,9 @@ sub _generate_disk_xml {
     <disk type='file' device='$device'>
       <driver name='qemu' type='".$format."'/>
       <source file='$file'/>
-      <target dev='$drive' bus='ide'/>
+      <target dev='$drive' bus='virtio'/>
       $readonly
       ".($boot||'')."
-      <address type='drive' controller='0' bus='0' target='0' unit='$unit'/>
     </disk>
 ";
 
