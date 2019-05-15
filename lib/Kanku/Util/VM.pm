@@ -157,14 +157,14 @@ has accessmode_9p => (
 );
 
 has '_unit' => (
-  traits  => ['Counter'],
-  is      => 'ro',
-  isa     => 'Num',
-  default => 0,
-  handles => {
-    inc_unit   => 'inc',
-    dec_unit   => 'dec',
-    reset_unit => 'reset',
+  is 	=> 'rw',
+  isa 	=> 'HashRef',
+  default => sub {
+    {
+      vd => 0,
+      sd => 0,
+      hd => 0,
+    }
   },
 );
 
@@ -263,28 +263,32 @@ sub process_template {
 sub _generate_disk_xml {
     my ($self,$file,$format, $boot) = @_;
     $self->logger->debug("generate_disk_xml: $file, $format");
-    # ASCII 97 = a + 0
-    my $unit  = $self->_unit;
-    my $drive = "vd" . chr(97+$unit);
 
-    my $readonly='';
-    my $device = 'disk';
+    # ASCII 97 = a + 0
+    my $disk_prefix = 'vd';
+    my $device      = 'disk';
+    my $bus         = 'virtio';
+    my $readonly    = '';
 
     if ($format eq 'iso') {
-      $format = 'raw';
-      $device = 'cdrom';
-      $readonly = '<readonly/>';
+       $format      = 'raw';
+       $disk_prefix = 'hd';
+       $device      = 'cdrom';
+       $bus         = 'ide';
+       $readonly    = '<readonly/>';
     }
 
-    $boot = "<boot order='1'/>" if ($boot);
+    my $drive = $disk_prefix . chr(97+$self->_unit()->{$disk_prefix});
+    $self->_unit()->{$disk_prefix}++;
+    my $tboot = ($boot) ? "<boot order='1'/>" : '';
 
     return "
     <disk type='file' device='$device'>
-      <driver name='qemu' type='".$format."'/>
+      <driver name='qemu' type='$format'/>
       <source file='$file'/>
-      <target dev='$drive' bus='virtio'/>
+      <target dev='$drive' bus='$bus'/>
       $readonly
-      ".($boot||'')."
+      $tboot
     </disk>
 ";
 
@@ -312,7 +316,6 @@ sub create_empty_disks  {
     my $vol = $img->create_volume();
 
     $xml .= $self->_generate_disk_xml($vol->get_path,$img->format);
-    $self->inc_unit;
   }
 
   return $xml;
@@ -324,7 +327,6 @@ sub create_additional_disks {
 
   for my $disk (@{$self->additional_disks}) {
     $xml .= $self->_generate_disk_xml($disk->{file}, $disk->{format});
-    $self->inc_unit;
   }
 
   return $xml;
@@ -339,10 +341,8 @@ sub create_domain {
     $disk_xml .= $self->create_additional_disks();
     $disk_xml .= $self->create_empty_disks();
     $disk_xml .= $self->_generate_disk_xml($self->image_file,$self->root_disk->format, 1);
-    $self->inc_unit;
   } else {
     $disk_xml .= $self->_generate_disk_xml($self->image_file,$self->root_disk->format, 1);
-    $self->inc_unit;
     $disk_xml .= $self->create_additional_disks();
     $disk_xml .= $self->create_empty_disks();
   }
