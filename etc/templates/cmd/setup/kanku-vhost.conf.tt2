@@ -1,0 +1,14 @@
+<IfDefine SSL>
+<IfDefine !NOSSL>
+<VirtualHost _default_:443>
+        DocumentRoot "/srv/www/htdocs"
+        ErrorLog /var/log/apache2/error_log
+        TransferLog /var/log/apache2/access_log
+        SSLEngine on
+        SSLCertificateFile /etc/apache2/ssl.crt/server.crt
+        SSLCertificateKeyFile /etc/apache2/ssl.key/server.key
+#        SSLCertificateChainFile /etc/apache2/ssl.crt/chain.crt
+        CustomLog /var/log/apache2/ssl_request_log   ssl_combined
+</VirtualHost>
+</IfDefine>
+</IfDefine>
