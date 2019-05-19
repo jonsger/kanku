@@ -1,7 +1,7 @@
 [Unit]
 Description=Kanku Web
 After=local-fs.target network.target
-Wants=rabbitmq-server
+Wants=rabbitmq-server.service
  
 [Service]
 User=kankurun
