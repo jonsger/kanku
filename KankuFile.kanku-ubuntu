@@ -66,6 +66,7 @@ jobs:
         - cpanm --installdeps --skip-installed /tmp/kanku
         - git clone https://github.com/M0ses/Net-OBS-Client /tmp/Net-OBS-Client
         - cd /tmp/Net-OBS-Client; perl Makefile.PL ; make ; make test ; make install
+        - git clone https://github.com/M0ses/kanku /tmp/kanku
         - make -C /tmp/kanku install
         - adduser kanku sudo
         - adduser kanku libvirt
