@@ -46,9 +46,9 @@ Kanku::LibVirt::Network::OpenVSwitch:
   name:                 kanku-ovs
   bridge:               kanku-br0
   vlan:                 kanku-vlan1
-  host_ip:              192.168.199.1
-  network:              192.168.199.0/24
-  dhcp_range:           192.168.199.66,192.168.199.254
+  host_ip:              [% ovs_ip_prefix %].1
+  network:              [% ovs_ip_prefix %].0/24
+  dhcp_range:           [% ovs_ip_prefix %].66,[% ovs_ip_prefix %].254
   start_dhcp:           1
   is_gateway:           1
   iptables_chain:       KANKU_HOSTS

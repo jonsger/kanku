@@ -77,6 +77,15 @@ sub _configure_apache_ssl {
     $logger->debug("No SSL confguration requested");
     return 0;
   }
+
+  $self->_create_config_from_template(
+    "kanku-vhost.conf.tt2",
+    "/etc/apache2/vhosts.d/kanku-vhost.conf",
+    {
+      # data goes here
+    }
+  );
+
 }
 
 1;

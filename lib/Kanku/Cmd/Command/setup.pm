@@ -182,6 +182,13 @@ has dns_domain_name => (
     default       => 'kanku.site',
 );
 
+has ovs_ip_prefix => (
+    traits        => [qw(Getopt)],
+    isa           => 'Str|Undef',
+    is            => 'rw',
+    documentation => 'IP network prefix for openVSwitch setup (default 192.168.199)',
+);
+
 sub abstract { "Setup local environment to work as server or developer mode." }
 
 sub description { "
@@ -220,6 +227,7 @@ sub execute {
       mq_pass         => $self->mq_pass,
       dns_domain_name => $self->dns_domain_name,
     );
+    $setup->ovs_ip_prefix($self->ovs_ip_prefix) if $self->ovs_ip_prefix;
   } elsif ($self->server) {
     $setup = Kanku::Setup::Server::Standalone->new(
       images_dir      => $self->images_dir,

@@ -2,6 +2,7 @@ CONFIG_FILES = \
 	templates/cmd/init.tt2\
 	templates/cmd/setup/kanku.conf.mod_perl.tt2\
 	templates/cmd/setup/kanku.conf.mod_proxy.tt2\
+	templates/cmd/setup/kanku-vhost.conf.tt2\
 	templates/cmd/setup/openssl.cnf.tt2\
 	templates/cmd/setup/dancer-config.yml.tt2\
 	templates/cmd/setup/kanku-config.yml.tt2\
