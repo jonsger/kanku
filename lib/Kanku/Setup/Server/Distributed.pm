@@ -79,6 +79,10 @@ sub setup {
 
   $self->_setup_database();
 
+  $self->_create_ca;
+
+  $self->_create_server_cert;
+
   $self->_configure_apache if $self->_apache;
 
   $self->_configure_libvirtd_access();
@@ -90,10 +94,6 @@ sub setup {
   $self->_set_sudoers();
 
   $self->_create_ssh_keys;
-
-  $self->_create_ca;
-
-  $self->_create_server_cert;
 
   $self->_setup_rabbitmq;
 
