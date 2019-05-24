@@ -310,7 +310,12 @@ and in developer mode
 %package common-server
 Summary: Common server files or settings for kanku
 Requires(pre): libvirt-daemon libvirt-daemon-driver-qemu qemu-kvm
+
+%if 0%{?fedora}
+Requires(pre): shadow-utils
+%else
 Requires(pre): shadow
+%endif
 
 %description common-server
 This package contains common server files, settings and dependencies 
