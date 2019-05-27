@@ -106,9 +106,6 @@ EOF
 
   return unless $choice;
 
-  my $conf = file('/etc/libvirt/qemu.conf');
-  $self->_backup_config_file($conf);
-
   my $dconf = file('/etc/libvirt/libvirtd.conf');
 
   my @lines = $dconf->slurp;
