@@ -57,7 +57,8 @@ has [qw/
         use_9p
         skip_network
         skip_login
-/]                    => (is => 'rw',isa=>'Bool',default=>0);
+        skip_memory_checks
+/]      => (is => 'rw',isa=>'Bool',default => 0);
 
 has "+images_dir"     => (default=>"/var/lib/libvirt/images");
 
@@ -220,6 +221,7 @@ sub execute {
       running_remotely      => $self->running_remotely,
       image_file            => $final_file,
       root_disk             => $image,
+      skip_memory_checks    => $self->skip_memory_checks,
   );
 
   $vm->pool_name($self->pool_name) if $self->pool_name;

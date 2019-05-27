@@ -81,6 +81,11 @@ sub execute {
     exit 1;
   }
 
+  if ($self->memory !~ /^\d+[kmgtp]$/i ) {
+    $logger->error("Please specify a valid memory value including a Unit!");
+    exit 1;
+  }
+
   my $config = {
     INCLUDE_PATH => '/etc/kanku/templates/cmd/',
     INTERPOLATE  => 1,               # expand "$var" in plain text

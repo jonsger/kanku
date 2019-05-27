@@ -168,6 +168,8 @@ has '_unit' => (
   },
 );
 
+has skip_memory_checks => ( is => 'rw', isa => 'Bool' );
+
 sub process_template {
   my ($self,$disk_xml) = @_;
   my $logger = $self->logger;
@@ -188,6 +190,24 @@ sub process_template {
   $logger->debug("Found hardware virtualization: '$host_feature'");
   # create Template object
   my $template  = Template->new($config);
+
+
+  if (!$self->skip_memory_checks) {
+    my $default_msg =  "You configured less than %dM memory. %s"
+                      ." You can overwrite this with the 'skip_memory_checks'"
+                      ." option in Kanku::Handler::CreateDomain.\n";
+    my $mem;
+    my $msg;
+    $mem = 3;
+    $msg = "You may not see any output on the console with our default images!";
+    die(sprintf($default_msg, $mem, $msg)) if ($self->memory < $mem*1024);
+    $mem = 64;
+    $msg = "You may not see the kernel booting with our default images!";
+    die(sprintf($default_msg, $mem, $msg)) if ($self->memory < $mem*1024);
+    $mem = 256;
+    $msg = "You may see a kernel panic with our default images!";
+    die(sprintf($default_msg, $mem, $msg)) if ($self->memory < $mem*1024);
+  }
 
   # define template variables for replacement
   my $vars = {
