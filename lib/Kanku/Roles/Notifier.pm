@@ -30,4 +30,17 @@ has duration => ( is=>'rw', isa => 'Int', default => 0);
 
 has job_id => ( is=>'ro', isa => 'Int', required => 1);
 
+has kanku_url => ( is=>'ro', isa => 'Undef|Str');
+
+sub get_template_data {
+    my ($self) = @_;
+    return {
+      short_message => $self->short_message || 'Got no message',
+      duration      => $self->duration,
+      full_message  => $self->full_message,
+      job_id        => $self->job_id,
+      kanku_url     => $self->kanku_url,
+    };
+}
+
 1;

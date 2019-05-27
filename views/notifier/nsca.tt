@@ -1,0 +1,2 @@
+[% short_message %]: <a href="[% kanku_url %]/job_result/[% job_id %]">[% kanku_url %]/job_result/[% job_id %]</a></br> |duration=[% duration %]s
+[% full_message %]
