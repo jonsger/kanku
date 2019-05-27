@@ -4,7 +4,7 @@ Kanku::Util::IPTables:
 
 
 domain_name: kanku-devel
-default_job: kanku-dist
+default_job: kanku-devel
 
 #qemu:
 #  user:
@@ -24,7 +24,7 @@ jobs:
     options:
       api_url: https://api.opensuse.org/public
       # Please have a look at
-      # https://build.opensuse.org/project/show/home:M0ses:kanku:Images
+      # https://build.opensuse.org/project/show/devel:kanku:images
       # to find more official Images
       project: devel:kanku:images
       repository: images_leap_15_0
@@ -34,10 +34,6 @@ jobs:
     use_module: Kanku::Handler::ImageDownload
     options:
       use_cache: 1
-  -
-    use_module: Kanku::Handler::ResizeImage
-    options:
-      disk_size: 25G
   -
     use_module: Kanku::Handler::CreateDomain
     options:
@@ -88,7 +84,7 @@ jobs:
     options:
       api_url: https://api.opensuse.org/public
       # Please have a look at
-      # https://build.opensuse.org/project/show/home:M0ses:kanku:Images
+      # https://build.opensuse.org/project/show/devel:kanku:images
       # to find more official Images
       project: devel:kanku:images
       repository: images_leap_15_0
@@ -97,10 +93,6 @@ jobs:
     use_module: Kanku::Handler::ImageDownload
     options:
       use_cache: 1
-  -
-    use_module: Kanku::Handler::ResizeImage
-    options:
-      disk_size: 25G
   -
     use_module: Kanku::Handler::CreateDomain
     options:
@@ -160,7 +152,7 @@ jobs:
     options:
       api_url: https://api.opensuse.org/public
       # Please have a look at
-      # https://build.opensuse.org/project/show/home:M0ses:kanku:Images
+      # https://build.opensuse.org/project/show/devel:kanku:images
       # to find more official Images
       project: devel:kanku:images
       repository: images_leap_15_0
@@ -169,10 +161,6 @@ jobs:
     use_module: Kanku::Handler::ImageDownload
     options:
       use_cache: 1
-  -
-    use_module: Kanku::Handler::ResizeImage
-    options:
-      disk_size: 25G
   -
     use_module: Kanku::Handler::CreateDomain
     options:
