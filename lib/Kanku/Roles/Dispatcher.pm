@@ -166,6 +166,7 @@ sub execute_notifier {
   my ($self, $options, $job, $task) = @_;
   my $logger    = $self->logger;
   my $state     = $job->state;
+  my $cfg       = Kanku::Config->instance->config->{"Kanku::Notifier"} || {};
 
   $logger->debug("Job state: $state // $options->{states}");
 
@@ -184,13 +185,17 @@ sub execute_notifier {
   $self->load_module($mod);
 
   my $notifier = $mod->new(
-    options=> $args,
-    job_id => $job->id,
-    state  => $state,
-    duration => ($job->end_time > $job->start_time) ? $job->end_time - $job->start_time : 0,
+    options   => $args,
+    job_id    => $job->id,
+    state     => $state,
+    duration  => ($job->end_time > $job->start_time) ? $job->end_time - $job->start_time : 0,
+    kanku_url => $cfg->{'kanku_url'} || "http://localhost/kanku",
   );
 
-  $notifier->short_message("Job ".$job->name." has exited with state '$state'");
+  my $jname = $job->name;
+  my $jid   = $job->id;
+  $notifier->short_message("Job $jname($jid) has exited with state '$state'");
+
   my $result;
   try {
     $result = decode_json($task->result)->{error_message} 

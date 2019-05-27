@@ -54,6 +54,26 @@ L<Net::NSCA::Client>
 sub notify {
   my $self = shift;
 
+  my $template_path = Kanku::Config->instance->views_dir . '/notifier/';
+
+  $self->logger->debug("Using template_path: $template_path");
+
+  my $config = {
+    INCLUDE_PATH  => $template_path,
+    INTERPOLATE   => 1,               # expand "$var" in plain text
+    POST_CHOMP    => 1,
+    PLUGIN_BASE   => 'Template::Plugin',
+  };
+
+  # create Template object
+  my $template  = Template->new($config);
+  my $input     = 'nsca.tt';
+  my $output    = '';
+  # process input template, substituting variables
+  $template->process($input, $self->get_template_data(), \$output)
+               || die $template->error()->as_string();
+  $output =~ s/\n/\\n/g;
+
   my $nstat;
   if($self->state eq 'succeed') {
     $nstat = $Net::NSCA::Client::STATUS_OK;
@@ -74,11 +94,10 @@ sub notify {
       $self->logger->error("No configuration found for init. Please check the docs!");
   }
   my $nsca             = Net::NSCA::Client->new(%iopts);
-  my $msg              = ($self->short_message || 'Got no message')."|duration=".$self->duration."s";
   $nsca->send_report(
     %{$cfg->{$pkg}->{send_report} ||{}},
     %{$self->options->{send_report}},
-    message => $msg,
+    message => $output,
     status => $nstat
   );
 

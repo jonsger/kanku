@@ -12,10 +12,6 @@ with 'Kanku::Roles::Logger';
 sub notify {
   my $self = shift;
   my $text = shift;
-  my $data = {
-    message => $self->full_message,
-    job_id  => $self->job_id,
-  };
 
   my $template_path = Kanku::Config->instance->views_dir . '/notifier/';
 
@@ -33,7 +29,7 @@ sub notify {
   my $input     = 'sendmail.tt';
   my $output    = '';
   # process input template, substituting variables
-  $template->process($input, $data, \$output)
+  $template->process($input, $self->get_template_data(), \$output)
                || die $template->error()->as_string();
 
   my %mail = (
