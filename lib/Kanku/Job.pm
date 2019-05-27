@@ -17,7 +17,6 @@
 package Kanku::Job;
 
 use Moose;
-use Data::Dumper;
 use JSON::XS;
 use Kanku::GPG;
 use Try::Tiny;

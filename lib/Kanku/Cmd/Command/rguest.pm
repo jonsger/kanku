@@ -17,7 +17,6 @@
 package Kanku::Cmd::Command::rguest;
 
 use Moose;
-use Data::Dumper;
 use Term::ReadKey;
 use Try::Tiny;
 use Kanku::YAML;

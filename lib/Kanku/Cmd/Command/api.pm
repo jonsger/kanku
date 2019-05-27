@@ -17,7 +17,6 @@
 package Kanku::Cmd::Command::api;
 
 use Moose;
-use Data::Dumper;
 use Term::ReadKey;
 use Try::Tiny;
 
@@ -25,6 +24,7 @@ extends qw(MooseX::App::Cmd::Command);
 
 with 'Kanku::Cmd::Roles::Remote';
 with 'Kanku::Cmd::Roles::RemoteCommand';
+with 'Kanku::Roles::Helpers';
 
 sub abstract { "make (GET) requests to api with arbitrary (sub) uri" }
 
@@ -54,7 +54,6 @@ sub execute {
   my $self  = shift;
   my $logger  = Log::Log4perl->get_logger;
 
-  # $logger->warn("Please specify a command. Run 'kanku help rguest' for further information.");
   my $kr;
   try {
 	$kr = $self->connect_restapi();
@@ -63,7 +62,7 @@ sub execute {
   };
 
   my $data = $kr->get_json( path => $self->uri );
-  print Dumper($data);
+  $logger->trace($self->dump_it($data));
 }
 
 __PACKAGE__->meta->make_immutable;

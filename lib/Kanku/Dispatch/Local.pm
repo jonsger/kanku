@@ -21,12 +21,12 @@ use Moose;
 with 'Kanku::Roles::Logger';
 with 'Kanku::Roles::Dispatcher';
 with 'Kanku::Roles::Daemon';
+with 'Kanku::Roles::Helpers';
 
 use Kanku::Config;
 use Kanku::Job;
 use Kanku::Task;
 use JSON::XS;
-use Data::Dumper;
 use Try::Tiny;
 
 has 'max_processes' => (is=>'rw',isa=>'Int',default=>1);
@@ -51,7 +51,7 @@ sub run_job {
 
   return 1 if (! $args);
 
-  $logger->trace("  -- args:".Dumper($args));
+  $logger->trace("  -- args: ".$self->dump_it($args));
 
   my $task;
 
@@ -65,7 +65,7 @@ sub run_job {
     my $un = $job->trigger_user;
     $logger->debug("--- trigger_user $un");
     $defaults{final_args}->{domain_name} =~ s{^($un-)?}{$un-}smx if ($un && exists $defaults{final_args}->{domain_name});
-    $logger->debug('--- final_args'.Dumper($defaults{final_args}));
+    $logger->debug('--- final_args'.$self->dump_it($defaults{final_args}));
 
     $task = Kanku::Task->new(
       %defaults,

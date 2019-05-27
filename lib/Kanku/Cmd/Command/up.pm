@@ -17,7 +17,6 @@
 package Kanku::Cmd::Command::up;
 
 use Moose;
-use Data::Dumper;
 use Carp;
 
 use Kanku::Config;

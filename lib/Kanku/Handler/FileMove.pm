@@ -18,7 +18,6 @@ package Kanku::Handler::FileMove;
 
 use Moose;
 use Path::Class qw/file/;
-use Data::Dumper;
 
 with 'Kanku::Roles::Handler';
 with 'Kanku::Roles::Logger';

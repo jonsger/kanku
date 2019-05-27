@@ -17,7 +17,6 @@
 package Kanku::Handler::ExecuteCommandViaSSH;
 
 use Moose;
-use Data::Dumper;
 use namespace::autoclean;
 
 with 'Kanku::Roles::Handler';

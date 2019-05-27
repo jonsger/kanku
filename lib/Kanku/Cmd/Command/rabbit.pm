@@ -18,7 +18,6 @@ package Kanku::Cmd::Command::rabbit;
 
 use Moose;
 use Kanku::Config;
-use Data::Dumper;
 use Kanku::YAML;
 use FindBin;
 use Log::Log4perl;

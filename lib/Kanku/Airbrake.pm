@@ -2,7 +2,6 @@ package Kanku::Airbrake;
 
 use MooseX::Singleton;
 use Try::Tiny;
-use Data::Dumper;
 use Devel::StackTrace;
 
 has _ab_object => (is =>'rw',isa=>'Object');

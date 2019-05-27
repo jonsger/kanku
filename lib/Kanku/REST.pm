@@ -14,8 +14,6 @@ use Try::Tiny;
 use Session::Token;
 use Carp qw/longmess/;
 
-use Data::Dumper;
-
 use Kanku::Config;
 use Kanku::Schema;
 use Kanku::Util::IPTables;

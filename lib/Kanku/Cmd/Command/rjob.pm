@@ -17,7 +17,6 @@
 package Kanku::Cmd::Command::rjob;
 
 use Moose;
-use Data::Dumper;
 use Term::ReadKey;
 use POSIX;
 use Try::Tiny;
@@ -95,7 +94,6 @@ sub execute {
 			last;
 		}
 	}
-	print Dumper($job_config);
   } else {
 	$logger->warn("Please specify a command. Run 'kanku help rjob' for further information.");
   }

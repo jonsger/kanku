@@ -21,7 +21,6 @@ use Kanku::Config;
 use Try::Tiny;
 use Log::Log4perl;
 use XML::XPath;
-use Data::Dumper;
 
 #use Kanku::Util::VM;
 #use Kanku::Util::IPTables;

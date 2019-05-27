@@ -4,7 +4,6 @@ use Moose;
 use JSON::XS;
 use HTTP::Request;
 use LWP::UserAgent;
-use Data::Dumper;
 
 use OpenStack::API::Cinder;
 use OpenStack::API::EC2;

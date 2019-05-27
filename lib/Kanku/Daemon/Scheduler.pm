@@ -26,7 +26,6 @@ use Kanku::Job;
 use Kanku::Dispatch::Local;
 use Kanku::Task;
 use JSON::XS;
-use Data::Dumper;
 use Try::Tiny;
 
 sub run {

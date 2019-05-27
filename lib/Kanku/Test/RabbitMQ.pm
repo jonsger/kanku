@@ -2,9 +2,10 @@ package Kanku::Test::RabbitMQ;
 
 use Moose;
 use Net::AMQP::RabbitMQ;
-use Data::Dumper;
 use JSON::MaybeXS;
 use Term::ANSIColor;
+
+with 'Kanku::Roles::Helpers';
 
 has config => (
    is     => 'rw',
@@ -52,6 +53,7 @@ has output_plugin=> (
   is      => 'rw',
   isa     => 'Str',
 );
+
 
 sub connect {
   my ($self) = @_; 
@@ -168,7 +170,7 @@ sub send {
   }
   my $routing_key = $self->config->{routing_key} || '#';
 
-  $logger->info(Dumper($notification));
+  $logger->info($self->dump_it($notification));
 
   my $msg = encode_json($notification);
 

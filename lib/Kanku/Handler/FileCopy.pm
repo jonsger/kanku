@@ -22,7 +22,6 @@ use Digest::MD5;
 use Kanku::Config;
 
 use feature 'say';
-use Data::Dumper;
 
 with 'Kanku::Roles::Handler';
 with 'Kanku::Roles::Logger';

@@ -18,7 +18,6 @@ package Kanku::Handler::ExecuteCommandOnHost;
 
 use Moose;
 
-use Data::Dumper;
 use Path::Class qw/file dir/;
 use namespace::autoclean;
 use IPC::Run qw/run/;

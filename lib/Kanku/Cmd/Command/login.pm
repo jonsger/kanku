@@ -17,7 +17,6 @@
 package Kanku::Cmd::Command::login;
 
 use Moose;
-use Data::Dumper;
 use Term::ReadKey;
 use Kanku::YAML;
 

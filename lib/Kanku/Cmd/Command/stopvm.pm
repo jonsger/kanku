@@ -21,7 +21,6 @@ use Kanku::Config;
 use Try::Tiny;
 use Log::Log4perl;
 use XML::XPath;
-use Data::Dumper;
 
 extends qw(MooseX::App::Cmd::Command);
 

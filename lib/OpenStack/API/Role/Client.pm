@@ -4,7 +4,6 @@ use Moose::Role;
 
 use LWP::UserAgent;
 use HTTP::Request;
-use Data::Dumper;
 use JSON::XS;
 
 has ua => (
@@ -84,7 +83,6 @@ sub request {
 	  "Already tried authentication: " . $self->__already_tried_authentication . "\n";
       }
     } else {
-      print Dumper($method,$uri,$header,$content);
       die "Error while accessing '$uri'\n".$response->status_line . "\n";
     }
   }

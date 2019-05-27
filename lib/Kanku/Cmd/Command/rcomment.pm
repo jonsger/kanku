@@ -1,7 +1,6 @@
 package Kanku::Cmd::Command::rcomment;
 
 use Moose;
-use Data::Dumper;
 use Term::ReadKey;
 use Log::Log4perl;
 use POSIX;
@@ -116,9 +115,6 @@ sub _list {
   );
 
   my $data = $kr->get_json( path => "job/comments/".$self->job_id );
-
-  print Dumper($data);
-
 };
 
 sub _create {
@@ -145,8 +141,6 @@ sub _create {
   my %params = (message => $self->message);
 
   my $data = $kr->post_json( path => "job/comment/".$self->job_id, data => \%params );
-
-  print Dumper($data);
 };
 
 sub _modify {
@@ -173,8 +167,6 @@ sub _modify {
   my %params = (message => $self->message);
 
   my $data = $kr->put_json( path => "job/comment/".$self->comment_id, data => \%params );
-
-  print Dumper($data);
 };
 
 sub _delete {
@@ -194,9 +186,6 @@ sub _delete {
   };
 
   my $data = $kr->delete_json( path => "job/comment/".$self->comment_id);
-
-  print Dumper($data);
-
 };
 
 __PACKAGE__->meta->make_immutable;

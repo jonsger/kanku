@@ -18,7 +18,6 @@ package Kanku::Daemon::Dispatcher;
 
 use Moose;
 use Try::Tiny;
-use Data::Dumper;
 use Kanku::Dispatch::Local;
 use Kanku::Dispatch::RabbitMQ;
 

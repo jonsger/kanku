@@ -20,7 +20,6 @@ use Moose;
 use Kanku::Util::CurlHttpDownload;
 use Path::Class qw/dir file/;
 use feature 'say';
-use Data::Dumper;
 use File::Copy;
 use Try::Tiny;
 use Archive::Cpio;
@@ -157,7 +156,6 @@ sub _calc_output_file {
   my $ctx                    = $self->job()->context();
   my $output_file;
 
-  $self->logger->trace("job->context:\n".Dumper($ctx));
   if ($use_public_api) {
     $output_file = $ctx->{obs_project}."-".$ctx->{obs_package} . '.cpio';
   } else {

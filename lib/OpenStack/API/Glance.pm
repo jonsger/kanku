@@ -5,7 +5,6 @@ with 'OpenStack::API::Role::Service';
 with 'OpenStack::API::Role::Client';
 
 use Carp;
-use Data::Dumper;
 use JSON::XS;
 
 sub image_list {

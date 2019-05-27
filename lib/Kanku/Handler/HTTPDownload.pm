@@ -18,7 +18,7 @@ package Kanku::Handler::HTTPDownload;
 
 use Moose;
 use Kanku::Util::CurlHttpDownload;
-use Data::Dumper;
+
 with 'Kanku::Roles::Handler';
 with 'Kanku::Roles::Logger';
 
