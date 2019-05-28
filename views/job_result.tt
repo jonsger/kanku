@@ -12,12 +12,12 @@
 
 <div class='job_header'>
   <div class='row'>
-      <div class="col-md-4">
+      <div class="col-md-8">
         <span class="badge badge-secondary">{{ id }}</span>
           {{ name }}
       </div>
-      <div class="col-md-4">{{ start_time }}</div>
-      <div class="col-md-4">{{ duration }}</div>
+      <div class="col-md-2">{{ start_time }}</div>
+      <div class="col-md-2">{{ duration }}</div>
   </div>
 </div>
 
@@ -28,12 +28,12 @@
 <div class="card" id="jh_line_{{ id }}">
   <div id="jh_ph_{{ id }}" class="card-header aler alert-{{ state_class }}">
     <div class='row'>
-      <div class="col-md-4">
+      <div class="col-md-8">
         <span class="badge badge-secondary">{{ id }}</span>
-          {{ name }}
+          {{ name }} ({{ workerhost }})
       </div>
-      <div class="col-md-4">{{ start_time }}</div>
-      <div class="col-md-4">({{ duration_min }}min {{ duration_sec }}sec)</div>
+      <div class="col-md-2">{{ start_time }}</div>
+      <div class="col-md-2">({{ duration_min }}min {{ duration_sec }}sec)</div>
     </div>
   </div>
   <div class="card-body" id="jbody_{{ id }}">

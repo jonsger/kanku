@@ -71,6 +71,7 @@ function update_job_result(xhr) {
                         duration_min  : duration_min,
                         duration_sec  : duration_sec,
                         state_class   : alert_map[job.state],
+                        workerhost    : job.workerhost,
                       }
       );
       $("#job_result").append(rendered);
@@ -100,7 +101,6 @@ function update_job_result_panel_body (data) {
     function() {
 
       var result_rendered;
-
       var rendered = Mustache.render(
                   subtask_result_template,
                   {
