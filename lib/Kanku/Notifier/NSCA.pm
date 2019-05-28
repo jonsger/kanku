@@ -55,6 +55,8 @@ sub notify {
   my $self = shift;
 
   my $template_path = Kanku::Config->instance->views_dir . '/notifier/';
+  my $cfg              = Kanku::Config->instance->config;
+  my $pkg              = __PACKAGE__;
 
   $self->logger->debug("Using template_path: $template_path");
 
@@ -84,8 +86,6 @@ sub notify {
   }
 
   $self->logger->debug("Sending report (status: $nstat  with message: ".$self->short_message);
-  my $cfg              = Kanku::Config->instance->config;
-  my $pkg              = __PACKAGE__;
 
   my $global_init_opts = $cfg->{$pkg}->{init}   || {};
   my $init_opts        = $self->options->{init} || {};
@@ -94,8 +94,12 @@ sub notify {
   if (! %iopts) {
       $self->logger->error("No configuration found for init. Please check the docs!");
   }
+
+  my $max_size = $cfg->{$pkg}->{max_pluginoutput_length} || 4096;
+  $output = substr($output, 0 , $max_size - 5).' ... ';
+
   my $nsca_config = Net::NSCA::Client::ServerConfig->new(
-    max_pluginoutput_length => 4096, # 4 KiB!
+    max_pluginoutput_length => $max_size, # 4 KiB!
   );
   $iopts{'server_config'} = $nsca_config;
 
