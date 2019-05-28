@@ -90,9 +90,15 @@ sub notify {
   my $global_init_opts = $cfg->{$pkg}->{init}   || {};
   my $init_opts        = $self->options->{init} || {};
   my %iopts            = (%{$global_init_opts}, %{$init_opts});
+
   if (! %iopts) {
       $self->logger->error("No configuration found for init. Please check the docs!");
   }
+  my $nsca_config = Net::NSCA::Client::ServerConfig->new(
+    max_pluginoutput_length => 4096, # 4 KiB!
+  );
+  $iopts{'server_config'} = $nsca_config;
+
   my $nsca             = Net::NSCA::Client->new(%iopts);
   $nsca->send_report(
     %{$cfg->{$pkg}->{send_report} ||{}},
