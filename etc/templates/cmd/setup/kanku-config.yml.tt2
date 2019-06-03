@@ -10,6 +10,8 @@ Kanku::Util::DoD:
 [% IF use_publickey %]
 Kanku::Roles::SSH:
   auth_type: publickey
+  privatekey_path: /etc/kanku/ssh/id_rsa
+  publickey_path: /etc/kanku/ssh/id_rsa.pub
 [% END %]
 
 plugins:

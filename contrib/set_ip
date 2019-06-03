@@ -1,0 +1,6 @@
+#!/bin/bash
+
+IP=`ip a s eth0|perl -ne 'm/\s+inet\s+([0-9\.]+)\/.*/&&print $1'`
+perl -p -i -e 's/RequestHeader set X_FORWARDED_HOST ".*"/RequestHeader set X_FORWARDED_HOST "'$IP'"/' /etc/apache2/conf.d/kanku.conf
+
+echo '<html><head><meta http-equiv="refresh" content="0; URL=https://'$IP'/kanku/"/></head></html>' > /srv/www/htdocs/index.html
