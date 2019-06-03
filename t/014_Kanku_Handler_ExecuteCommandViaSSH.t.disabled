@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 1;
+use Test::More tests => 6;
 use FindBin;
 use Path::Class qw/dir/;
 use Data::Dumper;
@@ -18,44 +18,83 @@ Log::Log4perl->easy_init($TRACE);  # Set priority of root logger to ERROR
 
 ### Application Section
 my $logger = get_logger();
-
-
 my $job = Kanku::Job->new();
+my @result;
 
-#$job->context()->{cache_dir} = $FindBin::Bin."/tmp/cache/";
-$job->context()->{ipaddress} = "192.168.199.17";
+$job->context()->{ipaddress} = $ARGV[0] || "192.168.199.17";
 
-my $handler = Kanku::Handler::ExecuteCommandViaSSH->new(
+@result = run_commands({
+  job             => $job,
+  logger          => $logger,
+  commands        => ["curl https://github.com"],
+  auth_type       => 'publickey',
+  publickey_path  => '/etc/kanku/ssh/id_rsa.pub',
+  privatekey_path => '/etc/kanku/ssh/id_rsa',
+});
+
+ok($result[1]->{code} == 0, "checking public key auth") || print Dumper(@result);
+
+@result = run_commands({
+  job             => $job,
+  logger          => $logger,
+  commands        => ["/bin/not-exists"],
+  auth_type       => 'publickey',
+  publickey_path  => '/missing/id_rsa.pub',
+  privatekey_path => '/missing/id_rsa',
+});
+
+is($result[0], "Could not authenticate! Unable to open public key file\n", "checking public key auth missing key files") || print Dumper(@result);
+
+@result = run_commands({
   job         => $job,
   logger      => $logger,
-  command => [
-    "curl https://github.com",
-  ],
-  # auth_type   => 'password',
-  # password    => 'kankudai',
-  # auth_type   => 'publickey',
-  # publickey_path  => '/etc/kanku/ssh/id_rsa.pub',
-  # privatekey_path => '/etc/kanku/ssh/id_rsa',
-  auth_type   => 'agent',
-);
+  commands    => ["/bin/not-exists"],
+  auth_type   => 'password',
+  password    => 'opensuse',
+  username    => 'root',
+});
 
-print Dumper($handler->execute());
-eval {
-  $handler = Kanku::Handler::ExecuteCommandViaSSH->new(
+like($result[0], qr{bash: /bin/not-exists: No such file or directory}, "checking password auth") || print Dumper(@result);
+
+@result = run_commands({
+  job             => $job,
+  logger          => $logger,
+  commands        => ["/bin/false"],
+  auth_type       => 'publickey',
+  publickey_path  => '/etc/kanku/ssh/id_rsa.pub',
+  privatekey_path => '/etc/kanku/ssh/id_rsa',
+});
+
+like($result[0], qr{Command '/bin/false' failed:}, "checking result of '/bin/false'") || print Dumper(@result);
+
+SKIP: {
+  skip "Not checking agent auth - No SSH_AUTH_SOCK set", 1 unless $::ENV{SSH_AUTH_SOCK};
+  @result = run_commands({
     job         => $job,
     logger      => $logger,
-    commands => [
-      "/bin/false",
-    ],
-    # auth_type   => 'password',
-    # password    => 'kankudai',
-    # auth_type   => 'publickey',
-    # publickey_path  => '/etc/kanku/ssh/id_rsa.pub',
-    # privatekey_path => '/etc/kanku/ssh/id_rsa',
-    # auth_type   => 'agent',
-  );
+    commands    => ["/bin/true"],
+    auth_type   => 'agent',
+  });
 
-  $handler->execute();
+  ok(defined $result[1]->{code}, "checking agent auth") || print Dumper(@result);
 };
 
 exit 0;
+
+sub run_commands {
+  my ($opts) = @_;
+  my $got = {};
+  my ($stdout, $stderr);
+
+  eval {
+    local *STDOUT;
+    local *STDERR;
+    open(STDOUT, '>', \$stdout);
+    open(STDERR, '>', \$stderr);
+    my $handler = Kanku::Handler::ExecuteCommandViaSSH->new(%{$opts});
+
+    $got = $handler->execute();
+  };
+
+  return ($@, $got, $stdout, $stderr);
+}
