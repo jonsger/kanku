@@ -79,6 +79,8 @@ has ['_root_disk']    => (is => 'rw', isa => 'Object');
 
 has 'root_disk_size'  => (is => 'rw', isa => 'Str');
 
+has 'root_disk_bus'  => (is => 'rw', isa => 'Str', default => 'virtio');
+
 has empty_disks => (
   is => 'rw',
   isa => 'ArrayRef',
@@ -221,6 +223,7 @@ sub execute {
       running_remotely      => $self->running_remotely,
       image_file            => $final_file,
       root_disk             => $image,
+      root_disk_bus         => $self->root_disk_bus,
       skip_memory_checks    => $self->skip_memory_checks,
   );
 
@@ -563,7 +566,11 @@ If configured a port_forward_list, it tries to find the next free port and confi
 
     installation          : array of expect commands for installation process
 
-    pool_name            : name of disk pool
+    pool_name             : name of disk pool
+
+    root_disk_bus         : disk bus system for root device. Default: virtio
+
+                            Can be virtio, ide, sata or scsi.
 
 =head1 CONTEXT
 

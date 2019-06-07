@@ -170,6 +170,9 @@ has '_unit' => (
 
 has skip_memory_checks => ( is => 'rw', isa => 'Bool' );
 
+has 'root_disk_bus'  => (is => 'rw', isa => 'Str');
+
+
 sub process_template {
   my ($self,$disk_xml) = @_;
   my $logger = $self->logger;
@@ -285,9 +288,16 @@ sub _generate_disk_xml {
     $self->logger->debug("generate_disk_xml: $file, $format");
 
     # ASCII 97 = a + 0
-    my $disk_prefix = 'vd';
-    my $device      = 'disk';
-    my $bus         = 'virtio';
+    my $disk_list   = { 
+      virtio => ['vd', 'disk'], 
+      ide    => ['hd', 'disk'], 
+      sata   => ['sd', 'disk'],
+      scsi   => ['sd', 'disk'],
+    };
+    my $bus         = $self->root_disk_bus;
+    die "Unknown bus type: '$bus'\n" unless $disk_list->{$bus};
+    my $disk_prefix = $disk_list->{$bus}->[0];
+    my $device      = $disk_list->{$bus}->[1];
     my $readonly    = '';
 
     if ($format eq 'iso') {
