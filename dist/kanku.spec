@@ -534,6 +534,10 @@ Summary: Documentation files for kanku
 This package contains the documentation files for kanku
 
 %files doc
+%if 0%{?fedora}
+%{_defaultdocdir}/kanku-common/
+%else
 %{_defaultdocdir}/kanku/
+%endif
 
 %changelog
